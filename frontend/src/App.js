@@ -16,6 +16,7 @@ import History from "./pages/History";
 import AgentsPage from "./pages/AgentsPage";
 import AgentDetail from "./pages/AgentDetail";
 import AgentReview from "./pages/AgentReview";
+import MembershipPage from "./pages/MembershipPage";
 
 export default function App(){
   return (
@@ -37,6 +38,7 @@ export default function App(){
         <Route path="/moi-gioi" element={<AgentsPage />} />
         <Route path="/moi-gioi/:id" element={<AgentDetail />} />
         <Route path="/moi-gioi/:id/danh-gia" element={<AgentReview />} />
+        <Route path="/goi-hoi-vien" element={<MembershipPage />} />
       </Routes>
     </BrowserRouter>
   );

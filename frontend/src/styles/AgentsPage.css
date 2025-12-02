@@ -12,7 +12,7 @@
 
 /* Phần nội dung dưới header – tránh bị che */
 .agents-page-content {
-  margin-top: 90px; /* chỉnh 80–100px tùy chiều cao header của chị */
+  margin-top: 90px;
   background: var(--ag-bg);
 }
 
@@ -29,25 +29,14 @@
 /* ==== FILTER BAR ==== */
 .agents-filter-bar {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.agents-filter-bar button {
-  font-size: 13px;
-}
-
-.agents-filter-btn {
-  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  border-radius: 4px;
-  border: 1px solid var(--ag-border);
-  background: #fff;
-  padding: 6px 10px;
-  cursor: pointer;
+  gap: 4px;
+  padding: 6px 0;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
+.agents-filter-btn,
 .agents-filter-pill {
   display: inline-flex;
   align-items: center;
@@ -57,6 +46,118 @@
   background: #fff;
   padding: 6px 10px;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ag-ink);
+}
+
+.agents-filter-btn:hover,
+.agents-filter-pill:hover {
+  background: #f5f6f7;
+}
+
+/* ----- PROVINCE PANEL ----- */
+.agents-province-wrapper {
+  position: relative;
+}
+
+.agents-province-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  width: 280px;
+  max-height: 320px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+.agents-province-search {
+  padding: 6px 10px 4px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.agents-province-search input {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+.agents-province-list {
+  padding: 4px 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.agents-province-item {
+  width: 100%;
+  border: none;
+  background: #fff;
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #111827;
+  cursor: pointer;
+}
+
+.agents-province-item:hover {
+  background: #f5f5f5;
+}
+
+.agents-province-item--active {
+  background: #fff4e5;
+  color: #ff7a00;
+  font-weight: 600;
+}
+
+/* icon quay khi mở panel */
+.ag-rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* ----- AGENT TYPE PANEL ----- */
+.agents-agenttype-wrapper {
+  position: relative;
+}
+
+.agents-agenttype-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 40;
+  width: 220px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  padding: 4px 0;
+}
+
+.agents-agenttype-item {
+  width: 100%;
+  border: none;
+  background: #fff;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+  color: #111827;
+}
+
+.agents-agenttype-item:hover {
+  background: #f5f5f5;
+}
+
+.agents-agenttype-item--active {
+  background: #fff4e5;
+  color: #ff7a00;
+  font-weight: 600;
 }
 
 /* ==== LIST ==== */
@@ -88,6 +189,9 @@
 /* Body */
 .agcard-body {
   padding: 10px 12px 6px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .agcard-top {
@@ -253,15 +357,200 @@
   }
 }
 
-/* Dùng flex để footer luôn dính đáy card, không cần chiều cao cố định */
-.agcard {
+/* ===== PAGINATION ===== */
+.agents-pagination {
+  margin-top: 18px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 }
 
-/* Phần nội dung tự giãn để các card cao bằng nhau trong cùng 1 hàng */
-.agcard-body {
-  flex: 1;
+.agents-page-btn {
+  padding: 6px 14px;
+  background: #ffffff;
+  border: 1px solid var(--ag-border);
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--ag-ink);
+  transition: 0.2s ease;
+}
+
+.agents-page-btn:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.agents-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.agents-page-info {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ag-ink);
+}
+
+/* ======== ESTATE TYPE (Loại BĐS) ======== */
+
+.agents-estate-wrap {
+  position: relative;
+}
+
+/* Panel xổ xuống */
+.agents-estate-panel {
+  position: absolute;
+  top: 38px;
+  left: 0;
+  z-index: 9999;
+  background: #ffffff;
+  border: 1px solid var(--ag-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+  min-width: 220px;
+  padding: 6px 0;
+}
+
+/* Mỗi item */
+.agents-estate-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 13px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  color: var(--ag-ink);
+}
+
+.agents-estate-item:hover {
+  background: #fff7ec; /* vàng nhạt giống Chợ Tốt */
+}
+
+/* Item đang được chọn */
+.agents-estate-item--active {
+  background: var(--ag-orange);
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* animation mượt */
+.ag-rotate-180 {
+  transform: rotate(180deg);
+  transition: 0.2s ease;
+}
+
+/* ======== PRICE FILTER (Khoảng giá) ======== */
+
+.agents-price-wrap {
+  position: relative;
+}
+
+/* Panel bao ngoài */
+.agents-price-panel {
+  position: absolute;
+  top: 38px;
+  left: 0;
+  z-index: 9999;
+  background: #ffffff;
+  border: 1px solid var(--ag-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+  min-width: 260px;
+  padding: 10px 0 8px;
+}
+
+/* Header: text "Khoảng giá từ 0 đến 100tr/m2+" */
+.agents-price-header {
+  font-size: 13px;
+  padding: 0 14px 6px;
+  color: var(--ag-muted);
+}
+
+.agents-price-header strong {
+  font-weight: 600;
+  color: var(--ag-ink);
+}
+
+/* Thanh "slider" giả lập */
+.agents-price-bar {
+  position: relative;
+  padding: 10px 14px 8px;
+}
+
+.agents-price-bar-line {
+  height: 3px;
+  background: #ffe2c2;
+  border-radius: 999px;
+  position: relative;
+}
+
+.agents-price-bar-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ag-orange);
+  border-radius: inherit;
+}
+
+/* 2 đầu núm tròn */
+.agents-price-bar-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid var(--ag-orange);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 10px;
+}
+
+.agents-price-bar-thumb.right {
+  right: 10px;
+  left: auto;
+}
+
+/* Danh sách option giá */
+.agents-price-list {
   display: flex;
   flex-direction: column;
+  padding-top: 4px;
+}
+
+.agents-price-item {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: #ffffff;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  color: var(--ag-ink);
+}
+
+.agents-price-item:hover {
+  background: #fff7ec;
+}
+
+/* "Radio" bên phải */
+.agents-price-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.agents-price-item--active {
+  background: var(--ag-orange-soft);
+  font-weight: 600;
+}
+
+.agents-price-item--active .agents-price-radio {
+  border-color: var(--ag-orange);
+  background: var(--ag-orange);
 }
