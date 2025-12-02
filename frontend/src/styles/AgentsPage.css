@@ -1,0 +1,267 @@
+/* ========= TOKENS ========= */
+:root {
+  --ag-orange: #ff7a00;
+  --ag-orange-soft: #fff7ec;
+  --ag-ink: #111827;
+  --ag-muted: #6b7280;
+  --ag-border: #e5e7eb;
+  --ag-bg: #f5f5f5;
+  --ag-white: #ffffff;
+  --ag-container: min(1200px, 92vw);
+}
+
+/* Phần nội dung dưới header – tránh bị che */
+.agents-page-content {
+  margin-top: 90px; /* chỉnh 80–100px tùy chiều cao header của chị */
+  background: var(--ag-bg);
+}
+
+/* Khung xám như Chợ Tốt */
+.agents-wrapper {
+  padding: 12px 0 24px;
+}
+
+.agents-main {
+  width: var(--ag-container);
+  margin: 0 auto;
+}
+
+/* ==== FILTER BAR ==== */
+.agents-filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.agents-filter-bar button {
+  font-size: 13px;
+}
+
+.agents-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 4px;
+  border: 1px solid var(--ag-border);
+  background: #fff;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.agents-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 4px;
+  border: 1px solid var(--ag-border);
+  background: #fff;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+/* ==== LIST ==== */
+.agents-list {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* ==== CARD ==== */
+.agcard {
+  position: relative;
+  background: #fff;
+  border-radius: 4px;
+  border: 1px solid var(--ag-border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Banner */
+.agcard-banner img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+/* Body */
+.agcard-body {
+  padding: 10px 12px 6px;
+}
+
+.agcard-top {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+}
+
+/* Avatar */
+.agcard-avatar-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2px solid #fff;
+  margin-top: -22px;
+  box-shadow: 0 0 0 1px #e5e7eb;
+  background: #fff;
+}
+
+.agcard-avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Name + follow */
+.agcard-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.agcard-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ag-ink);
+  margin: 0;
+}
+
+.agcard-follow-btn {
+  border: none;
+  border-radius: 999px;
+  background: var(--ag-orange);
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.agcard-follow-btn:hover {
+  filter: brightness(0.95);
+}
+
+/* Rating */
+.agcard-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.agcard-rating-icon {
+  fill: #f97316;
+  stroke: #f97316;
+}
+
+.agcard-rating-score {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.agcard-rating-count {
+  color: var(--ag-muted);
+}
+
+.agcard-badge {
+  margin-left: 6px;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-weight: 500;
+}
+
+/* Mô tả + khu vực */
+.agcard-desc {
+  font-size: 13px;
+  color: var(--ag-ink);
+  margin: 2px 0 4px;
+  line-height: 1.3;
+}
+
+.agcard-area {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ag-muted);
+}
+
+/* Footer nút */
+.agcard-footer {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px 10px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 4px;
+}
+
+.agcard-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  border-radius: 3px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.agcard-btn-ghost,
+.agcard-btn-outline {
+  border: 1px solid #d1d5db;
+  background: #fff;
+}
+
+/* Overlay click full card (trừ nút) */
+.agcard-overlay-link {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Cho nút nổi lên trên overlay */
+.agcard-footer,
+.agcard-follow-btn {
+  position: relative;
+  z-index: 2;
+}
+
+.agcard-overlay-link:hover {
+  outline: 2px solid rgba(255, 122, 0, 0.25);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .agents-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .agents-main {
+    width: 100%;
+    padding-inline: 8px;
+  }
+}
+
+/* Dùng flex để footer luôn dính đáy card, không cần chiều cao cố định */
+.agcard {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Phần nội dung tự giãn để các card cao bằng nhau trong cùng 1 hàng */
+.agcard-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

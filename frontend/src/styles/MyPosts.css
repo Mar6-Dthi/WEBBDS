@@ -1,0 +1,102 @@
+.myp-page {
+  min-height: calc(100vh - 64px);
+  background: #fff7ec;
+  padding: 32px 0 48px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.myp-container {
+  width: min(1200px, 94vw);
+  margin: 0 auto;
+}
+
+.myp-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.myp-item {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.myp-thumb {
+  width: 120px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f3f4f6;
+  flex-shrink: 0;
+}
+
+.myp-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.myp-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #9ca3af;
+  height: 100%;
+}
+
+.myp-body {
+  flex: 1;
+}
+
+.myp-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.myp-meta {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.myp-address {
+  margin: 0;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.myp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.myp-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.myp-btn:hover {
+  background: #f3f4f6;
+}
+
+.myp-btn-danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.myp-btn-danger:hover {
+  background: #fee2e2;
+}

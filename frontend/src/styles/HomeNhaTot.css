@@ -1,0 +1,669 @@
+/* ========== TOKENS ========== */
+:root{
+  --orange-1:#ff7a00;
+  --orange-2:#ffa43a;
+  --orange-3:#ffbb66;
+  --ink:#111827;
+  --muted:#667085;
+  --bg:#fff7ec;
+  --white:#fff;
+  --border:#ececec;
+  --radius:18px;
+  --shadow:0 12px 40px rgba(0,0,0,.08);
+  --container:min(1200px,92vw)
+}
+
+/* ========== RESET & LAYOUT ========== */
+.nhatot *{box-sizing:border-box}
+.nhatot img{display:block;max-width:100%}
+.nhatot button{font:inherit}
+.nhatot{position:relative;z-index:1;isolation:isolate}
+.nhatot .mk-page{display:flex;flex-direction:column;min-height:100%}
+.nhatot .mk-container{width:var(--container);margin:0 auto}
+
+
+/* ---- HERO TITLE & TABS ---- */
+.nhatot .mk-hero-title{
+  text-align:center;color:#fff;font-size:40px;line-height:1.15;
+  font-weight:900;letter-spacing:.2px;margin:6px 0
+}
+.nhatot .mk-hero-tabs{
+  position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+  display:flex;gap:40px;z-index:10!important
+}
+.nhatot .seg-btn{
+  border:0;background:transparent;color:#fff;font-weight:800;
+  font-size:18px;line-height:1;padding:12px 22px;border-radius:999px;
+  cursor:pointer;opacity:.95
+}
+.nhatot .seg-btn.active{
+  background:#fff;color:var(--orange-1);box-shadow:var(--shadow)
+}
+
+/* ========== HERO DECOR IMAGE (JSX <img class="mk-bg-decor" />) ========== */
+.nhatot .mk-hero{
+  position:relative;
+  overflow:hidden; /* để ảnh không tràn */
+}
+
+/* lớp cuối cùng – đẩy ra sau */
+.nhatot .mk-bg-decor{
+  position:absolute;
+  inset:0;          /* top:0; right:0; bottom:0; left:0 */
+  width:100%;
+  height:100%;
+  object-fit:cover; /* fill đều */
+  z-index:0;        /* thấp nhất */
+  pointer-events:none;
+  opacity:1;        /* chỉnh mờ nếu cần */
+}
+
+/* để nội dung nằm trên ảnh */
+.nhatot .mk-hero > *:not(.mk-bg-decor){
+  position:relative;
+  z-index:2;
+}
+
+/* ========== SEARCH BAR ========== */
+.nhatot .mk-search-wrap{margin:10px 0 8px;display:flex;justify-content:center}
+.nhatot .mk-search-grid{
+  display:flex;align-items:center;background:#fff;border-radius:14px;
+  padding:8px;border:1px solid #e7e7e7;box-shadow:var(--shadow);
+  gap:8px;width:var(--container);max-width:var(--container);
+  margin:0 auto;position:relative;z-index:500000!important;overflow:visible!important
+}
+.nhatot .mk-input{
+  display:flex;align-items:center;gap:10px;flex:1;min-height:60px;height:60px;
+  padding:0 10px;color:var(--muted)
+}
+.nhatot .mk-input input{
+  background:transparent;border:0;outline:0;width:100%;height:100%;
+  line-height:60px;font-size:16px;color:var(--ink)
+}
+.nhatot .mk-input input::placeholder{color:#9aa2b1}
+/* KHUNG COMBOBOX – cố định chiều rộng, không ellipsis ở đây */
+.nhatot .mk-select{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  background:#fff;
+  border-radius:12px;
+  border:1px solid #e7e7e7;
+  color:var(--ink);
+  font-weight:600;
+  height:60px;
+
+  /* cố định kích thước */
+  width:260px;
+  min-width:260px;
+  max-width:260px;
+}
+/* CHỈ PHẦN CHỮ BÊN TRONG BỊ ...  */
+.nhatot .mk-select span{
+  flex:1 1 auto;          /* chiếm phần còn lại giữa icon & mũi tên */
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+.nhatot .mk-btn-search{
+  background:#ff6a00;color:#fff;border:0;border-radius:12px;font-weight:900;
+  padding:0 22px;height:60px;cursor:pointer;white-space:nowrap;box-shadow:var(--shadow)
+}
+.nhatot .mk-btn-search:hover{filter:brightness(.95)}
+
+/* ========== LOCATION SELECT & PANEL ========== */
+.nhatot .mk-select-wrap{
+  position:relative;flex:0 0 260px;min-width:240px;max-width:320px;
+  z-index:600000!important
+}
+.nhatot .mk-select-loc{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 14px;border:1px solid #e7e7e7;border-radius:12px;
+  background:#fff;color:var(--ink);font-weight:600;width:100%;height:60px
+}
+
+/* Panel chọn khu vực (gộp lại, giữ giá trị cuối) */
+.nhatot .mk-select-wrap .mk-panel{
+  position:absolute;
+  top:calc(100% + 10px);
+  left:0;
+  width:min(380px,92vw)!important;
+  min-width:340px;
+  max-width:400px;
+  height:auto!important;
+  min-height:0!important;
+  max-height:350px!important;
+  overflow:hidden!important;
+  padding:10px 10px 8px!important;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px!important;
+  box-shadow:0 20px 60px rgba(0,0,0,.15);
+  transform:none!important;
+  display:flex;
+  flex-direction:column;
+  font-size:14px;
+  z-index:2147483647!important;
+}
+.nhatot .mk-select-wrap .mk-panel-head{display:none!important}
+.nhatot .mk-select-wrap .mk-panel-search{
+  position:sticky;top:0;z-index:1;margin:6px 6px 8px!important;
+  padding:8px 10px!important;display:flex;align-items:center;gap:10px;
+  background:#f2f4f7;border-radius:10px
+}
+.nhatot .mk-select-wrap .mk-panel-search input{
+  flex:1;border:0;outline:0;background:transparent
+}
+.nhatot .mk-select-wrap .mk-panel ul{
+  flex:1 1 auto!important;overflow-y:auto!important;overflow-x:hidden;
+  margin:0!important;padding:0 4px 8px!important;list-style:none
+}
+.nhatot .mk-select-wrap .mk-panel li>button{
+  display:flex;align-items:center;justify-content:space-between;width:100%;
+  padding:10px 8px;border-radius:10px;border:0;background:transparent;
+  font-weight:600;color:#111;cursor:pointer
+}
+.nhatot .mk-select-wrap .mk-panel li>button:hover{background:#fff7ec}
+
+/* ========== FIXED BG (#2) ========== */
+.nhatot .mk-fixed-bg{
+  position:fixed;
+  left:0;
+  right:0;
+  top:0;
+  bottom:0;
+  background-position:center top;
+  background-size:cover;
+  background-repeat:no-repeat;
+  z-index:-1;           /* nền lớp thấp */
+  pointer-events:none; /* không chặn click */
+}
+
+
+
+/* ========== CATEGORIES (4) ========== */
+.nhatot .mk-cats{
+  background:transparent;padding:10px 0 8px;position:relative;z-index:1
+}
+.nhatot .mk-cats .mk-container{
+  background:#fff;border:1px solid var(--border);border-radius:24px;
+  box-shadow:var(--shadow);padding:0;overflow:visible!important;
+  position:relative;z-index:1
+}
+.nhatot .mk-cats-card{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  align-items:stretch;gap:0;padding:14px 20px
+}
+.nhatot .mk-cat{
+  display:grid!important;grid-template-columns:92px 1fr;column-gap:16px;
+  align-items:center;min-height:110px;padding:10px 14px;width:100%;
+  text-decoration:none;color:inherit;background:transparent;
+  border-radius:0;box-shadow:none
+}
+.nhatot .mk-cat:not(:first-child){border-left:1px solid rgba(17,24,39,.12)}
+.nhatot .mk-cat-img{width:88px;height:88px;place-self:center}
+.nhatot .mk-cat-img img{width:100%;height:100%;object-fit:contain}
+.nhatot .mk-cat>div:last-child{
+  display:flex;flex-direction:column;justify-content:center;gap:6px;
+  min-width:0;min-height:72px
+}
+.nhatot .mk-cat-name{
+  margin:0;font-weight:800;color:#111827;font-size:20px;
+  line-height:22px;white-space:nowrap
+}
+.nhatot .muted{
+  margin:0;color:#8f959e;font-weight:600;font-size:14.5px;line-height:20px
+}
+.nhatot .mk-cat:not(.has-menu):hover{background:#fffdf8}
+.nhatot .mk-cat-title-link,
+.nhatot .mk-cat-title-link:hover{text-decoration:none!important}
+
+/* ========== ONE-CARD DROPDOWN ========== */
+.nhatot .mk-cat.has-menu{
+  position:relative;--mb-pad-x:14px;--mb-pad-y:10px;--mb-head:112px;
+  --mb-extra-left:0px;--mb-extra-right:0px;z-index:400000!important
+}
+.nhatot .mk-cat.has-menu .mk-cat-trigger{
+  display:grid!important;grid-template-columns:auto 1fr;column-gap:16px;
+  align-items:center;position:relative;z-index:41
+}
+.nhatot .mk-cat.has-menu .mk-cat-wrap:hover,
+.nhatot .mk-cat.has-menu .mk-cat-wrap:focus-within{
+  background:transparent!important;box-shadow:none!important
+}
+.nhatot .mk-cat.has-menu .mk-cat-menu{
+  position:absolute;top:calc(-1 * var(--mb-pad-y));
+  left:calc(-1 * var(--mb-pad-x) + var(--mb-extra-left));
+  right:calc(-1 * var(--mb-pad-x) + var(--mb-extra-right));
+  width:auto;max-width:none;box-sizing:border-box;
+  background:linear-gradient(#f5f6f8,#f5f6f8) 0 0/100% var(--mb-head) no-repeat,#fff;
+  border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);
+  padding:12px;padding-top:calc(var(--mb-head) + 12px);
+  opacity:0;visibility:hidden;transform:translateY(-4px);
+  transition:opacity .18s ease,transform .18s ease,visibility .18s;
+  z-index:2147483647!important;pointer-events:none;
+  display:flex;flex-direction:column
+}
+.nhatot .mk-cat.has-menu .mk-cat-menu::after{
+  content:"";position:absolute;left:12px;right:12px;
+  top:calc(var(--mb-head) + 6px);height:1px;background:#eef2f6
+}
+.nhatot .mk-cat.has-menu .mk-cat-wrap:hover .mk-cat-menu,
+.nhatot .mk-cat.has-menu .mk-cat-wrap:focus-within .mk-cat-menu,
+.nhatot .mk-cat.has-menu .mk-cat-wrap.open .mk-cat-menu{
+  opacity:1;visibility:visible;transform:none;pointer-events:auto
+}
+.nhatot .mk-cat-menu .mk-cat-opt{
+  display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;
+  border-radius:12px;white-space:normal;color:#111827;text-decoration:none
+}
+.nhatot .mk-cat-menu .mk-cat-opt:hover{background:#fff7ec}
+.nhatot .mk-cats-card>.mk-cat.has-menu:nth-of-type(1) .mk-cat-menu{
+  left:calc(-1 * var(--mb-pad-x))!important;
+  right:calc(-1 * var(--mb-pad-x) + 20px)!important
+}
+.nhatot .mk-cats-card>.mk-cat.has-menu:nth-of-type(2) .mk-cat-menu{
+  left:calc(-1 * var(--mb-pad-x) + 20px)!important;
+  right:calc(-1 * var(--mb-pad-x))!important
+}
+
+/* ========== MENU HEADER (ảnh JSX) ========== */
+.nhatot .mk-cat-menu{position:relative;padding-top:128px}
+.nhatot .mk-menu-head{
+  position:absolute;left:12px;right:12px;top:12px;height:96px;
+  border-radius:14px;background:#f5f6f8;
+  box-shadow:inset 0 1px 0 rgba(0,0,0,.02);
+  display:grid;grid-template-columns:72px 1fr;
+  align-items:center;gap:14px;padding:12px;pointer-events:none
+}
+.nhatot .mk-menu-head img{
+  width:72px;height:72px;object-fit:contain
+}
+.nhatot .mk-menu-head-text h4{
+  margin:0;font-size:18px;font-weight:800;color:#111827
+}
+.nhatot .mk-menu-head-text p{
+  margin:4px 0 0;color:#6b7280;font-weight:600
+}
+.nhatot .mk-cat-menu .mk-cat-opt:first-of-type{margin-top:6px}
+
+/* ========== TOOLS (2 CARD) ========== */
+.nhatot .mk-tools{padding:8px 0 12px}
+.nhatot .mk-tools .mk-container{width:var(--container)}
+.nhatot .mk-tools-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch
+}
+.nhatot .mk-panel{
+  background:#fff;border:1px solid #e9e9e9;border-radius:20px;
+  box-shadow:var(--shadow);padding:14px;height:100%;display:flex;flex-direction:column
+}
+.nhatot .mk-panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:4px 6px 8px;border-bottom:1px solid #f1f1f1
+}
+.nhatot .mk-panel-items{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:4px;padding-top:12px;margin-top:auto
+}
+.nhatot .mk-item{
+  display:flex;align-items:center;gap:12px;padding:14px 10px;
+  border-radius:14px;text-decoration:none;color:inherit
+}
+.nhatot .mk-item:hover{background:#fffdf8}
+.nhatot .mk-ico{
+  width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+  border:1px solid #f0f0f0;background:#fff
+}
+
+/* ========== FEED / POSTS ========== */
+.mk-feed{padding:8px 0 12px}
+.mk-feed+.mk-feed{margin-top:8px}
+.mk-feed-box{
+  background:#fff;border:1px solid var(--border);border-radius:24px;
+  box-shadow:var(--shadow);padding:14px 18px
+}
+.mk-feed-head{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:10px
+}
+.mk-feed-head h3{margin:0;font-size:20px;font-weight:800}
+.mk-feed-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:12px
+}
+@media (max-width:1400px){.mk-feed-grid{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:1100px){.mk-feed-grid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:860px){.mk-feed-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.mk-feed-grid{grid-template-columns:1fr}}
+.mk-post-card{
+  display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:#fff;border:1px solid var(--border);border-radius:16px;
+  overflow:hidden;box-shadow:var(--shadow);
+  transition:transform .15s ease,box-shadow .15s ease
+}
+.mk-post-card:hover{
+  transform:translateY(-2px);box-shadow:0 16px 44px rgba(0,0,0,.1)
+}
+.mk-post-media{position:relative;aspect-ratio:4/3;background:#f6f6f6}
+.mk-like{
+  position:absolute;top:10px;right:10px;width:36px;height:36px;
+  border-radius:999px;border:none;cursor:pointer;display:grid;place-items:center;
+  background:rgba(255,255,255,.9);box-shadow:0 6px 16px rgba(0,0,0,.12)
+}
+.mk-like svg{stroke:#222;fill:none}
+.mk-like.is-liked svg{fill:#ff4d4f;stroke:#ff4d4f}
+.mk-badge{
+  position:absolute;display:inline-flex;align-items:center;gap:6px;
+  height:28px;padding:0 10px;border-radius:999px;font-size:12px;
+  background:rgba(17,24,39,.82);color:#fff
+}
+.mk-photos{right:10px;bottom:10px}
+.mk-time{left:10px;bottom:10px}
+.mk-post-body{padding:10px 12px 12px}
+.mk-post-title{
+  margin:0 0 6px;font-size:14.5px;font-weight:650;line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;line-clamp:2
+}
+.mk-post-meta{
+  display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);
+  font-size:12.5px;margin-bottom:6px
+}
+.mk-post-price{
+  display:flex;align-items:flex-end;justify-content:space-between;margin:6px 0 8px
+}
+.mk-price-main{font-size:18px;font-weight:800;color:#e11d48}
+.mk-price-sub{
+  font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:10px
+}
+.mk-post-loc{
+  display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px
+}
+.mk-feed-cta{display:flex;justify-content:center;margin-top:12px}
+.mk-cta-more{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 16px;
+  border:1px solid var(--border);border-radius:12px;background:#fff;
+  color:#111827;font-weight:800;box-shadow:var(--shadow);cursor:pointer
+}
+.mk-cta-more:hover{background:#fffdf8}
+
+/* ========== ABOUT / SEO TEXT ========== */
+.nhatot .mk-about{
+  background:transparent;
+  padding:16px 0 24px
+}
+.nhatot .mk-about-box{
+  background:#fff;border:1px solid var(--border);border-radius:24px;
+  box-shadow:var(--shadow);padding:18px 22px
+}
+.nhatot .mk-about-title{
+  margin:0 0 6px;text-align:center;font-size:20px;
+  font-weight:800;color:#111827
+}
+.nhatot .mk-about-sub{
+  margin:0 0 10px;text-align:center;font-style:italic;color:#6b7280
+}
+.nhatot .mk-about-content{
+  color:#374151;line-height:1.65;font-size:15.5px
+}
+.nhatot .mk-about-content.collapsed{
+  --clip:180px;max-height:var(--clip);overflow:hidden;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,1) 70%,rgba(0,0,0,0))
+}
+.nhatot .mk-about-content.open{max-height:none;mask-image:none}
+.nhatot .mk-about-actions{
+  display:flex;justify-content:center;margin-top:12px
+}
+
+/* ========== OVERRIDES / KHÔNG CẮT PANEL ========== */
+.nhatot .mk-hero{padding-bottom:32px!important}
+.nhatot .mk-hero-tabs{
+  position:static!important;left:auto;bottom:auto;transform:none!important;
+  display:flex;justify-content:center;align-items:center;
+  gap:40px;margin:10px auto 8px;z-index:5
+}
+.nhatot .seg-btn{padding:12px 22px;font-size:18px;font-weight:800}
+.nhatot .seg-btn.active{
+  background:#fff;color:var(--orange-1);box-shadow:var(--shadow)
+}
+.nhatot .mk-search-wrap{margin-top:0!important}
+.nhatot .mk-search-grid{position:relative;z-index:500000!important}
+.nhatot .mk-select-wrap{position:relative;z-index:600000!important}
+.nhatot .mk-select-wrap .mk-panel{z-index:2147483647!important}
+
+.nhatot .mk-hero,
+.nhatot .mk-hero .mk-container,
+.nhatot .mk-header-row,
+.nhatot .mk-search-grid{overflow:visible!important}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width:1280px){
+  .nhatot .mk-search-grid{width:92vw;max-width:92vw}
+}
+@media (max-width:1100px){
+  .nhatot .mk-hero-title{font-size:32px}
+}
+@media (max-width:980px){
+  .nhatot .mk-hero{padding-top:16px}
+  .nhatot .mk-header-row{margin-top:4px}
+  .nhatot .mk-cats-card{grid-template-columns:repeat(2,1fr)}
+  .nhatot .mk-cat{padding:16px 18px;border-left:0}
+  .nhatot .mk-cat:nth-child(2n){border-left:1px solid rgba(17,24,39,.12)}
+  .nhatot .mk-cat:nth-child(n+3){border-top:1px solid rgba(17,24,39,.12)}
+  .nhatot .mk-tools-grid{grid-template-columns:1fr}
+  .nhatot .mk-select-wrap .mk-panel{max-height:300px!important}
+}
+@media (max-width:620px){
+  .nhatot .mk-cats-card{grid-template-columns:1fr}
+  .nhatot .mk-cat{gap:14px;padding:12px 10px}
+  .nhatot .mk-cat:nth-child(2n){border-left:0}
+  .nhatot .mk-cat:nth-child(n+2){border-top:1px solid rgba(17,24,39,.12)}
+  .nhatot .mk-cat-img{width:84px;height:84px}
+  .nhatot .mk-cat-name{font-size:20px}
+  .nhatot .mk-panel-items{grid-template-columns:1fr 1fr}
+}
+
+/* ========== OVERRIDE 3 ICON BÊN PHẢI (giữ mẫu) ========== */
+.nhatot .mk-header-row .mk-right .mk-icon-pill{
+  width:44px!important;height:44px!important;border-radius:999px!important;
+  background:#fff!important;color:#111!important;border:1px solid #f0f0f0!important;
+  box-shadow:0 6px 16px rgba(0,0,0,.12)!important;display:grid;place-items:center;
+  padding:0!important;line-height:0!important
+}
+.nhatot .mk-header-row .mk-right .mk-icon-pill svg{
+  width:22px!important;height:22px!important;stroke:#111!important;
+  fill:none!important;stroke-width:2!important
+}
+.nhatot .mk-header-row .mk-right .mk-icon-pill:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 22px rgba(0,0,0,.14)!important
+}
+/* Giữ nút menu bên trái */
+.nhatot .mk-header-row .mk-left .mk-icon-btn{
+  border-radius:12px!important;background:rgba(255,255,255,.15)!important;
+  color:#fff!important;border:none!important;box-shadow:none!important;
+  backdrop-filter:blur(4px)!important
+}
+
+/* ========== APP PROMO – NEW VERSION (FULL BACKGROUND IMAGE) ========== */
+.nhatot .mk-app-hero{
+  position:relative;
+  margin:0px 0 0px;
+  border-radius:0 !important;
+  overflow:hidden;
+  background:var(--orange-1);
+  color:#fff;
+}
+
+/* TEXT + BADGE */
+.nhatot .mk-app-hero__grid{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  min-height:200px;
+  padding:28px 20px;
+}
+
+.nhatot .mk-app-hero__text{
+  max-width:520px;
+}
+.nhatot .mk-app-hero__text h2{
+  margin:0 0 10px;
+  font-size:clamp(28px,4.2vw,52px);
+  line-height:1.08;
+  font-weight:900;
+}
+.nhatot .mk-app-hero__text p{
+  margin:0 0 20px;
+  font-size:clamp(16px,2.2vw,24px);
+  font-weight:800;
+  opacity:.96;
+}
+.nhatot .mk-app-hero__badges{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.nhatot .store-badge{
+  display:inline-flex;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  background:#000;
+}
+.nhatot .store-badge img{
+  height:48px;
+  width:auto;
+  display:block;
+}
+
+/* ========== BACKGROUND IMAGE FULL COVER ========== */
+.nhatot .mk-app-hero__art{
+  position:absolute;
+  inset:0;
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  pointer-events:none;
+}
+.nhatot .mk-app-hero__art .art-hero{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  user-select:none;
+}
+
+/* ========== RESPONSIVE APP HERO ========== */
+@media (max-width:980px){
+  .nhatot .mk-app-hero__grid{
+    padding:32px 20px;
+    min-height:220px;
+  }
+  .nhatot .store-badge img{ height:44px }
+}
+@media (max-width:560px){
+  .nhatot .mk-app-hero__grid{
+    padding:24px 16px;
+  }
+  .nhatot .store-badge img{ height:40px }
+}
+
+
+/* ===== MODAL ĐĂNG NHẬP ===== */
+/* Backdrop tối mờ */
+.login-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal trung tâm — chỉnh lớn hơn */
+.login-modal {
+  width: 480px;                 /* ⚡ tăng từ 320 → 480 */
+  max-width: 90vw;
+  padding: 28px 32px;           /* ⚡ padding lớn hơn */
+  background: #fff;
+  border-radius: 18px;          /* bo lớn hơn nhìn xịn */
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+
+  text-align: center;
+  animation: modal-pop 0.18s ease-out;
+}
+
+.login-modal h3 {
+  font-size: 22px;              /* ⚡ to hơn */
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.login-modal p {
+  font-size: 15px;              /* ⚡ to hơn  */
+  color: #555;
+  margin-bottom: 22px;
+}
+
+/* Nút */
+.login-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-primary {
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: #ff7a00;
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-ghost {
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: #f2f2f2;
+  color: #333;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.mk-icon-pill.mk-bell {
+  position: relative;
+}
+
+.mk-badge-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}

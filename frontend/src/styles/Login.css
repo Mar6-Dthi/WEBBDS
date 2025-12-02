@@ -1,0 +1,232 @@
+/* ===== PAGE WRAPPER ===== */
+.nt-login-page {
+  position: relative;
+  min-height: 100vh;
+  padding: 32px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+/* ẢNH BACKGROUND toàn màn */
+.nt-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ===== CARD CHÍNH ===== */
+.nt-login-container {
+  position: relative;
+  z-index: 1;
+
+  /* 🌟 Tăng rộng modal */
+  width: min(650px, 96vw);
+
+  /* 🌟 Tăng chiều cao modal */
+  min-height: 520px;
+
+  /* 🌟 Tăng padding để card thoáng hơn */
+  padding: 36px 40px 30px;
+
+  background: #ffffff;
+  border-radius: 32px;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+/* HEADER */
+.nt-login-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px; /* giãn header khỏi nội dung */
+}
+
+.nt-login-header h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.nt-login-sub {
+  margin-top: 6px;
+  font-size: 15px;
+  color: #6b7280;
+  max-width: 260px;
+  line-height: 1.45;
+}
+
+.nt-login-mascot {
+  width: 120px;
+}
+
+/* WRAP Google để dễ giãn khối */
+.nt-login-socials {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px; /* 👈 giãn Google với “Hoặc” */
+}
+
+/* Nút Google */
+.nt-btn-social {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;   /* 👈 căn giữa toàn bộ icon + text */
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* Khung chứa icon */
+.nt-btn-social .nt-icon-wrap {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;       /* icon giữa dọc */
+  justify-content: center;   /* icon giữa ngang */
+}
+
+/* Icon Google */
+.nt-btn-social .nt-icon-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Text */
+.nt-btn-social span:last-child {
+  flex: unset;               /* 👈 bỏ đẩy text sang trái */
+  text-align: center;        /* 👈 chữ nằm giữa */
+  display: flex;             
+  align-items: center;       /* 👈 text thẳng hàng icon */
+  justify-content: center;
+}
+
+
+/* SEPARATOR */
+.nt-login-separator {
+  display: flex;
+  align-items: center;
+  margin: 20px 0 24px;  /* 👈 giãn trên & dưới “Hoặc” */
+  font-size: 20px;
+  color: #9ca3af;
+}
+
+.nt-login-separator .line {
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.nt-login-separator .label {
+  padding: 0 10px;
+}
+
+/* ===== PHONE ROW (giống modal) ===== */
+.nt-login-phone-area {
+  margin-bottom: 22px; /* 👈 giãn khối phone với nút đăng ký */
+}
+
+.nt-phone-row {
+  display: flex;
+  align-items: stretch;
+  border-radius: 999px;
+  border: 1.5px solid #111827;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.nt-phone-input {
+  flex: 1;
+  border: none;
+  padding: 14px 18px;
+  font-size: 20px;
+  outline: none;
+}
+
+.nt-phone-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Nút Tiếp tục trong khung */
+.nt-btn-primary {
+  border: none;
+  padding: 14px 26px;
+  min-width: 120px;
+  background: #ff7a00;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* Nút Đăng ký */
+.nt-btn-register {
+  width: 100%;
+  margin-top: 12px;
+  margin-bottom: 24px;  /* 👈 tạo khoảng với footer */
+  padding: 14px 18px;
+  border-radius: 999px;
+  border: 1.5px solid #ff7a00;
+  background: #ffffff;
+  color: #ff7a00;
+  font-weight: 600;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* FOOTER */
+.nt-login-footer {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.nt-login-footer .footer-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.nt-login-footer .footer-links a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.nt-login-footer .footer-links a:hover {
+  text-decoration: underline;
+}
+
+.nt-login-footer .dot::before {
+  content: "•";
+  color: #6b7280;
+}
+
+.nt-login-footer .footer-logos {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nt-login-footer .footer-logos img {
+  height: 24px;
+  object-fit: contain;
+}

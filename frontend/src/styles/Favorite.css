@@ -1,0 +1,187 @@
+/* Layout tổng */
+.fav-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.fav-main {
+  flex: 1;
+  background: #f5f5f5;
+}
+
+.fav-inner {
+  width: min(1200px, 92vw);
+  margin: 0 auto;
+  padding: 24px 0 40px;
+}
+
+/* Breadcrumb */
+.fav-breadcrumb {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.fav-breadcrumb-sep {
+  margin: 0 4px;
+}
+
+/* Tiêu đề */
+.fav-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.fav-title-count {
+  font-weight: 400;
+  font-size: 16px;
+}
+
+/* Empty state */
+.fav-empty {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  font-size: 14px;
+}
+
+/* Danh sách */
+.fav-list {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+/* Item */
+.fav-item {
+  display: flex;
+  align-items: stretch;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 16px;
+}
+
+.fav-item:last-child {
+  border-bottom: none;
+}
+
+/* Ảnh */
+.fav-thumb {
+  position: relative;
+  width: 180px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  display: block;
+}
+
+.fav-thumb img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.fav-thumb-count {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+/* Nội dung */
+.fav-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fav-item-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  text-decoration: none;
+}
+
+.fav-item-title:hover {
+  color: #f97316;
+}
+
+.fav-item-price {
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.fav-item-meta {
+  font-size: 13px;
+  color: #6b7280;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.fav-dot {
+  margin: 0 2px;
+}
+
+/* Actions bên phải */
+.fav-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.fav-chat-btn {
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid #16a34a;
+  background: #ffffff;
+  color: #16a34a;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.fav-chat-btn:hover {
+  background: #dcfce7;
+}
+
+.fav-heart-btn {
+  border: none;
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.fav-heart-btn {
+  border: none;
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fav-heart-btn--active {
+  color: #ef4444;       /* đỏ */
+}
+
+.fav-heart-btn:not(.fav-heart-btn--active) {
+  color: #9ca3af;       /* xám khi bỏ tim */
+}

@@ -1,0 +1,325 @@
+/* =========================================
+   CHOTOT – HOME.CSS (scoped by .chotot)
+   ========================================= */
+
+/* --------- Variables --------- */
+:root{
+  --ink:#111827; --muted:#667085; --white:#fff; --border:#ececec;
+  --y1:#ffd34d; --y2:#ffca10;
+  --shadow:0 12px 40px rgba(0,0,0,.08);
+  --r:18px;
+
+  --w: min(94vw, 1280px);
+  --h-pill: 44px;
+  --h-input: 56px;
+
+  --edge-inset-desktop: 20px;
+  --edge-inset-mobile: 12px;
+}
+
+/* Base */
+:where(.chotot) *{box-sizing:border-box}
+:where(.chotot) html, :where(.chotot) body{margin:0;padding:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--ink);background:#fff}
+:where(.chotot) img{max-width:100%;display:block}
+:where(.chotot) button{font-family:inherit}
+
+/* Container mặc định (ngoài header) */
+:where(.chotot) .mk-container{width:var(--w);margin:0 auto}
+
+/* =========================================
+   HEADER – full width
+   ========================================= */
+:where(.chotot) .mk-header{
+  position:sticky; top:0; z-index:50;
+  background: linear-gradient(90deg,#ffd34d 0%, #ffcc18 40%, #ffca10 100%);
+  padding:10px 0;
+}
+:where(.chotot) .mk-header .mk-container{
+  width:100%; max-width:none;
+  padding-left: var(--edge-inset-desktop);
+  padding-right: var(--edge-inset-desktop);
+}
+@media (max-width:640px){
+  :where(.chotot) .mk-header .mk-container{padding-left:var(--edge-inset-mobile);padding-right:var(--edge-inset-mobile)}
+}
+
+:where(.chotot) .mk-header .mk-container.mk-header-row{
+  min-height:70px; display:flex; align-items:center; gap:16px;
+}
+:where(.chotot) .mk-left{display:flex;align-items:center;gap:12px}
+:where(.chotot) .mk-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+:where(.chotot) .mk-menu-btn{
+  width:var(--h-pill); height:var(--h-pill); border:0; border-radius:50%;
+  background:#fff; color:#111; display:grid; place-items:center; box-shadow:var(--shadow);
+}
+:where(.chotot) .mk-logo{
+  display:flex; align-items:center; gap:8px;
+  height:var(--h-pill); padding:0 18px; border-radius:999px;
+  background:#fff; color:#f7a000; font-weight:900; letter-spacing:.2px;
+  box-shadow: var(--shadow);
+}
+:where(.chotot) .mk-logo span{color:#111; font-weight:900}
+:where(.chotot) .mk-seller{color:#111; font-weight:700; display:flex; align-items:center; gap:6px}
+/* Ẩn menu chữ giữa header */
+:where(.chotot) .mk-nav{display:none!important}
+
+:where(.chotot) .mk-icon-pill{
+  width:var(--h-pill); height:var(--h-pill); border-radius:50%; border:0;
+  background:#fff; color:#111; display:grid;place-items:center; box-shadow:var(--shadow);
+}
+:where(.chotot) .mk-chip{
+  height:var(--h-pill); padding:0 18px; border-radius:999px; border:0;
+  background:#fff; color:#111; font-weight:800; box-shadow:var(--shadow);
+}
+:where(.chotot) .mk-chip.mk-post{background:#111; color:#fff}
+:where(.chotot) .mk-avatar{
+  width:var(--h-pill); height:var(--h-pill); border-radius:50%;
+  background:#fff; color:#111; display:grid;place-items:center; font-weight:800; box-shadow:var(--shadow);
+}
+
+/* =========================================
+   HERO + SEARCH (đã chỉnh)
+   ========================================= */
+:where(.chotot) .mk-hero{
+  background: linear-gradient(180deg, rgba(255,229,89,.95), rgba(246,184,0,.9));
+  padding: 20px 0 56px;
+}
+:where(.chotot) .mk-hero-title{
+  margin: 10px 0 18px; text-align:center; font-weight:900;
+  font-size: clamp(24px, 3.2vw, 42px); color:#111;
+}
+
+:where(.chotot) .mk-search-wrap{display:flex; justify-content:center}
+:where(.chotot) .mk-search-grid{
+  width:min(1160px,95vw);
+  display:grid; align-items:center; gap:12px;
+  /* Danh mục | Ô tìm kiếm | Địa chỉ (giãn hết) | Nút */
+  grid-template-columns: 220px minmax(300px,520px) 1fr 140px;
+  padding:10px; border-radius:20px; background:#fff;
+  border:1px solid #f0f0f0; box-shadow:0 18px 50px rgba(0,0,0,.06);
+}
+:where(.chotot) .mk-input,
+:where(.chotot) .mk-select,
+:where(.chotot) .mk-btn-search{height:var(--h-input)}
+
+:where(.chotot) .mk-input{
+  display:flex; align-items:center; gap:10px;
+  padding:0 14px; border:1px solid #f1f1f1; border-radius:12px
+}
+:where(.chotot) .mk-input input{flex:1;border:none;outline:none;background:transparent;font-size:16px}
+:where(.chotot) .mk-input input::placeholder{color:#9aa4b2}
+
+/* Áp style chung cho .mk-select và .mk-select-loc */
+:where(.chotot) .mk-select,
+:where(.chotot) .mk-select-loc{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:0 14px; border:1px solid #f1f1f1; border-radius:12px;
+  background:#fff; font-weight:700; color:var(--ink);
+}
+:where(.chotot) .mk-select-cat,
+:where(.chotot) .mk-select-loc{justify-content:space-between}
+
+:where(.chotot) .mk-btn-search{
+  border:0; border-radius:12px; padding:0 22px; font-weight:900; color:#111;
+  background:linear-gradient(180deg,#ffd34d,#f4b100);
+  box-shadow:0 10px 22px rgba(255,200,0,.35)
+}
+:where(.chotot) .mk-btn-search:hover{filter:brightness(.98)}
+
+/* ==== Location panel: neo đúng dưới ô địa chỉ ==== */
+:where(.chotot) .mk-select-wrap{
+  position: relative;   /* QUAN TRỌNG: để panel absolute bám theo */
+  width: 100%;
+}
+:where(.chotot) .mk-select-loc{
+  position: relative; z-index: 2; /* nằm trên các lớp khác */
+  width: 100%;
+}
+
+/* Panel – giữ nguyên style hiển thị “như cũ” */
+:where(.chotot) .mk-select-wrap .mk-panel{
+  position:absolute; top:calc(100% + 10px); left:0; right:auto; transform:none;
+  width:min(560px, 92vw); max-height:70vh; overflow:auto;
+  background:#fff; border:1px solid #e5e7eb; border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.15); z-index:1000;
+}
+:where(.chotot) .mk-select-wrap .mk-panel-head{
+  position:sticky; top:0; z-index:1; height:56px;
+  display:flex; align-items:center; justify-content:center;
+  background:#fff; border-bottom:1px solid #f1f5f9
+}
+:where(.chotot) .mk-select-wrap .mk-head-title{font-weight:800;font-size:16px}
+:where(.chotot) .mk-select-wrap .mk-head-back{
+  position:absolute; left:12px; width:36px; height:36px;
+  border:0; border-radius:10px; background:#f3f4f6;
+  display:grid; place-items:center; cursor:pointer
+}
+:where(.chotot) .mk-select-wrap .mk-panel-search{
+  position:sticky; top:56px; z-index:1;
+  margin:12px 16px; padding:10px 12px;
+  display:flex; align-items:center; gap:10px;
+  background:#f2f4f7; border-radius:999px
+}
+:where(.chotot) .mk-select-wrap .mk-panel-search input{
+  flex:1; border:0; outline:0; background:transparent
+}
+:where(.chotot) .mk-select-wrap .mk-panel ul{list-style:none; margin:0; padding:8px 10px 16px}
+:where(.chotot) .mk-select-wrap .mk-panel li>button{
+  width:100%; border:0; background:transparent; text-align:left;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 12px; border-radius:12px; font-weight:600; color:#111; cursor:pointer
+}
+:where(.chotot) .mk-select-wrap .mk-panel li>button:hover{background:#f8fafc}
+:where(.chotot) .mk-select-wrap .mk-radio{
+  width:22px; height:22px; border:2px solid #d1d5db; border-radius:50%;
+  display:flex; align-items:center; justify-content:center
+}
+:where(.chotot) .mk-select-wrap .mk-radio.is-checked{
+  background:linear-gradient(180deg,#ffd84d,#f4b100); border-color:transparent
+}
+
+/* =========================================
+   CATEGORIES – KHUNG TRẮNG + icon phẳng (LOCK 8×2)
+   ========================================= */
+
+/* Khung trắng bằng với phần “Giới thiệu” */
+:where(.chotot) .mk-cats{
+  background: linear-gradient(180deg,#fff8e6,#fff) !important;
+  padding: 28px 0 !important;
+}
+:where(.chotot) .mk-cats .mk-container{
+  width: min(1280px, 94vw) !important; /* giữ đồng bộ với About */
+  margin: 0 auto !important;
+  background: #fff !important;
+  border: 1px solid #f3f3f3 !important;
+  border-radius: 22px !important;
+  box-shadow: 0 18px 50px rgba(0,0,0,.06) !important;
+  padding: 32px !important;
+}
+
+/* LUÔN 8 CỘT × 2 HÀNG – KHÔNG MEDIA QUERY */
+:where(.chotot) .mk-cats .mk-container > .mk-cats-card{
+  display: grid !important;
+  grid-template-columns: repeat(8, 1fr) !important;   /* 8 cột cố định */
+  grid-template-rows: repeat(2, auto) !important;     /* 2 hàng cố định */
+  grid-auto-flow: row !important;                     /* đổ theo hàng */
+  gap: 44px 32px !important;                          /* hàng / cột */
+  white-space: normal !important;
+  flex-wrap: initial !important;
+  overflow: visible !important;
+}
+
+/* Item phẳng */
+:where(.chotot) .mk-cats .mk-container > .mk-cats-card > .mk-cat{
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 12px !important;
+
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: 220px !important;
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+/* Icon: phẳng, to – co giãn nhẹ để không vỡ bố cục */
+:where(.chotot) .mk-cats .mk-container > .mk-cats-card > .mk-cat .mk-cat-img{
+  width: clamp(88px, 10vw, 120px) !important;
+  height: clamp(88px, 10vw, 120px) !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Tên: 2 dòng, căn giữa */
+:where(.chotot) .mk-cats .mk-container > .mk-cats-card > .mk-cat .mk-cat-name{
+  font-weight: 700 !important;
+  font-size: clamp(14px, 1.4vw, 18px) !important;
+  line-height: 1.35 !important;
+  color: #374151 !important;
+  text-align: center !important;
+  max-width: 18ch !important;
+
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 2 !important;
+  line-clamp: 2 !important;
+  overflow: hidden !important;
+  white-space: normal !important;
+}
+
+/* =========================================
+   ABOUT
+   ========================================= */
+:where(.chotot) .mk-about{background:linear-gradient(180deg,#fffaf0,#fff); padding:26px 0 36px}
+:where(.chotot) .mk-about .mk-container{width:min(1280px,94vw)}
+:where(.chotot) .mk-about-card{background:#fff; border:1px solid #f1efe6; border-radius:22px; box-shadow:0 10px 30px rgba(0,0,0,.08); padding:24px 32px}
+:where(.chotot) .mk-about-title{margin:0 0 10px; font-weight:800; font-size:clamp(18px,2.2vw,24px); color:#1f2937}
+:where(.chotot) .mk-about-content{color:#4b5563; line-height:1.7; max-height:168px; overflow:hidden; position:relative}
+:where(.chotot) .mk-about-content p{margin:10px 0}
+:where(.chotot) .mk-about-content::after{content:""; position:absolute; inset:auto 0 0; height:56px; background:linear-gradient(to bottom,transparent,#fff)}
+:where(.chotot) .mk-about-content.is-open{max-height:none}
+:where(.chotot) .mk-about-content.is-open::after{display:none}
+:where(.chotot) .mk-expand-btn{margin-top:12px; height:40px; padding:0 14px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; font-weight:800; color:#111827; box-shadow:0 6px 18px rgba(0,0,0,.06); cursor:pointer}
+
+/* =========================================
+   PROMO
+   ========================================= */
+:where(.chotot) .mk-promo{background:linear-gradient(90deg,#ffe259,#f6b800); padding:48px 0}
+:where(.chotot) .mk-promo-inner{width:min(1280px,94vw); margin:0 auto; display:grid; grid-template-columns:1.2fr 1fr; gap:32px; align-items:center}
+:where(.chotot) .mk-promo-title{font-size:clamp(28px,4.6vw,64px); font-weight:900; color:#2b2b2b; margin:0 0 8px}
+:where(.chotot) .mk-promo-sub{font-size:clamp(16px,1.6vw,28px); color:#2b2b2b; margin:0 0 18px; font-weight:700}
+:where(.chotot) .mk-store-row{display:flex; gap:14px; align-items:center; flex-wrap:wrap}
+:where(.chotot) .mk-store-badge img{height:clamp(36px,5.2vw,56px)}
+:where(.chotot) .mk-promo-right{display:flex; justify-content:center}
+:where(.chotot) .mk-promo-art{max-width:min(520px,42vw); height:auto}
+@media (max-width:1024px){ 
+  :where(.chotot) .mk-promo-inner{grid-template-columns:1fr} 
+  :where(.chotot) .mk-promo-right{order:-1} 
+}
+
+/* =========================================
+   FOOTER
+   ========================================= */
+:where(.chotot) .mk-footer{background:#f9fafb; border-top:1px solid #f0f0f0; padding:40px 0}
+:where(.chotot) .mk-footer-inner{width:min(1280px,94vw); margin:0 auto; display:grid; grid-template-columns:1.2fr 1fr 1fr 1.2fr; gap:32px}
+:where(.chotot) .mk-ft-title{font-weight:800; margin:0 0 14px; font-size:clamp(16px,1.4vw,20px); color:#111827}
+:where(.chotot) .mk-qr-row{display:flex; gap:14px; align-items:center}
+:where(.chotot) .mk-qr{width:clamp(84px,10vw,120px)}
+:where(.chotot) .mk-badges{display:flex; flex-direction:column; gap:10px}
+:where(.chotot) .mk-badges .mk-store-badge img{height:clamp(34px,4.8vw,52px)}
+:where(.chotot) .mk-ft-links{list-style:none; margin:0; padding:0; display:grid; gap:10px}
+:where(.chotot) .mk-ft-links a{color:#374151; text-decoration:none}
+:where(.chotot) .mk-ft-links a:hover{text-decoration:underline}
+:where(.chotot) .mk-socials{display:flex; gap:10px; margin:4px 0 10px}
+:where(.chotot) .mk-social-btn{width:40px; height:40px; border-radius:10px; background:#fff; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e5e7eb; box-shadow:0 4px 10px rgba(0,0,0,.04)}
+:where(.chotot) .mk-contact{color:#4b5563; font-size:14px}
+:where(.chotot) .mk-contact p{margin:6px 0; display:flex; gap:6px; align-items:flex-start}
+@media (max-width:1024px){ 
+  :where(.chotot) .mk-footer-inner{grid-template-columns:1fr 1fr} 
+}
+@media (max-width:640px){ 
+  :where(.chotot) .mk-footer-inner{grid-template-columns:1fr} 
+  :where(.chotot) .mk-badges{flex-direction:row} 
+}
+
+/* Bỏ HỘP NHỎ trong khung trắng lớn ở mục danh mục (scoped) */
+:where(.chotot) .mk-cats .mk-container .mk-cats-card,
+:where(.chotot) .mk-cats .mk-container .mk-cats-inner,
+:where(.chotot) .mk-cats .mk-container .category-panel,
+:where(.chotot) .mk-cats .mk-container > div:first-child {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}

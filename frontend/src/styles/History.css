@@ -1,0 +1,171 @@
+/* Trang lịch sử xem */
+.hs-page {
+  background: #f3f4f6;
+  min-height: 100vh;
+}
+
+.hs-main {
+  padding: 16px 0 40px;
+}
+
+.hs-head {
+  margin: 8px 0 16px;
+}
+
+.hs-title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.hs-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Khi không có dữ liệu */
+.hs-empty {
+  margin-top: 24px;
+  padding: 24px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Lưới card */
+.hs-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* Card */
+.hs-card {
+  cursor: pointer;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.hs-card:hover {
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+  transform: translateY(-2px);
+}
+
+.hs-card-img-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 68%; /* tỷ lệ ảnh */
+  overflow: hidden;
+}
+
+.hs-card-img-wrap img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hs-card-badge {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #fff;
+}
+
+/* nút tim */
+.hs-like-btn {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.hs-like-btn.is-liked {
+  color: #f97316;
+}
+
+.hs-card-body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hs-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.hs-card-line {
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.hs-dot {
+  margin: 0 4px;
+}
+
+.hs-card-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+  font-size: 12px;
+}
+
+.hs-card-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+.hs-card-price-sub {
+  color: #111827;
+}
+
+.hs-card-area {
+  color: #4b5563;
+}
+
+.hs-card-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #4b5563;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .hs-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .hs-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

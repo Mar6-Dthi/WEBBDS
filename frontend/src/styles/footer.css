@@ -1,0 +1,89 @@
+/* ===== Footer layout ===== */
+.mk-footer{
+  background:#fff;
+  border-top:1px solid var(--border);
+}
+.mk-footer-inner{
+  width:var(--container);
+  margin:0 auto;
+  padding:28px 0 36px;
+  display:grid;
+  grid-template-columns: 1.2fr 1fr 1fr; /* như ảnh: cột trái rộng hơn */
+  gap:48px;
+}
+
+.mk-ft-col{min-width:0}
+.mk-ft-title{
+  margin:0 0 14px;
+  font-size:16px;
+  font-weight:600;
+  color:#111827;
+}
+
+/* ===== Col 1: QR + badges (xếp dọc 2 badge) ===== */
+.mk-qr-row{
+  display:flex;
+  align-items:flex-start;
+  gap:18px;
+}
+.mk-qr{width:92px; height:auto}
+.mk-badges{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.mk-store-badge img{
+  display:block;
+  height:38px; /* vừa với ảnh mẫu */
+  width:auto;
+}
+
+/* ===== Col 2: link list ===== */
+.mk-ft-links{
+  list-style:none; padding:0; margin:0;
+  display:flex; flex-direction:column; gap:10px;
+}
+.mk-ft-links a{
+  color:#374151; text-decoration:none;
+}
+.mk-ft-links a:hover{ text-decoration:underline }
+
+/* ===== Col 3: socials + contact ===== */
+.mk-socials{
+  display:flex; gap:12px; margin-bottom:12px;
+}
+.mk-social-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:36px; height:36px; border-radius:8px;
+  box-shadow:0 1px 0 rgba(0,0,0,.04);
+  overflow:hidden; /* bo tròn ảnh vuông */
+}
+.mk-social-icon{
+  width:20px; height:20px; object-fit:contain; display:block;
+}
+
+/* màu nền theo brand để giống icon vuông có nền */
+.mk-ln{ background:#0a66c2 }   /* LinkedIn */
+.mk-yt{ background:#ff0000 }   /* YouTube */
+.mk-fb{ background:#1877f2 }   /* Facebook */
+
+.mk-contact{ color:#374151; font-size:14px; line-height:1.6 }
+.mk-contact-line{
+  display:flex; align-items:flex-start; gap:8px; margin:6px 0;
+}
+.mk-contact-line svg{ flex:0 0 auto; margin-top:2px }
+
+/* ===== Responsive ===== */
+@media (max-width: 900px){
+  .mk-footer-inner{
+    grid-template-columns: 1fr 1fr;
+    gap:28px;
+  }
+}
+@media (max-width: 640px){
+  .mk-footer-inner{
+    grid-template-columns: 1fr;
+  }
+  .mk-qr{width:86px}
+  .mk-store-badge img{height:34px}
+}

@@ -1,0 +1,1015 @@
+.lp-page {
+  background: #f3f4f6;
+  min-height: 100vh;
+}
+
+/* MAIN WRAP */
+.lp-main {
+  padding: 16px 0 40px;
+}
+
+/* Breadcrumb + head card */
+.lp-breadcrumb {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.lp-breadcrumb-sep {
+  margin: 0 4px;
+}
+
+.lp-head-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 16px 18px 14px;
+  margin-bottom: 16px;
+  position: relative; /* để panel bám theo */
+}
+
+.lp-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+/* Filter button row */
+.lp-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.lp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: #111827;
+}
+
+.lp-chip-outline {
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.lp-chip-ghost {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.lp-chip-ghost.active {
+  background: #111827;
+  color: #ffffff;
+}
+
+/* chip riêng cho loại BĐS / Giá / Diện tích / PN */
+.lp-chip-filter {
+  min-width: 160px;
+  justify-content: space-between;
+}
+
+.lp-chip-filter--active {
+  background: #111827;
+  color: #fff;
+}
+
+/* ===== BODY (không còn sidebar) ===== */
+.lp-body {
+  margin-top: 4px;
+}
+
+/* LEFT */
+.lp-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Tabs + sort row */
+.lp-list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.lp-tabs {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.lp-tab {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+.lp-tab.active {
+  background: #ff7a00;
+  color: #ffffff;
+}
+
+.lp-sort-view {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+/* ===== LIST VIEW ===== */
+.lp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lp-card {
+  position: relative; /* để nút tim mobile bám đúng */
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 36px;
+  gap: 12px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  padding: 10px;
+  align-items: stretch;
+}
+
+.lp-card-media {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.lp-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lp-card-badge {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.92);
+  color: #ffffff;
+}
+
+.lp-card-photos {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #ffffff;
+}
+
+/* Body */
+.lp-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lp-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.lp-card-line {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.lp-dot {
+  margin: 0 4px;
+}
+
+.lp-card-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.lp-card-price {
+  color: #b91c1c;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.lp-card-price-sub {
+  color: #111827;
+}
+
+.lp-card-area {
+  color: #4b5563;
+}
+
+.lp-card-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.lp-card-owner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.lp-owner-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #ffffff;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lp-owner-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.lp-owner-sub {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Like btn list view */
+.lp-like-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.lp-like-btn.is-liked svg {
+  stroke: #f97316;
+}
+
+/* Empty */
+.lp-empty {
+  padding: 20px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Pagination */
+.lp-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.page-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.page-btn.active {
+  background: #ff7a00;
+  color: #ffffff;
+  border-color: #ff7a00;
+}
+
+/* ===== VIEW TOGGLE ===== */
+.lp-view-toggle {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.lp-view-toggle button {
+  border: none;
+  background: transparent;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.lp-view-toggle button.is-active {
+  background: #111827;
+  color: #ffffff;
+}
+
+/* ====== GRID VIEW (8 tin / 2h x 4c) ====== */
+
+.lp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* card trong grid */
+.lp-card-grid {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ảnh */
+.lp-card-grid-media {
+  position: relative;
+  width: 100%;
+  padding-top: 75%; /* 4:3 */
+  overflow: hidden;
+}
+
+.lp-card-grid-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* badge + tim */
+.lp-card-grid-badge {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.96);
+  color: #fff;
+}
+
+.lp-like-btn-grid {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  border: none;
+  background: rgba(0, 0, 0, 0.3);
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.lp-like-btn-grid svg {
+  stroke: #ffffff;
+}
+
+.lp-like-btn-grid.is-liked svg {
+  fill: #f97316;
+  stroke: #f97316;
+}
+
+/* body */
+.lp-card-grid-body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lp-card-grid-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  min-height: 38px; /* 2 dòng */
+  overflow: hidden;
+}
+
+/* PN + loại */
+.lp-card-grid-meta {
+  font-size: 12px;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* giá */
+.lp-card-grid-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.lp-card-grid-price {
+  color: #b91c1c;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.lp-card-grid-price-sub {
+  color: #111827;
+}
+
+/* area + location */
+.lp-card-grid-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+  gap: 6px;
+}
+
+.lp-card-grid-area {
+  white-space: nowrap;
+}
+
+.lp-card-grid-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1280px) {
+  .lp-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .lp-card {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr) 32px;
+  }
+
+  .lp-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .lp-head-card {
+    padding: 12px;
+  }
+
+  .lp-list-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .lp-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lp-like-btn {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+  }
+
+  .lp-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .lp-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+/* ===== PANEL LOẠI HÌNH BĐS ===== */
+
+.lp-category-panel {
+  position: absolute;
+  top: 100%;
+  left: 165px; /* chỉnh cho khớp chip */
+  margin-top: 6px;
+  z-index: 30;
+}
+
+.lp-category-panel-inner {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 10px 16px 12px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  max-width: 360px;
+  min-width: 260px;
+}
+
+.lp-category-header {
+  margin-bottom: 4px;
+}
+
+.lp-category-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.lp-category-list {
+  list-style: none;
+  padding: 4px 0 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lp-category-item {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #111827;
+  cursor: pointer;
+}
+
+.lp-category-item:hover {
+  background: #f3f4f6;
+}
+
+.lp-category-item--active {
+  font-weight: 600;
+  color: #f97316;
+  background: #fff7ed;
+}
+
+.lp-category-clear {
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f3f4f6;
+  text-align: right;
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: #f97316;
+  cursor: pointer;
+}
+
+/* ===== PANEL GIÁ ===== */
+.lp-price-panel {
+  position: absolute;
+  top: 100%;
+  left: 330px; /* chỉnh nếu muốn dịch trái/phải */
+  margin-top: 6px;
+  z-index: 30;
+}
+
+.lp-price-panel-inner {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 14px 18px 12px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  min-width: 360px;
+}
+
+.lp-price-slider-track {
+  position: relative;
+  height: 4px;
+  margin-bottom: 18px;
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+
+.lp-price-slider-range {
+  position: absolute;
+  top: 0;
+  height: 4px;
+  background: #ff7a00;
+  border-radius: 999px;
+}
+
+.lp-price-slider-input {
+  position: absolute;
+  top: -6px;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+}
+
+.lp-price-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #ff7a00;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #ff7a00;
+  pointer-events: auto;
+}
+
+.lp-price-slider-input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #ff7a00;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #ff7a00;
+  pointer-events: auto;
+}
+
+.lp-price-slider-input::-webkit-slider-runnable-track,
+.lp-price-slider-input::-moz-range-track {
+  height: 4px;
+  background: transparent;
+}
+
+.lp-price-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.lp-price-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.lp-price-input label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.lp-price-input-row {
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 6px 10px;
+  background: #f9fafb;
+}
+
+.lp-price-input-row input {
+  border: none;
+  background: transparent;
+  outline: none;
+  flex: 1;
+  font-size: 13px;
+}
+
+.lp-price-input-unit {
+  font-size: 13px;
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+.lp-price-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.lp-price-btn-reset {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 13px;
+  padding: 7px 0;
+  cursor: pointer;
+}
+
+.lp-price-btn-apply {
+  flex: 1;
+  border-radius: 999px;
+  border: none;
+  background: #ff7a00;
+  color: #fff;
+  font-size: 13px;
+  padding: 7px 0;
+  cursor: pointer;
+}
+
+/* ===== PANEL DIỆN TÍCH ===== */
+.lp-area-panel {
+  position: absolute;
+  top: 100%;
+  left: 500px; /* dưới chip Diện tích */
+  margin-top: 6px;
+  z-index: 30;
+}
+
+.lp-area-panel-inner {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 14px 18px 12px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  min-width: 360px;
+}
+
+.lp-area-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.lp-area-input label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.lp-area-input-row {
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 6px 10px;
+  background: #f9fafb;
+}
+
+.lp-area-input-row input {
+  border: none;
+  background: transparent;
+  outline: none;
+  flex: 1;
+  font-size: 13px;
+}
+
+.lp-area-input-unit {
+  font-size: 13px;
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+.lp-area-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.lp-area-btn-reset {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 13px;
+  padding: 7px 0;
+  cursor: pointer;
+}
+
+.lp-area-btn-apply {
+  flex: 1;
+  border-radius: 999px;
+  border: none;
+  background: #ff7a00;
+  color: #fff;
+  font-size: 13px;
+  padding: 7px 0;
+  cursor: pointer;
+}
+
+/* ===== PANEL DEAL TYPE (nếu sau này dùng) ===== */
+.lp-dealtype-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  z-index: 30;
+  width: 240px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  padding: 14px 0;
+  animation: fadeInScale 0.12s ease-out;
+}
+
+.lp-dealtype-panel-inner {
+  padding: 6px 0;
+}
+
+.lp-dealtype-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lp-dealtype-item {
+  width: 100%;
+  display: block;
+  padding: 12px 20px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.lp-dealtype-item:hover {
+  background: #f3f4f6;
+}
+
+.lp-dealtype-item--active {
+  background: #fff7eb;
+  color: #f97316;
+  font-weight: 600;
+}
+
+/* animation */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== PANEL SỐ PHÒNG NGỦ ===== */
+
+.lp-beds-panel {
+  position: absolute;
+  top: 100%;
+  left: 620px;
+  margin-top: 6px;
+  z-index: 30;
+}
+
+.lp-beds-panel-inner {
+  width: 260px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  padding: 10px 16px 12px;
+}
+
+.lp-beds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.lp-beds-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 6px 2px;
+}
+
+.lp-beds-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.lp-beds-label {
+  color: #111827;
+}
+
+.lp-beds-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lp-beds-btn-reset,
+.lp-beds-btn-apply {
+  flex: 1;
+  height: 32px;
+  font-size: 13px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.lp-beds-btn-reset {
+  background: #fff;
+  color: #374151;
+}
+
+.lp-beds-btn-apply {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+
+/* ===== SORT PANEL ===== */
+.lp-sort {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.lp-sort-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 13px;
+  color: #111827;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.lp-sort-chip:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* dropdown sort */
+.lp-sort-panel {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  z-index: 20;
+  min-width: 190px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+  padding: 8px 0;
+}
+
+.lp-sort-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: #374151;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.lp-sort-item:hover {
+  background: #f3f4f6;
+}
+
+.lp-sort-item--active {
+  background: #fff7eb;
+  color: #f97316;
+  font-weight: 600;
+}

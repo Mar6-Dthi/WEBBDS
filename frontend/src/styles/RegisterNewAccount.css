@@ -1,0 +1,258 @@
+/******************************************
+ * ĐĂNG KÝ TÀI KHOẢN MỚI – giống mẫu Chợ Tốt
+ ******************************************/
+
+.reg-container {
+  padding: 32px 40px;
+  min-height: 650px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.reg-main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+.reg-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.reg-back-btn {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 8px 4px 0;
+}
+
+.reg-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.reg-sub {
+  margin: 0 0 24px;
+  font-size: 15px;
+  color: #4b5563;
+}
+
+.reg-phone {
+  font-weight: 700;
+}
+
+/* FORM */
+.reg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ô input bo tròn */
+.reg-input-row {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+}
+
+.reg-input-row input {
+  flex: 1;
+  padding: 13px 0;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  background: transparent;
+}
+
+/* RULES 4 tiêu chí – 2 cột */
+.reg-rules-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 32px;
+  row-gap: 6px;
+  font-size: 13px;
+}
+
+.reg-rule {
+  color: #9ca3af; /* xám khi chưa đạt */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reg-rule::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  border: 2px solid #d1d5db;
+}
+
+/* đạt điều kiện -> xanh sáng */
+.reg-rule.ok {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.reg-rule.ok::before {
+  border-color: #16a34a;
+  background: #bbf7d0;
+}
+
+/* Điều khoản + checkbox */
+.reg-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: #111827;
+}
+
+.reg-checkbox-wrap {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.reg-checkbox-wrap input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+}
+
+.reg-checkbox-custom {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+/* khi checked -> nền vàng + tick */
+.reg-checkbox-wrap input:checked + .reg-checkbox-custom {
+  background: #ffb300;
+  border-color: #ffb300;
+}
+
+.reg-checkbox-wrap input:checked + .reg-checkbox-custom::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -54%);
+  font-size: 13px;
+  color: #111827;
+  font-weight: 700;
+}
+
+.reg-terms-text a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.reg-terms-text a:hover {
+  text-decoration: underline;
+}
+
+/* Nút Tiếp tục */
+.reg-submit {
+  margin-top: 4px;
+  width: 100%;
+  padding: 15px 20px;
+  border-radius: 999px;
+  border: none;
+  background: #ffb300;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  cursor: pointer;
+}
+
+.reg-submit:hover {
+  background: #ffc533;
+}
+
+
+/* bọc từng field để chứa error text */
+.reg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* viền đỏ khi lỗi */
+.reg-input-error {
+  border-color: #ef4444;
+}
+
+/* text lỗi dưới input */
+.reg-error-text {
+  font-size: 12px;
+  color: #ef4444;
+  margin-left: 4px;
+}
+
+/******************************************
+ * MODAL THÔNG BÁO ĐĂNG KÝ
+ ******************************************/
+.reg-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.reg-modal {
+  width: min(360px, 90vw);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 18px 18px 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.reg-modal h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.reg-modal p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.reg-modal-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: none;
+  background: #ffb300;
+  color: #111827;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reg-modal-btn:hover {
+  background: #ffc533;
+}

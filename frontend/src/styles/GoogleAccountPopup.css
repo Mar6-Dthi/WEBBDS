@@ -1,0 +1,171 @@
+/******************************************
+ * POPUP CHỌN TÀI KHOẢN GOOGLE (MOCK)
+ ******************************************/
+
+.gg-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gg-dialog {
+  width: min(430px, 95vw);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+/* Thanh trên */
+.gg-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.gg-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.gg-topbar-logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.gg-topbar-close {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+/* Nội dung chính */
+.gg-main {
+  padding: 20px 24px 18px;
+}
+
+/* App row */
+.gg-app-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.gg-app-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #ffb300;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gg-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.gg-sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.gg-app-name {
+  color: #2563eb;
+}
+
+/* Danh sách tài khoản */
+.gg-account-list {
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.gg-account-row {
+  width: 100%;
+  border: none;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  cursor: pointer;
+}
+
+.gg-account-row + .gg-account-row {
+  border-top: 1px solid #e5e7eb;
+}
+
+.gg-avatar {
+  margin-right: 12px;
+  margin-left: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+  overflow: hidden;
+}
+
+.gg-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gg-account-text {
+  flex: 1;
+  text-align: left;
+}
+
+.gg-name {
+  font-size: 14px;
+  color: #111827;
+}
+
+.gg-email {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.gg-status {
+  font-size: 12px;
+  color: #6b7280;
+  margin-left: 8px;
+}
+
+/* Sử dụng tài khoản khác */
+.gg-other-account {
+  margin-top: 10px;
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 0;
+}
