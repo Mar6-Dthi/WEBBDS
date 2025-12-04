@@ -19,6 +19,7 @@ import Footer from "../components/footer";
 import NhatotHeader from "../components/header";
 
 /** ===== Demo data ===== */
+// dùng membershipPlanId để ưu tiên, isBroker chỉ để sort & hiển thị badge trong Post
 const POSTS = [
   {
     id: "p1",
@@ -34,6 +35,9 @@ const POSTS = [
     location: "Tp Hồ Chí Minh",
     liked: false,
     ownerName: "Loan",
+    membershipPlanId: "p20", // gói cao nhất
+    isBroker: true,
+    createdAt: "2025-11-30T10:30:00Z",
   },
   {
     id: "p2",
@@ -49,6 +53,9 @@ const POSTS = [
     location: "Tp Hồ Chí Minh",
     liked: false,
     ownerName: "Loan",
+    membershipPlanId: "p10",
+    isBroker: true,
+    createdAt: "2025-11-30T10:20:00Z",
   },
   {
     id: "p3",
@@ -64,6 +71,9 @@ const POSTS = [
     location: "Tp Hồ Chí Minh",
     liked: false,
     ownerName: "Loan",
+    membershipPlanId: "p5",
+    isBroker: false,
+    createdAt: "2025-11-30T10:10:00Z",
   },
   {
     id: "p4",
@@ -79,6 +89,9 @@ const POSTS = [
     location: "Tp Hồ Chí Minh",
     liked: false,
     ownerName: "Loan",
+    membershipPlanId: null, // không hội viên
+    isBroker: true,
+    createdAt: "2025-11-30T10:05:00Z",
   },
   {
     id: "p5",
@@ -94,6 +107,9 @@ const POSTS = [
     location: "Tp Hồ Chí Minh",
     liked: false,
     ownerName: "Loan",
+    membershipPlanId: null,
+    isBroker: false,
+    createdAt: "2025-11-30T09:50:00Z",
   },
 ];
 
@@ -111,6 +127,9 @@ const POSTS2 = [
     typeLabel: "Căn hộ dịch vụ",
     location: "Q.1, TP.HCM",
     ownerName: "Chị B",
+    membershipPlanId: "p20",
+    isBroker: true,
+    createdAt: "2025-11-30T10:25:00Z",
   },
   {
     id: "r2",
@@ -125,6 +144,9 @@ const POSTS2 = [
     typeLabel: "Phòng trọ",
     location: "TP Thủ Đức",
     ownerName: "Chị Thi",
+    membershipPlanId: "p10",
+    isBroker: false,
+    createdAt: "2025-11-30T10:15:00Z",
   },
   {
     id: "r3",
@@ -139,6 +161,9 @@ const POSTS2 = [
     typeLabel: "Nhà nguyên căn",
     location: "Gò Vấp, TP.HCM",
     ownerName: "Anh Hoài",
+    membershipPlanId: "p5",
+    isBroker: true,
+    createdAt: "2025-11-30T10:00:00Z",
   },
   {
     id: "r4",
@@ -153,6 +178,9 @@ const POSTS2 = [
     typeLabel: "Chung cư",
     location: "TP Thủ Đức",
     ownerName: "Anh Hải",
+    membershipPlanId: null,
+    isBroker: true,
+    createdAt: "2025-11-30T09:55:00Z",
   },
   {
     id: "r5",
@@ -167,8 +195,25 @@ const POSTS2 = [
     typeLabel: "Văn phòng",
     location: "Quận 3, TP.HCM",
     ownerName: "Anh Dũng",
+    membershipPlanId: null,
+    isBroker: false,
+    createdAt: "2025-11-30T09:45:00Z",
   },
 ];
+
+/** ===== Helper xếp hạng hội viên ===== */
+function getMembershipRank(planId) {
+  switch (planId) {
+    case "p20":
+      return 3; // gói cao nhất
+    case "p10":
+      return 2;
+    case "p5":
+      return 1;
+    default:
+      return 0; // không hội viên
+  }
+}
 
 export default function HomeNhaTot() {
   const [tab, setTab] = useState("Mua bán");
@@ -184,7 +229,6 @@ export default function HomeNhaTot() {
 
     if (dealType) params.set("dealType", dealType);
 
-    // nếu chị đang chọn tỉnh ở ô tìm kiếm thì mang theo luôn
     if (location && location !== "Tỉnh thành") {
       params.set("province", location);
     }
@@ -230,13 +274,15 @@ export default function HomeNhaTot() {
 
   const handleBlurSale = (e) => {
     const next = e.relatedTarget;
-    if (saleWrapRef.current && next && saleWrapRef.current.contains(next)) return;
+    if (saleWrapRef.current && next && saleWrapRef.current.contains(next))
+      return;
     setSaleMenuOpen(false);
   };
 
   const handleBlurRent = (e) => {
     const next = e.relatedTarget;
-    if (rentWrapRef.current && next && rentWrapRef.current.contains(next)) return;
+    if (rentWrapRef.current && next && rentWrapRef.current.contains(next))
+      return;
     setRentMenuOpen(false);
   };
 
@@ -253,6 +299,36 @@ export default function HomeNhaTot() {
   }, []);
 
   const [aboutOpen, setAboutOpen] = useState(false);
+
+  /** ===== SORT FEED: Ưu tiên hội viên > môi giới > bài mới ===== */
+  const sortedPosts = [...POSTS].sort((a, b) => {
+    const rankA = getMembershipRank(a.membershipPlanId);
+    const rankB = getMembershipRank(b.membershipPlanId);
+
+    // 1. ưu tiên hội viên & gói cao hơn
+    if (rankA !== rankB) return rankB - rankA;
+
+    // 2. ưu tiên môi giới
+    const brokerA = a.isBroker ? 1 : 0;
+    const brokerB = b.isBroker ? 1 : 0;
+    if (brokerA !== brokerB) return brokerB - brokerA;
+
+    // 3. ưu tiên bài mới
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
+
+  const sortedPosts2 = [...POSTS2].sort((a, b) => {
+    const rankA = getMembershipRank(a.membershipPlanId);
+    const rankB = getMembershipRank(b.membershipPlanId);
+
+    if (rankA !== rankB) return rankB - rankA;
+
+    const brokerA = a.isBroker ? 1 : 0;
+    const brokerB = b.isBroker ? 1 : 0;
+    if (brokerA !== brokerB) return brokerB - brokerA;
+
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
 
   return (
     <div className="mk-page nhatot">
@@ -351,7 +427,6 @@ export default function HomeNhaTot() {
                     <img ref={saleImgRef} src="/Img/Muaban.png" alt="" />
                   </div>
                   <div>
-                    {/* Bấm vào chữ "Mua bán" => sang listing, dealType=mua-ban */}
                     <NavLink
                       to="/listing"
                       onClick={(e) => {
@@ -380,7 +455,6 @@ export default function HomeNhaTot() {
                     </div>
                   </div>
 
-                  {/* các dòng con: map sang category tương ứng, UI giữ nguyên */}
                   <NavLink
                     to="/listing"
                     className="mk-cat-opt"
@@ -483,7 +557,6 @@ export default function HomeNhaTot() {
                     </div>
                   </div>
 
-                  {/* map các loại cho thuê sang category Listing gần nhất */}
                   <NavLink
                     to="/listing"
                     className="mk-cat-opt"
@@ -585,9 +658,9 @@ export default function HomeNhaTot() {
             </div>
 
             <div className="mk-feed-grid">
-              {POSTS.map((it) => {
+              {sortedPosts.map((it) => {
                 const link = `/post/${it.id}`;
-                return <Post key={it.id} item={{ ...it, to: link }} to={link} />;
+                return <Post key={it.id} item={it} to={link} />;
               })}
             </div>
 
@@ -609,9 +682,9 @@ export default function HomeNhaTot() {
             </div>
 
             <div className="mk-feed-grid">
-              {POSTS2.map((it) => {
+              {sortedPosts2.map((it) => {
                 const link = `/post/${it.id}`;
-                return <Post key={it.id} item={{ ...it, to: link }} to={link} />;
+                return <Post key={it.id} item={it} to={link} />;
               })}
             </div>
 

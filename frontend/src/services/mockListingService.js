@@ -590,6 +590,7 @@ function getAreaNumber(item) {
  *  - minPrice, maxPrice: VND
  *  - minArea,  maxArea : m²
  *  - bedsFilter       : array (vd [1,2,"gt5"])
+ *  - ownerName        : tên người đăng (để map môi giới)
  */
 export function filterMockListings(options = {}) {
   const {
@@ -602,6 +603,7 @@ export function filterMockListings(options = {}) {
     minArea,
     maxArea,
     bedsFilter,
+    ownerName, // 👈 thêm field mới
   } = options;
 
   const keyword = strip(q || "");
@@ -619,6 +621,9 @@ export function filterMockListings(options = {}) {
 
     // --- category ---
     if (category && strip(item.category) !== categoryKey) return false;
+
+    // --- ownerName (môi giới) ---
+    if (ownerName && item.ownerName !== ownerName) return false;
 
     // --- keyword search ---
     if (keyword) {

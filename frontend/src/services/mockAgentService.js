@@ -16,12 +16,16 @@ export const MOCK_AGENTS = [
     provinces: ["TP Hồ Chí Minh"],
     agentType: "buy", // mua bán
     estateTypes: ["nhao", "dat"],
+
+    // ✅ field cho AgentsPage
+    estateType: "nhao",     // loại BĐS chính
+    avgPricePerM2: 65,      // (triệu/m²) để lọc khoảng giá
+
     postsCount: 706,
     yearsActive: 9,
     transactionsCount: 13,
     responseRate: 0.87,
     phone: "0908 123 456",
-     
   },
   {
     id: "hau_binh_thanh",
@@ -36,6 +40,10 @@ export const MOCK_AGENTS = [
     provinces: ["TP Hồ Chí Minh"],
     agentType: "buy",
     estateTypes: ["nhao"],
+
+    estateType: "nhao",
+    avgPricePerM2: 80,
+
     postsCount: 610,
     yearsActive: 5,
     transactionsCount: 30,
@@ -55,6 +63,10 @@ export const MOCK_AGENTS = [
     provinces: ["TP Hồ Chí Minh"],
     agentType: "rent",
     estateTypes: ["canho", "nhao"],
+
+    estateType: "canho",
+    avgPricePerM2: 25,
+
     postsCount: 145,
     yearsActive: 4,
     transactionsCount: 80,
@@ -73,7 +85,11 @@ export const MOCK_AGENTS = [
     area: "TP Thuận An, TP Dĩ An (Bình Dương)",
     provinces: ["Bình Dương", "TP Hồ Chí Minh"],
     agentType: "buy",
-    estateTypes: ["canho", "vpmb"],
+    estateTypes: ["dat"],
+
+    estateType: "dat",
+    avgPricePerM2: 18,
+
     postsCount: 210,
     yearsActive: 6,
     transactionsCount: 55,
@@ -93,6 +109,10 @@ export const MOCK_AGENTS = [
     provinces: ["Cần Thơ"],
     agentType: "buy",
     estateTypes: ["dat"],
+
+    estateType: "dat",
+    avgPricePerM2: 25,
+
     postsCount: 132,
     yearsActive: 7,
     transactionsCount: 48,
@@ -112,6 +132,10 @@ export const MOCK_AGENTS = [
     provinces: ["Đà Nẵng"],
     agentType: "rent",
     estateTypes: ["canho", "vpmb"],
+
+    estateType: "vpmb",
+    avgPricePerM2: 35,
+
     postsCount: 89,
     yearsActive: 3,
     transactionsCount: 60,
@@ -131,6 +155,10 @@ export const MOCK_AGENTS = [
     provinces: ["Khánh Hòa"],
     agentType: "buy",
     estateTypes: ["canho", "vpmb"],
+
+    estateType: "canho",
+    avgPricePerM2: 70,
+
     postsCount: 75,
     yearsActive: 5,
     transactionsCount: 32,
@@ -149,7 +177,11 @@ export const MOCK_AGENTS = [
     area: "Thanh Xuân, Cầu Giấy, Nam Từ Liêm (Hà Nội)",
     provinces: ["Hà Nội"],
     agentType: "both", // vừa mua bán vừa cho thuê
-    estateTypes: ["nhao", "dat"],
+    estateTypes: ["canho"],
+
+    estateType: "canho",
+    avgPricePerM2: 45,
+
     postsCount: 320,
     yearsActive: 8,
     transactionsCount: 120,
@@ -168,7 +200,11 @@ export const MOCK_AGENTS = [
     area: "Đức Hòa, Bến Lức (Long An)",
     provinces: ["Long An", "TP Hồ Chí Minh"],
     agentType: "buy",
-    estateTypes: ["nhao", "dat"],
+    estateTypes: ["dat"],
+
+    estateType: "dat",
+    avgPricePerM2: 14,
+
     postsCount: 98,
     yearsActive: 4,
     transactionsCount: 40,
@@ -188,6 +224,10 @@ export const MOCK_AGENTS = [
     provinces: ["TP Hồ Chí Minh"],
     agentType: "rent",
     estateTypes: ["canho", "nhao"],
+
+    estateType: "nhao",
+    avgPricePerM2: 20,
+
     postsCount: 160,
     yearsActive: 3,
     transactionsCount: 95,
@@ -206,7 +246,11 @@ export const MOCK_AGENTS = [
     area: "Hoàn Kiếm, Hai Bà Trưng (Hà Nội)",
     provinces: ["Hà Nội"],
     agentType: "rent",
-    estateTypes: ["canho", "nhao"],
+    estateTypes: ["vpmb"],
+
+    estateType: "vpmb",
+    avgPricePerM2: 90,
+
     postsCount: 54,
     yearsActive: 4,
     transactionsCount: 38,
@@ -225,7 +269,11 @@ export const MOCK_AGENTS = [
     area: "Quận 7, TP Thủ Đức (TP Hồ Chí Minh)",
     provinces: ["TP Hồ Chí Minh"],
     agentType: "buy",
-    estateTypes: ["canho"],
+    estateTypes: ["nhao"],
+
+    estateType: "nhao",
+    avgPricePerM2: 120,
+
     postsCount: 43,
     yearsActive: 6,
     transactionsCount: 20,
@@ -254,9 +302,7 @@ export function filterAgents({ province, agentType } = {}) {
   if (province && province !== "Tất cả") {
     const key = province.toLowerCase();
     result = result.filter((a) =>
-      (a.provinces || [])
-        .map((p) => p.toLowerCase())
-        .includes(key)
+      (a.provinces || []).map((p) => p.toLowerCase()).includes(key)
     );
   }
 

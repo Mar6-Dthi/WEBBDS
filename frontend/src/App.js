@@ -17,6 +17,7 @@ import AgentsPage from "./pages/AgentsPage";
 import AgentDetail from "./pages/AgentDetail";
 import AgentReview from "./pages/AgentReview";
 import MembershipPage from "./pages/MembershipPage";
+import AgentListings from "./pages/AgentListings";
 
 export default function App(){
   return (
@@ -39,6 +40,7 @@ export default function App(){
         <Route path="/moi-gioi/:id" element={<AgentDetail />} />
         <Route path="/moi-gioi/:id/danh-gia" element={<AgentReview />} />
         <Route path="/goi-hoi-vien" element={<MembershipPage />} />
+        <Route path="/moi-gioi/:agentId/tin-dang" element={<AgentListings />} />
       </Routes>
     </BrowserRouter>
   );

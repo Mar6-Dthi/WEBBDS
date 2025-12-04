@@ -3,11 +3,9 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Star, Phone, ChevronRight } from "lucide-react";
 
-import Header from "../components/header";
+import NhatotHeader from "../components/header";
 import Footer from "../components/footer";
-import AgentsFilterBar, {
-  PRICE_OPTIONS,
-} from "../components/AgentsFilterBar";
+import AgentsFilterBar, { PRICE_OPTIONS } from "../components/AgentsFilterBar";
 import "../styles/AgentsPage.css";
 
 /** ================== MOCK DỮ LIỆU MÔI GIỚI ================== */
@@ -40,8 +38,7 @@ const AGENTS = [
     ratingCount: 1,
     badge: "",
     desc: `Chuyên nhà Bình Thạnh, Phú Nhuận, Gò Vấp.`,
-    area:
-      "Quận Bình Thạnh, Quận Gò Vấp, Quận Phú Nhuận (TP Hồ Chí Minh)",
+    area: "Quận Bình Thạnh, Quận Gò Vấp, Quận Phú Nhuận (TP Hồ Chí Minh)",
     provinces: ["TP Hồ Chí Minh"],
     agentType: "buy",
     estateType: "nhao",
@@ -342,10 +339,7 @@ export default function AgentsPage() {
   ]);
 
   // ====== PHÂN TRANG ======
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredAgents.length / PAGE_SIZE)
-  );
+  const totalPages = Math.max(1, Math.ceil(filteredAgents.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
 
   const startIndex = (safePage - 1) * PAGE_SIZE;
@@ -363,14 +357,17 @@ export default function AgentsPage() {
     navigate(`/moi-gioi/${agent.id}`);
   };
 
+  // 🔥 Quan trọng: gửi kèm state { agent } sang trang tin đăng
   const handleGoPosts = (agent) => {
-    navigate(`/moi-gioi/${agent.id}/tin-dang`);
+    navigate(`/moi-gioi/${agent.id}/tin-dang`, {
+      state: { agent },
+    });
   };
 
   return (
     <div className="nhatot">
       <div className="mk-page">
-        <Header />
+        <NhatotHeader />
 
         <div className="agents-page-content">
           <div className="agents-wrapper">

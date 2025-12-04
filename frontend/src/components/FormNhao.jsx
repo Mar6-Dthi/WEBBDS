@@ -45,6 +45,15 @@ export default function FormNhao({ estateType }) {
     const id = Date.now().toString();
     const ownerId = localStorage.getItem("accessToken") || "guest";
 
+    // 👉 xác định môi giới / cá nhân
+    const isBroker = ownerType === "Môi giới";
+
+    // 👉 đọc gói hội viên (nếu có)
+    // VD ở trang đăng ký hội viên:
+    // localStorage.setItem(`membershipPlan_${ownerId}`, "p20");
+    const membershipPlanId =
+      localStorage.getItem(`membershipPlan_${ownerId}`) || null;
+
     // 🔴 LẤY MEDIA TỪ POSTCREATE (ảnh/video user đã chọn)
     const draftMedia = JSON.parse(
       localStorage.getItem("postDraftMedia") || "[]"
@@ -67,7 +76,7 @@ export default function FormNhao({ estateType }) {
       projectName,
       maCan,
       phanKhu,
-      ownerType,
+      ownerType, // "Cá nhân" | "Môi giới"
 
       // thông tin chi tiết
       houseType: loaiNha || "Nhà ở",
@@ -84,6 +93,10 @@ export default function FormNhao({ estateType }) {
       width: Number(chieuNgang) || null,
       length: Number(chieuDai) || null,
       price: Number(gia) || null,
+
+      // ưu tiên hiển thị
+      isBroker,          // 👈 chọn Môi giới → card gắn badge + ưu tiên môi giới
+      membershipPlanId,  // 👈 dùng để ưu tiên hội viên gói cao
 
       createdAt: new Date().toISOString(),
 

@@ -44,27 +44,33 @@ export default function FormPhongtro() {
     const id = String(Date.now());
     const ownerId = localStorage.getItem("accessToken") || "guest";
 
-    // 🔴 LẤY MEDIA (ảnh/video) ĐÃ CHỌN Ở PostCreate
+    // 👉 gắn môi giới
+    const isBroker = ownerType === "Môi giới";
+
+    // 👉 đọc gói hội viên (nếu có)
+    const membershipPlanId =
+      localStorage.getItem(`membershipPlan_${ownerId}`) || null;
+
+    // LẤY MEDIA đã upload từ PostCreate
     const draftMedia = JSON.parse(
       localStorage.getItem("postDraftMedia") || "[]"
     );
 
-    // Chuyển thành mảng src cho PostDetail dùng làm gallery
+    // Chuyển về mảng src để PostDetail dùng
     const images = Array.isArray(draftMedia)
       ? draftMedia.filter((m) => !!m.src).map((m) => m.src)
       : [];
 
     const newPost = {
       id,
-      ownerId, // để Quản lý tin lọc theo user
+      ownerId,
       category: "Phòng trọ",
-      estateType, // "Cho thuê"
+      estateType, // cho thuê
 
       title: form.title,
       description: form.description,
       address: form.address,
 
-      // số liệu chính
       price: Number(form.price),
       landArea: Number(form.area),
       usableArea: Number(form.area),
@@ -82,18 +88,20 @@ export default function FormPhongtro() {
 
       createdAt: new Date().toISOString(),
 
-      // 🔴 ẢNH THẬT TỪ NGƯỜI DÙNG (PostDetail dùng post.images)
       images,
 
-      // fallback người bán
       sellerName: "Người cho thuê",
       sellerPhone: "0900000000",
+
+      // ⭐ Thêm quyền ưu tiên hiển thị
+      isBroker,          // gắn badge môi giới
+      membershipPlanId,  // ưu tiên theo gói hội viên
     };
 
     const old = JSON.parse(localStorage.getItem("posts") || "[]");
     localStorage.setItem("posts", JSON.stringify([...old, newPost]));
 
-    // xoá media tạm cho lần đăng sau
+    // xoá media cho lần sau
     localStorage.removeItem("postDraftMedia");
 
     navigate(`/post/${id}`);

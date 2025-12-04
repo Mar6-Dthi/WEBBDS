@@ -1,0 +1,230 @@
+/* ========== LAYOUT CHUNG ========== */
+.ap-main {
+  background: #f3f4f6;
+  min-height: calc(100vh - 64px);
+}
+
+.ap-inner {
+  width: min(1200px, 92vw);
+  margin: 16px auto 24px;
+}
+
+/* nút back + title */
+.ap-back-btn {
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.ap-title {
+  margin: 0 0 14px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+}
+
+/* ========== CARD THÔNG TIN MÔI GIỚI ========== */
+.ap-agent-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.ap-agent-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #f97316;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.ap-agent-info {
+  flex: 1;
+}
+
+.ap-agent-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ap-agent-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.ap-agent-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fbbf24;
+}
+
+.ap-agent-meta {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ap-rating-count {
+  color: #9ca3af;
+}
+
+.ap-dot {
+  font-size: 10px;
+}
+
+/* ========== BỘ LỌC (KHUNG TRẮNG) ========== */
+.ap-filter {
+  margin-top: 16px;
+  background: #fff;              /* khung trắng */
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 16px 18px 14px;       /* padding để tất cả field đều nằm trong khung */
+}
+
+.ap-filter-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* grid các field bên trong KHUNG TRẮNG */
+.ap-filter-grid {
+  margin-top: 4px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.5fr);
+  gap: 12px 16px;
+}
+
+/* mỗi field là 1 khối nhỏ nhưng vẫn nằm trong card trắng */
+.ap-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+
+
+.ap-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* input/select luôn full width bên trong khung trắng */
+.ap-select,
+.ap-input {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  padding: 7px 12px;
+  font-size: 14px;
+  outline: none;
+  background: #f9fafb;
+}
+
+.ap-select:focus,
+.ap-input:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.15);
+  background: #fff;
+}
+
+/* hàng "Từ – Đến" luôn nằm gọn trong card */
+.ap-range-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 6px;
+  align-items: center;
+}
+
+.ap-range-sep {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.ap-hint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* ========== DANH SÁCH TIN ========== */
+.ap-posts {
+  margin-top: 18px;
+}
+
+.ap-posts-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.ap-posts-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.ap-posts-sub {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.ap-empty {
+  font-size: 13px;
+  color: #6b7280;
+  padding: 12px 0 24px;
+}
+
+/* grid dùng lại layout feed chung */
+.ap-posts-grid {
+  margin-top: 4px;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .ap-inner {
+    width: 100%;
+    padding: 0 12px 20px;
+  }
+
+  .ap-agent-card {
+    align-items: flex-start;
+  }
+
+  .ap-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ap-range-row {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 6px;
+  }
+
+  .ap-range-sep {
+    display: none;
+  }
+}

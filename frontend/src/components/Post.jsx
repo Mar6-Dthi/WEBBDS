@@ -9,8 +9,8 @@ import {
   BedDouble,
   Ruler,
 } from "lucide-react";
-import { toggleFavoriteMock } from "../services/mockFavoriteService"; // dùng để tạo thông báo
-import { addToViewHistory } from "../services/viewHistoryService";    // 👈 THÊM DÒNG NÀY
+import { toggleFavoriteMock } from "../services/mockFavoriteService";
+import { addToViewHistory } from "../services/viewHistoryService";
 
 function formatPriceVND(n) {
   if (n >= 1_000_000_000) return `${+(n / 1_000_000_000).toFixed(2)} tỷ`;
@@ -26,45 +26,54 @@ function formatPerM2(n) {
 
 /* ===== helper cho yêu thích (localStorage) ===== */
 
-function getCurrentUserId() {
+/** Lấy key để lưu favorites:
+ *  - Nếu có currentUser.id / phone → dùng cái đó
+ *  - Nếu không nhưng có accessToken → dùng "user_<accessToken>"
+ *  - Nếu không có gì → "guest"
+ */
+function getFavoriteUserKey() {
   try {
-    const u = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    return u.id || u.phone || null;
+    const rawUser = localStorage.getItem("currentUser");
+    if (rawUser) {
+      const u = JSON.parse(rawUser);
+      if (u.id || u.phone) return String(u.id || u.phone);
+    }
   } catch {
-    return null;
+    // ignore
   }
+
+  const token = localStorage.getItem("accessToken");
+  if (token) return "user_" + token;
+
+  return "guest";
 }
 
-function getFavorites(userId) {
-  if (!userId) return [];
+function getFavorites(userKey) {
   try {
-    return JSON.parse(localStorage.getItem("favorites_" + userId) || "[]");
+    return JSON.parse(localStorage.getItem("favorites_" + userKey) || "[]");
   } catch {
     return [];
   }
 }
 
-function saveFavorites(userId, list) {
-  if (!userId) return;
-  localStorage.setItem("favorites_" + userId, JSON.stringify(list));
+function saveFavorites(userKey, list) {
+  localStorage.setItem("favorites_" + userKey, JSON.stringify(list));
 }
 
-function isItemFavorite(userId, item) {
-  if (!userId || !item) return false;
-  const list = getFavorites(userId);
+function isItemFavorite(userKey, item) {
+  if (!item) return false;
+  const list = getFavorites(userKey);
 
-  // ưu tiên theo id
   if (item.id != null) {
     return list.some((p) => p.id === item.id);
   }
-  // fallback nếu chưa có id
   return list.some((p) => p.title === item.title && p.price === item.price);
 }
 
-function toggleFavoriteForUser(userId, item) {
-  if (!userId || !item) return;
+function toggleFavoriteForUser(userKey, item) {
+  if (!item) return;
 
-  let list = getFavorites(userId);
+  let list = getFavorites(userKey);
 
   if (item.id != null) {
     const exists = list.some((p) => p.id === item.id);
@@ -80,14 +89,15 @@ function toggleFavoriteForUser(userId, item) {
       : [...list, item];
   }
 
-  saveFavorites(userId, list);
+  saveFavorites(userKey, list);
 }
 
 /* ===== Component card tin ===== */
 
 export default function Post({ item, to = "#" }) {
   const navigate = useNavigate();
-  const userId = getCurrentUserId();
+  const userKey = getFavoriteUserKey();
+  const accessToken = localStorage.getItem("accessToken"); // để kiểm tra login
 
   const {
     title,
@@ -100,53 +110,47 @@ export default function Post({ item, to = "#" }) {
     beds,
     typeLabel,
     location,
+    isBroker, // 👈 chỉ dùng để gắn badge môi giới
   } = item || {};
 
   const [liked, setLiked] = useState(false);
 
-  // 🔁 Mỗi lần card (hoặc user) thay đổi → đọc lại trạng thái tim
+  // Đọc trạng thái tim mỗi khi item hoặc userKey thay đổi
   useEffect(() => {
-    if (!item || !userId) {
+    if (!item) {
       setLiked(false);
       return;
     }
-    const fav = isItemFavorite(userId, item);
+    const fav = isItemFavorite(userKey, item);
     setLiked(fav);
-  }, [userId, item]);
+  }, [userKey, item]);
 
   const handleLikeClick = (e) => {
     e.preventDefault(); // không cho NavLink chuyển trang khi bấm tim
 
-    if (!userId) {
-      // chưa login → điều hướng sang trang đăng nhập
+    // Chưa đăng nhập (không có accessToken) → bắt đi login
+    if (!accessToken) {
       navigate("/login");
       return;
     }
 
-    // trạng thái hiện tại (trước khi toggle)
-    const currentlyLiked = isItemFavorite(userId, item);
+    const currentlyLiked = isItemFavorite(userKey, item);
 
-    // toggle trong danh sách yêu thích của user
-    toggleFavoriteForUser(userId, item);
+    // toggle trong danh sách yêu thích
+    toggleFavoriteForUser(userKey, item);
     setLiked(!currentlyLiked);
 
     // Nếu là hành động "thêm vào yêu thích" thì tạo thông báo cho chủ bài
-    // YÊU CẦU: item phải có ownerName (đã thêm ở POSTS trong HomeNhaTot)
     if (!currentlyLiked && item?.ownerName) {
       toggleFavoriteMock({
         postId: item.id,
         postTitle: item.title,
         ownerName: item.ownerName,
-        // nếu muốn có thêm thông tin trong thông báo thì sau này thêm vào:
-        // postPrice: item.price,
-        // postLocation: item.location,
-        // postThumbnail: item.coverUrl,
       });
     }
   };
 
   const handleCardClick = () => {
-    // 👉 lưu lịch sử xem khi bấm vào card (trừ nút tim vì đã preventDefault)
     if (item) {
       addToViewHistory(item);
     }
@@ -155,14 +159,19 @@ export default function Post({ item, to = "#" }) {
   return (
     <NavLink
       to={to}
-      state={{ item }} // 👈 TRUYỀN TOÀN BỘ DATA SANG TRANG CHI TIẾT
+      state={{ item }}
       className="mk-post-card"
       aria-label={title}
-      onClick={handleCardClick} // 👈 THÊM SỰ KIỆN CLICK Ở ĐÂY
+      onClick={handleCardClick}
     >
       {/* Ảnh */}
       <div className="mk-post-media">
         <img src={coverUrl} alt={title} loading="lazy" />
+
+        {/* 🔹 Badge Môi giới */}
+        {isBroker && (
+          <div className="mk-badge mk-badge-broker">Môi giới</div>
+        )}
 
         <button
           type="button"

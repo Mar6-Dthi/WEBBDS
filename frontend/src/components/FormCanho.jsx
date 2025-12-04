@@ -6,7 +6,7 @@ export default function FormCanho({ estateType }) {
   const navigate = useNavigate();
 
   const [estateStatus, setEstateStatus] = useState("Chưa bàn giao");
-  const [ownerType, setOwnerType] = useState("Cá nhân");
+  const [ownerType, setOwnerType] = useState("Cá nhân"); // "Cá nhân" | "Môi giới"
 
   const isRent = estateType === "Cho thuê";
 
@@ -74,9 +74,18 @@ export default function FormCanho({ estateType }) {
           .map((m) => m.src)
       : [];
 
+    // 👇 Xác định môi giới / cá nhân
+    const isBroker = ownerType === "Môi giới";
+
+    // 👇 Đọc gói hội viên hiện tại của user (nếu có)
+    // Ví dụ ở trang đăng ký hội viên:
+    // localStorage.setItem(`membershipPlan_${ownerId}`, "p20");
+    const membershipPlanId =
+      localStorage.getItem(`membershipPlan_${ownerId}`) || null;
+
     const newPost = {
       id: String(Date.now()),
-      ownerId, // 👈 gắn ID chủ tin
+      ownerId, // ID chủ tin
       category: "Căn hộ/Chung cư",
       estateType, // "Cần bán" | "Cho thuê"
 
@@ -95,7 +104,7 @@ export default function FormCanho({ estateType }) {
       houseType: form.houseType || "Căn hộ",
       legal: form.legal,
       interior: form.interior,
-      ownerType,
+      ownerType, // "Cá nhân" | "Môi giới"
       estateStatus,
 
       // field phụ
@@ -103,6 +112,10 @@ export default function FormCanho({ estateType }) {
       maCan: form.maCan,
       block: form.block,
       isCorner: form.isCorner,
+
+      // trạng thái môi giới + hội viên (dùng cho ưu tiên hiển thị)
+      isBroker,          // 👈 Form chọn "Môi giới" → gắn badge môi giới
+      membershipPlanId,  // 👈 nếu user có gói hội viên → ưu tiên xếp hạng
 
       // thời gian tạo tin
       createdAt: new Date().toISOString(),

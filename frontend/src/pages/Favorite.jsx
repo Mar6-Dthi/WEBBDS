@@ -7,29 +7,46 @@ import "../styles/header.css";
 import NhatotHeader from "../components/header";
 import ChatModal from "../components/ChatModal";
 
-// 🧡 DÙNG CHUNG VỚI LISTING
-import { getFavoriteIds, toggleFavorite } from "../services/mockFavoriteService";
-import { getMockListings } from "../services/mockListingService";
+/* ===== helper: key dùng chung với Post.jsx ===== */
 
-/* ===== helper ===== */
-function getCurrentUserId() {
+/**
+ * Lấy key để lưu favorites:
+ *  - Nếu có currentUser.id / phone → dùng cái đó
+ *  - Nếu không nhưng có accessToken → dùng "user_<accessToken>"
+ *  - Nếu không có gì → null (coi như chưa login)
+ */
+function getFavoriteUserKey() {
   try {
-    const u = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    return u.id || u.phone || null;
+    const rawUser = localStorage.getItem("currentUser");
+    if (rawUser) {
+      const u = JSON.parse(rawUser);
+      if (u.id || u.phone) return String(u.id || u.phone);
+    }
   } catch {
-    return null;
+    // ignore
   }
+
+  const token = localStorage.getItem("accessToken");
+  if (token) return "user_" + token;
+
+  return null;
 }
 
-// Lấy danh sách tin đã tim từ mock (favorites_mock + MOCK_LISTINGS)
-function getFavorites() {
+// Lấy danh sách bài đã lưu theo userKey
+function loadFavoritesForUser(userKey) {
+  if (!userKey) return [];
   try {
-    const ids = getFavoriteIds() || [];
-    const all = getMockListings() || [];
-    return all.filter((p) => ids.includes(p.id));
+    const raw = localStorage.getItem("favorites_" + userKey) || "[]";
+    return JSON.parse(raw);
   } catch {
     return [];
   }
+}
+
+// Lưu danh sách favorites
+function saveFavoritesForUser(userKey, list) {
+  if (!userKey) return;
+  localStorage.setItem("favorites_" + userKey, JSON.stringify(list));
 }
 
 function formatPriceVND(n) {
@@ -44,7 +61,8 @@ function formatPriceVND(n) {
 
 /* ===== Component chính ===== */
 export default function Favorite() {
-  const [userId, setUserId] = useState(null);
+  const [userKey, setUserKey] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [list, setList] = useState([]);
   const [sessionLikes, setSessionLikes] = useState({}); // trạng thái tim trong phiên
 
@@ -53,28 +71,29 @@ export default function Favorite() {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
-    const id = getCurrentUserId();
-    setUserId(id);
+    // kiểm tra login theo accessToken hoặc currentUser
+    const hasToken = !!localStorage.getItem("accessToken");
+    const hasUser = !!localStorage.getItem("currentUser");
 
-    // Lưu sẵn toàn bộ posts để PostDetail F5 vẫn đọc được
-    try {
-      const all = getMockListings();
-      localStorage.setItem("posts", JSON.stringify(all));
-    } catch {
-      // ignore
+    if (!hasToken && !hasUser) {
+      setIsLoggedIn(false);
+      return;
     }
+    setIsLoggedIn(true);
 
-    if (id) {
-      const favs = getFavorites();
-      setList(favs);
+    const key = getFavoriteUserKey();
+    setUserKey(key);
 
-      const init = {};
-      favs.forEach((it) => {
-        const k = it.id ?? `${it.title}|${it.price}`;
-        init[k] = true;
-      });
-      setSessionLikes(init);
-    }
+    const favs = loadFavoritesForUser(key);
+    setList(favs);
+
+    // trạng thái tim trong phiên (mặc định tất cả đang được tim)
+    const init = {};
+    favs.forEach((it) => {
+      const k = it.id ?? `${it.title}|${it.price}`;
+      init[k] = true;
+    });
+    setSessionLikes(init);
   }, []);
 
   const handleToggleFavorite = (item) => {
@@ -82,20 +101,38 @@ export default function Favorite() {
     const currentLiked = sessionLikes[key] ?? true;
     const nextLiked = !currentLiked;
 
-    // 1. cập nhật UI (chỉ đổi màu tim, KHÔNG xoá item khỏi list)
+    // 1. Cập nhật UI: chỉ đổi màu tim, KHÔNG xoá item khỏi list
     setSessionLikes((prev) => ({
       ...prev,
       [key]: nextLiked,
     }));
 
-    // 2. cập nhật kho tim chung (favorites_mock)
-    toggleFavorite(item.id);
-    // -> lần sau reload trang Yêu thích, những tin bỏ tim sẽ tự biến mất
+    // 2. Cập nhật localStorage: bỏ tim → xoá khỏi favorites_<userKey>
+    if (!userKey) return;
+
+    const currentList = loadFavoritesForUser(userKey);
+
+    let nextList;
+    if (nextLiked) {
+      // thêm lại (trường hợp user bấm tim lại khi chưa reload)
+      const existed = currentList.some(
+        (p) => (p.id ?? `${p.title}|${p.price}`) === key
+      );
+      nextList = existed ? currentList : [...currentList, item];
+    } else {
+      // bỏ tim → xoá khỏi kho
+      nextList = currentList.filter(
+        (p) => (p.id ?? `${p.title}|${p.price}`) !== key
+      );
+    }
+
+    saveFavoritesForUser(userKey, nextList);
+    // ❗ KHÔNG cập nhật state `list` để item vẫn còn hiển thị tới khi reload
   };
 
   // bấm Chat
   const handleChatClick = (item) => {
-    if (!userId) {
+    if (!isLoggedIn) {
       alert("Vui lòng đăng nhập để chat với người đăng tin.");
       return;
     }
@@ -127,14 +164,14 @@ export default function Favorite() {
             </h1>
 
             {/* chưa login */}
-            {!userId && (
+            {!isLoggedIn && (
               <div className="fav-empty">
                 <p>Vui lòng đăng nhập để xem danh sách tin đã lưu.</p>
               </div>
             )}
 
             {/* login nhưng rỗng */}
-            {userId && total === 0 && (
+            {isLoggedIn && total === 0 && (
               <div className="fav-empty">
                 <p>Hiện tại chị chưa lưu tin nào.</p>
                 <p>💛 Hãy bấm trái tim ở tin đăng để lưu lại.</p>
@@ -142,7 +179,7 @@ export default function Favorite() {
             )}
 
             {/* có tin */}
-            {userId && total > 0 && (
+            {isLoggedIn && total > 0 && (
               <div className="fav-list">
                 {list.map((item, idx) => {
                   const likeKey = item.id ?? `${item.title}|${item.price}`;
@@ -150,6 +187,8 @@ export default function Favorite() {
 
                   const detailPath =
                     item.to || (item.id ? `/post/${item.id}` : "#");
+
+                  const priceValue = item.priceValue ?? item.price;
 
                   return (
                     <div className="fav-item" key={item.id ?? idx}>
@@ -179,7 +218,7 @@ export default function Favorite() {
                         </NavLink>
 
                         <div className="fav-item-price">
-                          {formatPriceVND(item.priceValue)}
+                          {formatPriceVND(priceValue)}
                         </div>
 
                         <div className="fav-item-meta">

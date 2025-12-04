@@ -51,6 +51,15 @@ export default function FormDat({ estateType }) {
     // 🔑 Lấy ownerId để Quản lý tin
     const ownerId = localStorage.getItem("accessToken") || "guest";
 
+    // 👇 Xác định môi giới / cá nhân
+    const isBroker = ownerType === "Môi giới";
+
+    // 👇 Lấy gói hội viên của user (nếu có)
+    // Ở màn đăng ký gói hội viên chị lưu kiểu:
+    // localStorage.setItem(`membershipPlan_${ownerId}`, "p20");
+    const membershipPlanId =
+      localStorage.getItem(`membershipPlan_${ownerId}`) || null;
+
     // 🔴 LẤY MEDIA ĐÃ UPLOAD Ở POSTCREATE
     const draftMedia = JSON.parse(
       localStorage.getItem("postDraftMedia") || "[]"
@@ -81,7 +90,7 @@ export default function FormDat({ estateType }) {
       houseType: form.landType || "Đất",
       legal: form.legal,
       interior: "",
-      ownerType,
+      ownerType,          // "Cá nhân" | "Môi giới"
       estateStatus: "",
 
       projectName: form.projectName,
@@ -89,6 +98,10 @@ export default function FormDat({ estateType }) {
       maLo: form.maLo,
       width: Number(form.width) || null,
       length: Number(form.length) || null,
+
+      // 👇 thêm thông tin ưu tiên hiển thị
+      isBroker,          // dùng để gắn badge Môi giới & ưu tiên môi giới
+      membershipPlanId,  // dùng để ưu tiên hội viên gói cao
 
       createdAt: new Date().toISOString(),
 

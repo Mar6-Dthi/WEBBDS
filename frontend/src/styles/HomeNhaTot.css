@@ -667,3 +667,19 @@
   justify-content: center;
   font-weight: 600;
 }
+
+.mk-post-media {
+  position: relative;
+}
+
+.mk-badge-broker {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #2563eb;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}

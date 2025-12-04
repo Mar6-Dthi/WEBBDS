@@ -48,10 +48,17 @@ export default function FormVanphong({ estateType }) {
     if (!validate()) return;
 
     const id = String(Date.now());
-    // 🔴 LẤY ID USER TỪ LOCALSTORAGE (giống FormPhongtro)
+    // LẤY ID USER TỪ LOCALSTORAGE
     const ownerId = localStorage.getItem("accessToken") || "guest";
 
-    // 🔴 LẤY MEDIA ĐÃ CHỌN Ở PostCreate
+    // 👉 gắn môi giới
+    const isBroker = ownerType === "Môi giới";
+
+    // 👉 đọc gói hội viên (nếu có)
+    const membershipPlanId =
+      localStorage.getItem(`membershipPlan_${ownerId}`) || null;
+
+    // LẤY MEDIA ĐÃ CHỌN Ở PostCreate
     const draftMedia = JSON.parse(
       localStorage.getItem("postDraftMedia") || "[]"
     );
@@ -63,7 +70,7 @@ export default function FormVanphong({ estateType }) {
 
     const newPost = {
       id,
-      ownerId, // ➕ thêm field này để Quản lý tin lọc theo user
+      ownerId, // để Quản lý tin lọc theo user
       category: "Văn phòng, Mặt bằng kinh doanh",
       estateType, // "Cần bán" | "Cho thuê"
 
@@ -90,12 +97,16 @@ export default function FormVanphong({ estateType }) {
 
       createdAt: new Date().toISOString(),
 
-      // 🔴 ẢNH THẬT TỪ USER
+      // ẢNH THẬT TỪ USER
       images,
 
       // fallback người bán
       sellerName: "Chủ văn phòng",
       sellerPhone: "0900000000",
+
+      // ⭐ quyền ưu tiên hiển thị
+      isBroker,         // để gắn badge môi giới
+      membershipPlanId, // để xếp hạng hội viên
     };
 
     const old = JSON.parse(localStorage.getItem("posts") || "[]");
