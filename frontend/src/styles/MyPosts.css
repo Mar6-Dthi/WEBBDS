@@ -1,102 +1,274 @@
-.myp-page {
-  min-height: calc(100vh - 64px);
+/* ========== LAYOUT CHUNG ========== */
+
+.myp-main {
   background: #fff7ec;
-  padding: 32px 0 48px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: calc(100vh - 64px);
 }
 
-.myp-container {
-  width: min(1200px, 94vw);
-  margin: 0 auto;
-}
-
-.myp-list {
-  margin-top: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.myp-item {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  padding: 12px 16px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
-}
-
-.myp-thumb {
-  width: 120px;
-  height: 80px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #f3f4f6;
-  flex-shrink: 0;
-}
-
-.myp-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.myp-thumb-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  color: #9ca3af;
-  height: 100%;
-}
-
-.myp-body {
-  flex: 1;
+.myp-inner {
+  width: min(1200px, 92vw);
+  margin: 20px auto 32px;
 }
 
 .myp-title {
-  margin: 0 0 4px;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 16px;
+  color: #111827;
 }
 
-.myp-meta {
-  margin: 0 0 2px;
+/* ========== CARD BỘ LỌC ========== */
+
+.myp-filter-card {
+  margin-bottom: 18px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 16px 18px 18px;
+  border: 1px solid #f3f4f6;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+
+.myp-filter-heading {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.myp-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)); /* 4 ô: loại người đăng, loại BĐS, thời gian, giá */
+  gap: 12px 16px;
+}
+
+.myp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.myp-label {
   font-size: 13px;
   color: #6b7280;
 }
 
-.myp-address {
-  margin: 0;
-  font-size: 13px;
-  color: #4b5563;
+.myp-select {
+  width: 100%;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  padding: 0 14px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
 }
 
-.myp-actions {
+.myp-select:focus {
+  border-color: #ff7a00;
+  box-shadow: 0 0 0 1px rgba(255, 122, 0, 0.15);
+}
+
+/* responsive: màn nhỏ < 960px thì cho 2 cột, mobile 1 cột */
+@media (max-width: 960px) {
+  .myp-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .myp-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ========== KHU VỰC DANH SÁCH TIN ========== */
+
+.myp-posts-section {
+  margin-top: 16px;
+}
+
+.myp-posts-head {
   display: flex;
   flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.myp-posts-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.myp-posts-sub {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Grid tin đăng (tận dụng mk-feed-grid) */
+
+.myp-posts-grid.mk-feed-grid {
+  margin-top: 4px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+/* Bọc card + nút */
+
+.myp-post-card-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.myp-post-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.myp-action-btn {
+  flex: 1;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.myp-action-btn:hover {
+  border-color: #ff7a00;
+  color: #ff7a00;
+}
+
+.myp-action-btn-danger {
+  border-color: #fee2e2;
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.myp-action-btn-danger:hover {
+  border-color: #f97373;
+  background: #fee2e2;
+}
+
+/* ========== PHÂN TRANG ========== */
+
+.myp-pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
   gap: 6px;
 }
 
-.myp-btn {
-  padding: 6px 12px;
+.myp-page-btn {
+  min-width: 32px;
+  height: 32px;
   border-radius: 999px;
   border: 1px solid #e5e7eb;
-  background: #fff;
+  background: #ffffff;
   font-size: 13px;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.myp-btn:hover {
-  background: #f3f4f6;
+.myp-page-btn--active {
+  border-color: #ff7a00;
+  background: #ff7a00;
+  color: #ffffff;
 }
 
-.myp-btn-danger {
-  border-color: #fecaca;
+.myp-page-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 900px) {
+  .myp-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .myp-inner {
+    width: 94vw;
+  }
+
+  .myp-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .myp-posts-grid.mk-feed-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========== MODAL XÁC NHẬN XOÁ ========== */
+
+.myp-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.myp-modal {
+  width: min(420px, 92vw);
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px 20px 16px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.45);
+}
+
+.myp-modal-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.myp-modal-text {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.myp-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.myp-modal-btn {
+  min-width: 88px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 14px;
+  transition: all 0.15s ease;
+}
+
+.myp-modal-btn:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.myp-modal-btn-danger {
+  border-color: #fee2e2;
+  background: #fef2f2;
   color: #b91c1c;
 }
 
-.myp-btn-danger:hover {
+.myp-modal-btn-danger:hover {
+  border-color: #f97373;
   background: #fee2e2;
 }

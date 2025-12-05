@@ -9,7 +9,9 @@ import {
   getMyChatsMock,
   markChatsAsReadMock,
   sendChatMessageMock,
+  seedSampleChatsForCurrentUser,
 } from "../services/mockChatService";
+import { getCurrentUserName } from "../services/mockFavoriteService";
 
 // tạo key hội thoại: dựa trên postId + 2 bên tham gia (bất kể chiều gửi)
 function getConversationKey(msg) {
@@ -23,12 +25,13 @@ function getConversationKey(msg) {
 export default function Messages() {
   const navigate = useNavigate();
 
-  const [rawMessages, setRawMessages] = useState([]);   // toàn bộ message
+  const [rawMessages, setRawMessages] = useState([]); // toàn bộ message
   const [selectedConvId, setSelectedConvId] = useState(null); // hội thoại đang chọn
-  const [reply, setReply] = useState("");               // input trả lời
+  const [reply, setReply] = useState(""); // input trả lời
 
   const isLoggedIn = !!localStorage.getItem("accessToken");
-  const currentName = (localStorage.getItem("accountName") || "").trim();
+  // ✅ dùng đúng hàm system để lấy tên user
+  const currentName = (getCurrentUserName() || "").trim();
 
   // ===== HELPER: tên người còn lại trong 1 message =====
   function getPartnerName(msg) {
@@ -49,16 +52,32 @@ export default function Messages() {
       return;
     }
 
-    const data = getMyChatsMock() || [];
+    // 👇 kiểm tra tên hiện tại
+    const me = getCurrentUserName();
+    if (!me) {
+      console.warn("[Messages] getCurrentUserName() rỗng → không load được chat");
+      setRawMessages([]);
+      return;
+    }
+
+    // 1) Lấy tin nhắn hiện có
+    let data = getMyChatsMock() || [];
+
+    // 2) Nếu chưa có gì thì seed mẫu rồi đọc lại
+    if (data.length === 0) {
+      seedSampleChatsForCurrentUser();
+      data = getMyChatsMock() || [];
+    }
+
     setRawMessages(data);
 
-    // chọn hội thoại mới nhất
+    // chọn hội thoại mới nhất nếu có dữ liệu
     if (data.length > 0) {
-      const firstConv = getConversationKey(data[0]);
+      const firstConv = getConversationKey(data[0]); // getMyChatsMock trả desc
       setSelectedConvId(firstConv);
     }
 
-    // mở trang tin nhắn ⇒ đánh dấu đã đọc tất cả tin nhận
+    // đánh dấu đã đọc tất cả tin nhận
     markChatsAsReadMock();
   }, [isLoggedIn, navigate]);
 
@@ -80,8 +99,9 @@ export default function Messages() {
           partnerName,
           lastText: m.text || "",
           lastTime: time,
-          // chưa đọc nếu mình là người nhận & isRead = false
-          isUnread: !m.isRead && (m.receiverName || "").trim() === currentName,
+          isUnread:
+            !m.isRead &&
+            (m.receiverName || "").trim() === currentName,
         });
       }
     });
@@ -91,11 +111,9 @@ export default function Messages() {
     );
   }, [rawMessages, currentName]);
 
-  // hội thoại đang chọn
   const selectedConversation =
     conversations.find((c) => c.id === selectedConvId) || null;
 
-  // message thuộc hội thoại đang chọn (dùng cho khung chat bên phải)
   const selectedMessages = React.useMemo(() => {
     if (!selectedConvId) return [];
     return rawMessages
@@ -114,7 +132,6 @@ export default function Messages() {
     const text = reply.trim();
     if (!text || !selectedConversation) return;
 
-    // gửi tin nhắn mock
     sendChatMessageMock({
       postId: selectedConversation.postId,
       postTitle: selectedConversation.postTitle,
@@ -122,19 +139,16 @@ export default function Messages() {
       text,
     });
 
-    // load lại toàn bộ messages để hội thoại được cập nhật
+    // load lại messages từ mock_chats
     const data = getMyChatsMock() || [];
     setRawMessages(data);
-
     setReply("");
   };
 
   return (
     <div className="nhatot">
-      {/* HEADER NHÀ TỐT */}
       <NhatotHeader />
 
-      {/* NỘI DUNG TRANG TIN NHẮN */}
       <div className="msg-page">
         <main className="msg-main" style={{ paddingTop: 88 }}>
           <div className="msg-inner">
@@ -149,7 +163,6 @@ export default function Messages() {
               </div>
             </div>
 
-            {/* Không có hội thoại */}
             {conversations.length === 0 && (
               <div className="msg-empty">
                 <p>Hiện tại chị chưa có tin nhắn nào.</p>
@@ -162,7 +175,7 @@ export default function Messages() {
 
             {conversations.length > 0 && (
               <div className="msg-layout">
-                {/* ===== CỘT TRÁI: DANH SÁCH HỘI THOẠI (CÓ THANH CUỘN) ===== */}
+                {/* Cột trái */}
                 <div className="msg-list">
                   {conversations.map((conv) => (
                     <button
@@ -183,7 +196,9 @@ export default function Messages() {
                         </span>
                         <span className="msg-time">
                           {conv.lastTime
-                            ? new Date(conv.lastTime).toLocaleString("vi-VN")
+                            ? new Date(
+                                conv.lastTime
+                              ).toLocaleString("vi-VN")
                             : ""}
                         </span>
                       </div>
@@ -195,14 +210,17 @@ export default function Messages() {
                         {conv.postTitle}
                       </div>
 
-                      <div className="msg-item-text" title={conv.lastText}>
+                      <div
+                        className="msg-item-text"
+                        title={conv.lastText}
+                      >
                         {conv.lastText}
                       </div>
                     </button>
                   ))}
                 </div>
 
-                {/* ===== CỘT PHẢI: HỘI THOẠI DẠNG CHAT ===== */}
+                {/* Cột phải */}
                 <div className="msg-detail">
                   {!selectedConversation && (
                     <div className="msg-detail-empty">
@@ -237,7 +255,8 @@ export default function Messages() {
                             to={`/post/${selectedConversation.postId}`}
                             className="msg-detail-post-link"
                           >
-                            {selectedConversation.postTitle || "Xem bài đăng"}
+                            {selectedConversation.postTitle ||
+                              "Xem bài đăng"}
                           </NavLink>
                         ) : (
                           <div className="msg-detail-post-text">
@@ -247,7 +266,6 @@ export default function Messages() {
                         )}
                       </div>
 
-                      {/* KHUNG CHAT GIỮA – BUBBLE TRÁI / PHẢI */}
                       <div className="msg-detail-block">
                         <div className="msg-detail-label">
                           Nội dung hội thoại
@@ -267,7 +285,9 @@ export default function Messages() {
                                 key={m.id}
                                 className={
                                   "msg-chat-row " +
-                                  (isMe ? "msg-chat-row--me" : "msg-chat-row--other")
+                                  (isMe
+                                    ? "msg-chat-row--me"
+                                    : "msg-chat-row--other")
                                 }
                               >
                                 <div className="msg-chat-bubble">
@@ -279,7 +299,6 @@ export default function Messages() {
                         </div>
                       </div>
 
-                      {/* Ô TRẢ LỜI GIỐNG MESSENGER */}
                       <form
                         className="msg-reply-row"
                         onSubmit={handleReplySubmit}

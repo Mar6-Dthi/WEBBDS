@@ -46,11 +46,11 @@ export function sendChatMessageMock({
     id: now,
     postId,
     postTitle: postTitle || "",
-    senderName,      // người nhắn (CHỊ)
-    receiverName,    // chủ bài
+    senderName, // người nhắn (CHỊ)
+    receiverName, // chủ bài
     text: content,
     createdAt: now,
-    isRead: false,   // phía người nhận chưa đọc
+    isRead: false, // phía người nhận chưa đọc
   });
 
   saveChats(chats);
@@ -112,15 +112,19 @@ export function markChatsAsReadMock() {
 
 /**
  * 🌟 SEED MOCK: tạo sẵn vài đoạn chat mà CHỊ LÀ NGƯỜI GỬI
- * giả sử chị đã thích 2–3 bài của người khác và nhắn cho chủ bài.
- * Gọi 1 lần (ví dụ ở Messages.jsx) – nếu đã có chat thì không seed nữa.
+ * Mỗi user mới login sẽ được seed riêng, không ảnh hưởng dữ liệu user khác.
  */
 export function seedSampleChatsForCurrentUser() {
   const me = getCurrentUserName();
   if (!me) return;
 
   const current = loadChats();
-  if (current.length > 0) return; // đã có dữ liệu thì thôi, tránh bị nhân đôi
+
+  // ✅ Chỉ bỏ qua nếu user hiện tại đã có ít nhất 1 đoạn chat
+  const hasChatForMe = current.some(
+    (c) => c.senderName === me || c.receiverName === me
+  );
+  if (hasChatForMe) return;
 
   const now = Date.now();
 
@@ -129,9 +133,10 @@ export function seedSampleChatsForCurrentUser() {
       id: now + 1,
       postId: 101,
       postTitle: "Đất nền 100m² Bình Chánh",
-      senderName: me,              // chị là người nhắn
-      receiverName: "Anh Minh",    // chủ bài 1 (mock)
-      text: "Chào anh Minh, em thấy tin đất nền 100m² Bình Chánh, còn đất không ạ?",
+      senderName: me, // chị là người nhắn
+      receiverName: "Anh Minh", // chủ bài 1 (mock)
+      text:
+        "Chào anh Minh, em thấy tin đất nền 100m² Bình Chánh, còn đất không ạ?",
       createdAt: now - 1000 * 60 * 45, // 45 phút trước
       isRead: false,
     },
@@ -151,7 +156,8 @@ export function seedSampleChatsForCurrentUser() {
       postTitle: "Văn phòng 40m² ngay Q.Tân Bình",
       senderName: me,
       receiverName: "Anh Thanh Hà",
-      text: "Em quan tâm văn phòng 40m² Q.Tân Bình, giá còn thương lượng được không anh?",
+      text:
+        "Em quan tâm văn phòng 40m² Q.Tân Bình, giá còn thương lượng được không anh?",
       createdAt: now - 1000 * 60 * 150, // 2.5 giờ trước
       isRead: true,
     },

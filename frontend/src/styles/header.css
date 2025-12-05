@@ -15,7 +15,7 @@
     var(--orange-2) 60%,
     var(--orange-3)
   );
-  box-shadow: none; /* để khi ở top dính liền hero, không lộ rãnh */
+  box-shadow: none;
 }
 
 .nhatot .mk-header-fixed .mk-container {
@@ -51,38 +51,36 @@
   margin-left: auto;
 }
 
+/* Ẩn thanh nav bên cạnh logo (nếu chưa dùng) */
 .nhatot .mk-nav {
   display: none !important;
 }
 
-.nhatot .mk-icon-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  border: 0;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  backdrop-filter: blur(4px);
-}
-
+/* ========== LOGO ẢNH ========== */
+/* ========== LOGO ẢNH TRONG KHUNG TRẮNG ========== */
+/* NavLink bọc logo */
 .nhatot .mk-logo {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-weight: 900;
-  font-size: 20px;
-  letter-spacing: 0.2px;
-  padding: 6px 10px;
+  justify-content: center;
+  height: 44px;              /* chiều cao khung trắng */
+  padding: 6px 14px;         /* chỉnh cho vừa logo */
   border-radius: 12px;
   background: #fff;
-  color: var(--orange-1);
   box-shadow: var(--shadow);
-  text-transform: uppercase;
 }
 
+/* Ảnh logo thật */
+.nhatot .mk-logo-img {
+  height: 100%;              /* fill theo chiều cao khung */
+  width: auto;
+  object-fit: contain;
+  display: block;
+  cursor: pointer;
+}
+
+
+/* ========== BUTTONS BÊN PHẢI ========== */
 .nhatot .mk-chip {
   border: 0;
   border-radius: 999px;
@@ -110,7 +108,7 @@
   border: 2px solid #fff;
 }
 
-/* ========== OVERRIDE ICONS BÊN PHẢI ========== */
+/* OVERRIDE ICONS BÊN PHẢI */
 .nhatot .mk-header-row .mk-right .mk-icon-pill {
   width: 44px !important;
   height: 44px !important;
@@ -138,16 +136,6 @@
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14) !important;
 }
 
-/* Giữ nút menu bên trái */
-.nhatot .mk-header-row .mk-left .mk-icon-btn {
-  border-radius: 12px !important;
-  background: rgba(255, 255, 255, 0.15) !important;
-  color: #fff !important;
-  border: none !important;
-  box-shadow: none !important;
-  backdrop-filter: blur(4px) !important;
-}
-
 /* ========== BADGE SỐ THÔNG BÁO TRÊN CHUÔNG ========== */
 .mk-icon-pill.mk-bell {
   position: relative;
@@ -168,4 +156,29 @@
   align-items: center;
   justify-content: center;
   font-weight: 600;
+}
+
+.nhatot .mk-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  border: 2px solid #fff;
+  overflow: hidden;
+}
+
+.nhatot .mk-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  object-fit: cover;
+  display: block;
+}
+
+.nhatot .mk-avatar-initial {
+  font-size: 14px;
 }

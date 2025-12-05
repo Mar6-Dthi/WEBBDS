@@ -151,3 +151,56 @@ export function markNotificationsAsReadMock() {
     window.dispatchEvent(new Event("mock-notifications-changed"));
   }
 }
+
+/**
+ * 🌟 SEED: tạo sẵn vài thông báo mẫu cho user hiện tại
+ * Mỗi tài khoản mới login lần đầu sẽ có 1–2 thông báo demo.
+ */
+export function seedNotificationsForCurrentUser() {
+  const me = getCurrentUserName();
+  if (!me) return;
+
+  const notifications = load("notifications_mock") || [];
+
+  // Nếu user này đã có ít nhất 1 thông báo thì không seed nữa
+  const hasForMe = notifications.some((n) => n.ownerName === me);
+  if (hasForMe) return;
+
+  const now = Date.now();
+
+  const samples = [
+    {
+      id: now + 1,
+      ownerName: me,
+      actorName: "Hồng Anh",
+      postId: 201,
+      postTitle: "Vinhomes Central Park 2PN – View sông, full nội thất",
+      postPrice: 4_500_000_000,
+      postLocation: "Bình Thạnh, TP.HCM",
+      postThumbnail: "/Img/demo/house-1.jpg",
+      content: `Hồng Anh đã thêm bài viết "Vinhomes Central Park 2PN – View sông, full nội thất" của bạn vào mục yêu thích`,
+      createdAt: now - 1000 * 60 * 10,
+      isRead: false,
+    },
+    {
+      id: now + 2,
+      ownerName: me,
+      actorName: "Minh Khang",
+      postId: 202,
+      postTitle: "Nhà phố 3 tầng Phú Nhuận",
+      postPrice: 7_200_000_000,
+      postLocation: "Phú Nhuận, TP.HCM",
+      postThumbnail: "/Img/demo/house-2.jpg",
+      content: `Minh Khang đã thêm bài viết "Nhà phố 3 tầng Phú Nhuận" của bạn vào mục yêu thích`,
+      createdAt: now - 1000 * 60 * 30,
+      isRead: false,
+    },
+  ];
+
+  const merged = [...samples, ...notifications];
+  save("notifications_mock", merged);
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("mock-notifications-changed"));
+  }
+}

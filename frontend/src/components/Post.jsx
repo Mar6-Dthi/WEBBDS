@@ -9,9 +9,14 @@ import {
   BedDouble,
   Ruler,
 } from "lucide-react";
-import { toggleFavoriteMock } from "../services/mockFavoriteService";
+
+import {
+  toggleFavoriteMock,
+} from "../services/mockFavoriteService";
+
 import { addToViewHistory } from "../services/viewHistoryService";
 
+/* ================= FORMATTERS ================= */
 function formatPriceVND(n) {
   if (n >= 1_000_000_000) return `${+(n / 1_000_000_000).toFixed(2)} tỷ`;
   if (n >= 1_000_000) return `${+(n / 1_000_000).toFixed(0)} tr`;
@@ -24,13 +29,7 @@ function formatPerM2(n) {
   return `${n.toLocaleString("vi-VN")} đ/m²`;
 }
 
-/* ===== helper cho yêu thích (localStorage) ===== */
-
-/** Lấy key để lưu favorites:
- *  - Nếu có currentUser.id / phone → dùng cái đó
- *  - Nếu không nhưng có accessToken → dùng "user_<accessToken>"
- *  - Nếu không có gì → "guest"
- */
+/* ========== FAVORITE LOCAL STORAGE ========= */
 function getFavoriteUserKey() {
   try {
     const rawUser = localStorage.getItem("currentUser");
@@ -38,9 +37,7 @@ function getFavoriteUserKey() {
       const u = JSON.parse(rawUser);
       if (u.id || u.phone) return String(u.id || u.phone);
     }
-  } catch {
-    // ignore
-  }
+  } catch {}
 
   const token = localStorage.getItem("accessToken");
   if (token) return "user_" + token;
@@ -92,14 +89,15 @@ function toggleFavoriteForUser(userKey, item) {
   saveFavorites(userKey, list);
 }
 
-/* ===== Component card tin ===== */
+/* ================= THE CARD ================= */
 
 export default function Post({ item, to = "#" }) {
   const navigate = useNavigate();
   const userKey = getFavoriteUserKey();
-  const accessToken = localStorage.getItem("accessToken"); // để kiểm tra login
+  const accessToken = localStorage.getItem("accessToken");
 
   const {
+    id,
     title,
     coverUrl,
     timeAgo,
@@ -110,12 +108,13 @@ export default function Post({ item, to = "#" }) {
     beds,
     typeLabel,
     location,
-    isBroker, // 👈 chỉ dùng để gắn badge môi giới
+    ownerName,  // 🔥 rất quan trọng cho Notification
+    isBroker,
   } = item || {};
 
   const [liked, setLiked] = useState(false);
 
-  // Đọc trạng thái tim mỗi khi item hoặc userKey thay đổi
+  /* READ CURRENT FAVORITE STATE */
   useEffect(() => {
     if (!item) {
       setLiked(false);
@@ -125,37 +124,40 @@ export default function Post({ item, to = "#" }) {
     setLiked(fav);
   }, [userKey, item]);
 
+  /* ========== LIKE HANDLER ========== */
   const handleLikeClick = (e) => {
-    e.preventDefault(); // không cho NavLink chuyển trang khi bấm tim
+    e.preventDefault();
 
-    // Chưa đăng nhập (không có accessToken) → bắt đi login
     if (!accessToken) {
       navigate("/login");
       return;
     }
 
     const currentlyLiked = isItemFavorite(userKey, item);
-
-    // toggle trong danh sách yêu thích
     toggleFavoriteForUser(userKey, item);
     setLiked(!currentlyLiked);
 
-    // Nếu là hành động "thêm vào yêu thích" thì tạo thông báo cho chủ bài
-    if (!currentlyLiked && item?.ownerName) {
+    // ✔ Chỉ khi "THÊM TIM" → tạo thông báo cho chủ bài
+    if (!currentlyLiked && ownerName) {
       toggleFavoriteMock({
-        postId: item.id,
-        postTitle: item.title,
-        ownerName: item.ownerName,
+        postId: id,
+        postTitle: title,
+        ownerName,
+
+        // ✔ bổ sung data để NotificationModal hiển thị đẹp
+        postPrice: price,
+        postLocation: location,
+        postThumbnail: coverUrl,
       });
     }
   };
 
+  /* ========== VIEW HISTORY ========== */
   const handleCardClick = () => {
-    if (item) {
-      addToViewHistory(item);
-    }
+    if (item) addToViewHistory(item);
   };
 
+  /* ========== UI ========== */
   return (
     <NavLink
       to={to}
@@ -164,11 +166,9 @@ export default function Post({ item, to = "#" }) {
       aria-label={title}
       onClick={handleCardClick}
     >
-      {/* Ảnh */}
       <div className="mk-post-media">
         <img src={coverUrl} alt={title} loading="lazy" />
 
-        {/* 🔹 Badge Môi giới */}
         {isBroker && (
           <div className="mk-badge mk-badge-broker">Môi giới</div>
         )}
@@ -182,7 +182,7 @@ export default function Post({ item, to = "#" }) {
           <Heart size={18} />
         </button>
 
-        {typeof photos === "number" && photos > 0 && (
+        {photos > 0 && (
           <div className="mk-badge mk-photos">
             <Camera size={14} /> <span>{photos}</span>
           </div>
@@ -195,17 +195,16 @@ export default function Post({ item, to = "#" }) {
         )}
       </div>
 
-      {/* Nội dung */}
       <div className="mk-post-body">
         <h4 className="mk-post-title">{title}</h4>
 
         <div className="mk-post-meta">
-          {beds ? (
+          {beds && (
             <span>
               <BedDouble size={14} /> {beds} PN
             </span>
-          ) : null}
-          {typeLabel ? <span>{typeLabel}</span> : null}
+          )}
+          {typeLabel && <span>{typeLabel}</span>}
         </div>
 
         <div className="mk-post-price">
@@ -213,20 +212,20 @@ export default function Post({ item, to = "#" }) {
             {price != null ? formatPriceVND(price) : ""}
           </div>
           <div className="mk-price-sub">
-            {pricePerM2 ? <span>{formatPerM2(pricePerM2)}</span> : null}
-            {area ? (
+            {pricePerM2 && <span>{formatPerM2(pricePerM2)}</span>}
+            {area && (
               <span className="mk-dot">
                 <Ruler size={14} /> {area} m²
               </span>
-            ) : null}
+            )}
           </div>
         </div>
 
-        {location ? (
+        {location && (
           <div className="mk-post-loc">
             <MapPin size={14} /> {location}
           </div>
-        ) : null}
+        )}
       </div>
     </NavLink>
   );

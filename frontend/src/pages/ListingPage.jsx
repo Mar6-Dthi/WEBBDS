@@ -64,10 +64,11 @@ export default function ListingPage() {
   );
 
   // PANELS
+  const [isDealTypeOpen, setIsDealTypeOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isPriceOpen, setIsPriceOpen] = useState(false);
   const [isAreaOpen, setIsAreaOpen] = useState(false);
-  const [isBedsOpen, setIsBedsOpen] = useState(false);
+  const [isBedsOpenState, setIsBedsOpenState] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
 
   // GIÁ
@@ -83,7 +84,6 @@ export default function ListingPage() {
   const [areaMax, setAreaMax] = useState(null);
 
   // SỐ PHÒNG NGỦ
-  const [isBedsOpenState, setIsBedsOpenState] = useState(false);
   const [selectedBeds, setSelectedBeds] = useState([]);
   const [bedsDraft, setBedsDraft] = useState([]);
 
@@ -107,15 +107,33 @@ export default function ListingPage() {
     if (dt === "mua-ban") return "Mua bán";
     if (dt === "cho-thue") return "Cho thuê";
     if (dt === "du-an") return "Dự án";
-    return "Bất động sản";
+    return "Mua bán"; // mặc định
   };
   const dealTypeLabel = mapDealTypeLabel(dealType);
+
+  // ===== DEAL TYPE PANEL =====
+  const toggleDealTypePanel = () => {
+    setIsDealTypeOpen((v) => !v);
+    setIsCategoryOpen(false);
+    setIsPriceOpen(false);
+    setIsAreaOpen(false);
+    setIsBedsOpenState(false);
+    setIsSortOpen(false);
+  };
+
+  const applyDealType = (value) => {
+    const next = new URLSearchParams(searchParams);
+    if (value) next.set("dealType", value);
+    else next.delete("dealType");
+    setSearchParams(next);
+    setIsDealTypeOpen(false);
+  };
 
   // label loại BĐS
   const activeCategoryLabel =
     CATEGORY_OPTIONS.find((c) => c.value === categoryParam)?.label ||
     categoryParam ||
-    "Loại BĐS";
+    "Căn hộ/Chung cư";
 
   // text H1
   const titleCategoryLabel = categoryParam ? activeCategoryLabel : "Bất động sản";
@@ -279,6 +297,7 @@ export default function ListingPage() {
   // ===== PANEL LOẠI HÌNH BĐS =====
   const openCategoryPanel = () => {
     setIsCategoryOpen((v) => !v);
+    setIsDealTypeOpen(false);
     setIsPriceOpen(false);
     setIsAreaOpen(false);
     setIsBedsOpenState(false);
@@ -303,6 +322,7 @@ export default function ListingPage() {
   // GIÁ
   const togglePricePanel = () => {
     setIsPriceOpen((v) => !v);
+    setIsDealTypeOpen(false);
     setIsCategoryOpen(false);
     setIsAreaOpen(false);
     setIsBedsOpenState(false);
@@ -338,6 +358,7 @@ export default function ListingPage() {
   // DIỆN TÍCH
   const toggleAreaPanel = () => {
     setIsAreaOpen((v) => !v);
+    setIsDealTypeOpen(false);
     setIsCategoryOpen(false);
     setIsPriceOpen(false);
     setIsBedsOpenState(false);
@@ -380,6 +401,7 @@ export default function ListingPage() {
       if (next) setBedsDraft(selectedBeds);
       return next;
     });
+    setIsDealTypeOpen(false);
     setIsCategoryOpen(false);
     setIsPriceOpen(false);
     setIsAreaOpen(false);
@@ -405,6 +427,7 @@ export default function ListingPage() {
   // SORT PANEL
   const toggleSortPanel = () => {
     setIsSortOpen((v) => !v);
+    setIsDealTypeOpen(false);
     setIsCategoryOpen(false);
     setIsPriceOpen(false);
     setIsAreaOpen(false);
@@ -456,8 +479,17 @@ export default function ListingPage() {
                 Lọc
               </button>
 
-              <button className="lp-chip lp-chip-ghost active" type="button">
-                {dealTypeLabel || "Mua bán"}
+              {/* DEAL TYPE FILTER */}
+              <button
+                className={
+                  "lp-chip lp-chip-ghost lp-chip-filter" +
+                  (dealType ? " lp-chip-filter--active" : "")
+                }
+                type="button"
+                onClick={toggleDealTypePanel}
+              >
+                {dealTypeLabel}
+                <ChevronDown size={14} />
               </button>
 
               {/* LOẠI HÌNH BĐS */}
@@ -514,6 +546,72 @@ export default function ListingPage() {
                 </button>
               )}
             </div>
+
+            {/* PANEL DEAL TYPE */}
+            {isDealTypeOpen && (
+              <div className="lp-category-panel">
+                <div className="lp-category-panel-inner">
+                  <div className="lp-category-header">
+                    <span className="lp-category-title">
+                      Hình thức giao dịch
+                    </span>
+                  </div>
+
+                  <ul className="lp-category-list">
+                    <li>
+                      <button
+                        type="button"
+                        className={
+                          "lp-category-item" +
+                          ((dealType === "mua-ban" || !dealType)
+                            ? " lp-category-item--active"
+                            : "")
+                        }
+                        onClick={() => applyDealType("mua-ban")}
+                      >
+                        Mua bán
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        className={
+                          "lp-category-item" +
+                          (dealType === "cho-thue"
+                            ? " lp-category-item--active"
+                            : "")
+                        }
+                        onClick={() => applyDealType("cho-thue")}
+                      >
+                        Cho thuê
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        className={
+                          "lp-category-item" +
+                          (dealType === "du-an"
+                            ? " lp-category-item--active"
+                            : "")
+                        }
+                        onClick={() => applyDealType("du-an")}
+                      >
+                        Dự án
+                      </button>
+                    </li>
+                  </ul>
+
+                  <button
+                    type="button"
+                    className="lp-category-clear"
+                    onClick={() => applyDealType("")}
+                  >
+                    Xoá lọc
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* PANEL LOẠI HÌNH BĐS */}
             {isCategoryOpen && (

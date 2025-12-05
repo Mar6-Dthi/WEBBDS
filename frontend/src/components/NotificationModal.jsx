@@ -24,15 +24,15 @@ export default function NotificationModal({ open, onClose }) {
     setSelected(null); // mở modal thì cho user tự chọn
   }, [open]);
 
-  if (!open) return null;
+  // ❗ Chỉ unmount hoàn toàn khi KHÔNG mở modal & KHÔNG mở chat
+  if (!open && !isChatOpen) return null;
 
   const handleSelect = (n) => {
     setSelected(n);
 
     // nếu thông báo này chưa đọc thì mark read
     if (!n.isRead) {
-      // cập nhật trong localStorage
-      markNotificationReadMock(n.id);
+      markNotificationReadMock(n.id); // cập nhật storage
 
       // cập nhật ngay trên UI
       setList((prev) =>
@@ -47,11 +47,8 @@ export default function NotificationModal({ open, onClose }) {
   const handleChatNow = () => {
     if (!selected) return;
 
-    // người đã thích bài của mình (người còn lại trong khung chat)
     const otherName = selected.actorName || "Người dùng";
 
-    // Chuẩn bị data truyền cho ChatModal
-    // dùng sellerName để ChatModal hiểu đây là người “bên kia”
     const postData = {
       id: selected.postId,
       title: selected.postTitle,
@@ -60,86 +57,94 @@ export default function NotificationModal({ open, onClose }) {
 
     setChatPost(postData);
     setIsChatOpen(true);
+
+    // ✅ TẮT MODAL THÔNG BÁO, nhưng vẫn giữ ChatModal
+    if (typeof onClose === "function") {
+      onClose(); // parent set open = false
+    }
   };
 
   return (
     <>
-      <div className="notif-modal-backdrop">
-        <div className="notif-modal">
-          {/* ===== HEADER ===== */}
-          <div className="notif-header">
-            <h3>Thông báo</h3>
-            <button className="notif-close" onClick={onClose}>
-              <X size={20} />
-            </button>
-          </div>
-
-          <div className="notif-body">
-            {/* ===== DANH SÁCH ===== */}
-            <div className="notif-list">
-              {list.length === 0 && (
-                <div className="notif-empty">Chưa có thông báo.</div>
-              )}
-
-              {list.map((n) => (
-                <div
-                  key={n.id}
-                  className={
-                    "notif-item " +
-                    (selected?.id === n.id ? "active " : "") +
-                    (n.isRead ? "read" : "unread")
-                  }
-                  onClick={() => handleSelect(n)}
-                >
-                  <div className="notif-item-text">{n.content}</div>
-                  <div className="notif-item-time">
-                    {new Date(n.createdAt).toLocaleString("vi-VN")}
-                  </div>
-                </div>
-              ))}
+      {/* ===== MODAL THÔNG BÁO – chỉ render khi open = true ===== */}
+      {open && (
+        <div className="notif-modal-backdrop">
+          <div className="notif-modal">
+            {/* ===== HEADER ===== */}
+            <div className="notif-header">
+              <h3>Thông báo</h3>
+              <button className="notif-close" onClick={onClose}>
+                <X size={20} />
+              </button>
             </div>
 
-            {/* ===== CHI TIẾT ===== */}
-            <div className="notif-detail">
-              {!selected && <p>Chọn thông báo để xem chi tiết</p>}
+            <div className="notif-body">
+              {/* ===== DANH SÁCH ===== */}
+              <div className="notif-list">
+                {list.length === 0 && (
+                  <div className="notif-empty">Chưa có thông báo.</div>
+                )}
 
-              {selected && (
-                <>
-                  <h4 className="notif-detail-title">
-                    {selected.actorName} đã thích bài viết của bạn
-                  </h4>
-
-                  <div className="notif-detail-meta">
-                    <p>
-                      <strong>Bài: </strong> {selected.postTitle}
-                    </p>
-                    <p>
-                      <strong>Thời gian: </strong>
-                      {new Date(selected.createdAt).toLocaleString("vi-VN")}
-                    </p>
+                {list.map((n) => (
+                  <div
+                    key={n.id}
+                    className={
+                      "notif-item " +
+                      (selected?.id === n.id ? "active " : "") +
+                      (n.isRead ? "read" : "unread")
+                    }
+                    onClick={() => handleSelect(n)}
+                  >
+                    <div className="notif-item-text">{n.content}</div>
+                    <div className="notif-item-time">
+                      {new Date(n.createdAt).toLocaleString("vi-VN")}
+                    </div>
                   </div>
+                ))}
+              </div>
 
-                  <div className="notif-detail-actions">
-                    <button className="btn-chat" onClick={handleChatNow}>
-                      <MessageCircle size={18} />
-                      Chat ngay
-                    </button>
+              {/* ===== CHI TIẾT ===== */}
+              <div className="notif-detail">
+                {!selected && <p>Chọn thông báo để xem chi tiết</p>}
 
-                    <a
-                      className="btn-view"
-                      href={`/post/${selected.postId}`}
-                    >
-                      Xem bài đăng
-                    </a>
-                  </div>
-                </>
-              )}
+                {selected && (
+                  <>
+                    <h4 className="notif-detail-title">
+                      {selected.actorName} đã thích bài viết của bạn
+                    </h4>
+
+                    <div className="notif-detail-meta">
+                      <p>
+                        <strong>Bài: </strong> {selected.postTitle}
+                      </p>
+                      <p>
+                        <strong>Thời gian: </strong>
+                        {new Date(selected.createdAt).toLocaleString("vi-VN")}
+                      </p>
+                    </div>
+
+                    <div className="notif-detail-actions">
+                      <button className="btn-chat" onClick={handleChatNow}>
+                        <MessageCircle size={18} />
+                        Chat ngay
+                      </button>
+
+                      <a
+                        className="btn-view"
+                        href={`/post/${selected.postId}`}
+                      >
+                        Xem bài đăng
+                      </a>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* 👇 Modal chat, đồng bộ với hệ thống tin nhắn mock */}
+      {/* 👇 ChatModal luôn render, chỉ phụ thuộc isChatOpen */}
       <ChatModal
         open={isChatOpen}
         onClose={() => setIsChatOpen(false)}

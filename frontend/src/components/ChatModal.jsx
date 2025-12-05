@@ -3,13 +3,12 @@ import React, { useEffect, useState, useRef } from "react";
 import { X, Send } from "lucide-react";
 import "../styles/ChatModal.css";
 import { sendChatMessageMock } from "../services/mockChatService";
+import { getCurrentUserName } from "../services/mockFavoriteService";
 
-// key lưu hội thoại theo bài đăng
 const CHAT_KEY_PREFIX = "chat_conv_";
 
 function getPostKey(post) {
   if (!post) return null;
-  // ưu tiên id, nếu không có thì fallback theo title
   return post.id != null ? String(post.id) : `title_${post.title || ""}`;
 }
 
@@ -18,42 +17,39 @@ export default function ChatModal({ open, onClose, post }) {
   const [input, setInput] = useState("");
   const bodyRef = useRef(null);
 
-  const otherName = post?.ownerName || post?.sellerName || "Người bán";
+  // 👇 Tên người còn lại (người đã like bài của mình)
+  const otherName = post?.ownerName || post?.sellerName || "Người dùng";
 
-  // 🔁 Mỗi khi đổi sang bài khác → load hội thoại từ localStorage, hoặc tạo mới
+  // Load / tạo đoạn hội thoại ban đầu
   useEffect(() => {
     if (!post) return;
     const key = getPostKey(post);
     if (!key) return;
-
     const storageKey = CHAT_KEY_PREFIX + key;
 
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) {
-        // đã từng chat → load lại
         const saved = JSON.parse(raw);
         setMessages(saved);
         setInput("");
         return;
       }
     } catch {
-      // ignore parse error
+      // ignore
     }
 
-    // chưa có đoạn chat nào → tạo hội thoại mẫu rồi lưu
+    // ❗ Chưa có đoạn chat nào => CHÍNH MÌNH nhắn trước
+    const meName = getCurrentUserName() || "mình";
+
     const initial = [
       {
         id: 1,
-        from: "other",
-        text: `Xin chào, mình là ${otherName}. Bạn quan tâm tin "${post.title}" phải không?`,
-      },
-      {
-        id: 2,
-        from: "me",
-        text: "Dạ em quan tâm, tin còn không ạ?",
+        from: "me", // => bubble bên phải, màu cam
+        text: `Chào ${otherName}, mình là ${meName}. Mình thấy bạn đã thêm tin "${post.title}" vào mục yêu thích, bạn cần thêm thông tin gì không?`,
       },
     ];
+
     setMessages(initial);
     setInput("");
     try {
@@ -63,13 +59,12 @@ export default function ChatModal({ open, onClose, post }) {
     }
   }, [post, otherName]);
 
-  // 🌟 Auto scroll xuống cuối khi messages thay đổi
+  // Auto scroll
   useEffect(() => {
     if (!bodyRef.current) return;
     bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
   }, [messages]);
 
-  // ❗ Hook luôn ở trên, sau đó mới được return
   if (!open || !post) return null;
 
   const handleSend = (e) => {
@@ -81,11 +76,11 @@ export default function ChatModal({ open, onClose, post }) {
     if (!key) return;
     const storageKey = CHAT_KEY_PREFIX + key;
 
-    // 1) Gửi tin nhắn cho CHỦ BÀI (mock BE)
+    // Gửi tin cho người kia (người đã like bài)
     const res = sendChatMessageMock({
       postId: post.id,
       postTitle: post.title,
-      receiverName: otherName, // chủ bài
+      receiverName: otherName,
       text,
     });
 
@@ -94,14 +89,12 @@ export default function ChatModal({ open, onClose, post }) {
       return;
     }
 
-    // 2) Lưu vào hội thoại local của người đang xem
+    // Lưu local đoạn chat
     setMessages((prev) => {
       const next = [...prev, { id: Date.now(), from: "me", text }];
       try {
         localStorage.setItem(storageKey, JSON.stringify(next));
-      } catch {
-        // ignore
-      }
+      } catch {}
       return next;
     });
 
@@ -118,6 +111,7 @@ export default function ChatModal({ open, onClose, post }) {
               {otherName.charAt(0).toUpperCase()}
             </div>
             <div>
+              {/* 👇 Tên hiển thị là tên người đã like (người kia) */}
               <div className="chat-name">{otherName}</div>
               <div className="chat-sub">
                 Đang trao đổi về:{" "}
@@ -150,7 +144,7 @@ export default function ChatModal({ open, onClose, post }) {
           ))}
         </div>
 
-        {/* Ô GỬI TIN NHẮN */}
+        {/* Ô NHẬP TIN NHẮN */}
         <form className="chat-input-row" onSubmit={handleSend}>
           <input
             className="chat-input"
