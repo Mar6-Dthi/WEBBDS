@@ -5,6 +5,7 @@ import "../styles/ProfilePage.css";
 import NhatotHeader from "../components/header";
 
 import { CalendarDays, ShieldCheck, MapPin, X, User } from "lucide-react";
+import { getMyFollowingAgents } from "../services/mockFollowService"; // ⭐ mới
 
 const AVATAR_META_KEY = "profile_avatar_meta";
 const COVER_META_KEY = "profile_cover_meta";
@@ -24,8 +25,6 @@ function getCurrentUserInfo() {
 }
 
 /* ========= JOIN DATE ========= */
-/* Ưu tiên dùng ngày tạo tài khoản (currentUser.createdAt) nếu có,
-   nếu không thì dùng JOIN_KEY lưu lần đầu mở profile */
 function getJoinDate() {
   try {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -87,6 +86,43 @@ function saveMeta(key, meta) {
   );
 }
 
+/* ========= ĐỌC THỐNG KÊ MÔI GIỚI CHO USER HIỆN TẠI ========= */
+function loadAgentStats(user) {
+  const base = { followers: 0, following: 0, rating: 0, ratingCount: 0 };
+  if (!user) return base;
+
+  let list = [];
+  try {
+    const rawAgents =
+      localStorage.getItem("agents") ||
+      localStorage.getItem("mockAgents") ||
+      "[]";
+    const parsed = JSON.parse(rawAgents);
+    if (Array.isArray(parsed)) list = parsed;
+  } catch {
+    return base;
+  }
+
+  const me =
+    list.find(
+      (a) =>
+        a.ownerId === user.id ||
+        a.userId === user.id ||
+        a.phone === user.phone
+    ) || null;
+
+  if (!me) return base;
+
+  const followers = me.followers ?? me.followerCount ?? 0;
+  const following = me.following ?? me.followingCount ?? 0;
+  const ratingRaw = me.rating ?? me.avgRating ?? 0;
+  const rating = Math.max(0, Math.min(5, Number(ratingRaw) || 0));
+  const ratingCount =
+    me.ratingCount ?? me.reviewCount ?? me.totalReviews ?? 0;
+
+  return { followers, following, rating, ratingCount };
+}
+
 /* ========= MODAL CROP / ZOOM ẢNH ========= */
 function ImageAdjustModal({
   open,
@@ -123,7 +159,7 @@ function ImageAdjustModal({
     const handleMove = (ev) => {
       const dx = ev.clientX - startX;
       const dy = ev.clientY - startY;
-      const factor = 0.2; // 1px ~ 0.2%
+      const factor = 0.2;
       let nextX = startPos.x + dx * factor;
       let nextY = startPos.y + dy * factor;
       nextX = Math.max(0, Math.min(100, nextX));
@@ -151,8 +187,8 @@ function ImageAdjustModal({
 
   const frameStyle =
     aspect === 1
-      ? { width: 280, height: 280 } // avatar 1:1
-      : { width: 420, height: 210 }; // cover 2:1
+      ? { width: 280, height: 280 }
+      : { width: 420, height: 210 };
 
   return (
     <div className="crop-backdrop" onClick={onCancel}>
@@ -220,35 +256,66 @@ export default function ProfilePage() {
   const [avatarMeta, setAvatarMeta] = useState(() => loadMeta(AVATAR_META_KEY));
   const [coverMeta, setCoverMeta] = useState(() => loadMeta(COVER_META_KEY));
 
+  const [agentStats, setAgentStats] = useState(() =>
+    loadAgentStats(getCurrentUserInfo().currentUser)
+  );
+
+  // ⭐ số môi giới đang theo dõi (đọc từ mockFollowService)
+  const [followingCount, setFollowingCount] = useState(() =>
+    getMyFollowingAgents().length
+  );
+
   const initialChar = displayName ? displayName.charAt(0).toUpperCase() : "U";
 
-  // refs cho input file
+  const provinces = currentUser?.profileProvinces || [];
+
+  // ====== TRẠNG THÁI XÁC THỰC ======
+  const phoneFromAccount = (localStorage.getItem("accountPhone") || "").trim();
+  const isPhoneVerified = !!(currentUser?.phone || phoneFromAccount);
+
+  const isEmailVerified = !!(currentUser?.email && currentUser.email.trim());
+
+  const isGoogleLinked =
+    currentUser?.provider === "google" ||
+    currentUser?.loginMethod === "google";
+
+  const hasAnyVerification =
+    isPhoneVerified || isEmailVerified || isGoogleLinked;
+
   const avatarInputRef = useRef(null);
   const coverInputRef = useRef(null);
 
-  // trạng thái mở menu 3 nút
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [coverMenuOpen, setCoverMenuOpen] = useState(false);
 
-  // trạng thái modal crop
   const [cropState, setCropState] = useState({
     type: null, // "avatar" | "cover"
     src: "",
   });
 
-  // reload nếu profile thay đổi ở nơi khác
+  // reload khi profile / agents / follow thay đổi
   useEffect(() => {
     const handler = () => {
       const info = getCurrentUserInfo();
       setUserInfo(info);
       setAvatarMeta(loadMeta(AVATAR_META_KEY));
       setCoverMeta(loadMeta(COVER_META_KEY));
+      setAgentStats(loadAgentStats(info.currentUser));
+      setFollowingCount(getMyFollowingAgents().length); // ⭐ cập nhật Đang theo dõi
     };
+
     window.addEventListener("profile-changed", handler);
-    return () => window.removeEventListener("profile-changed", handler);
+    window.addEventListener("agents-changed", handler);
+    window.addEventListener("follow-changed", handler); // ⭐ lắng nghe event follow
+
+    return () => {
+      window.removeEventListener("profile-changed", handler);
+      window.removeEventListener("agents-changed", handler);
+      window.removeEventListener("follow-changed", handler);
+    };
   }, []);
 
-  // Avatar meta: ưu tiên meta, nếu chưa có thì dùng avatarUrl của currentUser
+  // Avatar meta
   const effectiveAvatarMeta =
     avatarMeta ||
     (currentUser?.avatarUrl
@@ -267,7 +334,7 @@ export default function ProfilePage() {
     posY: 50,
   };
 
-  // Cover meta: tương tự, ưu tiên coverUrl nếu có
+  // Cover meta
   const effectiveCoverMeta =
     coverMeta ||
     (currentUser?.coverUrl
@@ -425,7 +492,6 @@ export default function ProfilePage() {
                 }
               />
 
-              {/* input file ẩn cho cover */}
               <input
                 type="file"
                 accept="image/*"
@@ -434,7 +500,6 @@ export default function ProfilePage() {
                 onChange={handleCoverFileChange}
               />
 
-              {/* icon camera -> upload ngay */}
               <button
                 type="button"
                 className="profile-cover-upload"
@@ -446,7 +511,6 @@ export default function ProfilePage() {
                 📷
               </button>
 
-              {/* menu 3 lựa chọn cho ảnh bìa */}
               {coverMenuOpen && (
                 <div className="profile-img-menu profile-img-menu-cover">
                   <button type="button" onClick={triggerCoverUpload}>
@@ -484,7 +548,6 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* input file ẩn cho avatar */}
                 <input
                   type="file"
                   accept="image/*"
@@ -493,7 +556,6 @@ export default function ProfilePage() {
                   onChange={handleAvatarFileChange}
                 />
 
-                {/* icon camera -> upload ngay */}
                 <button
                   type="button"
                   className="profile-avatar-upload"
@@ -505,7 +567,6 @@ export default function ProfilePage() {
                   📷
                 </button>
 
-                {/* menu 3 lựa chọn cho avatar */}
                 {avatarMenuOpen && (
                   <div className="profile-img-menu profile-img-menu-avatar">
                     <button type="button" onClick={triggerAvatarUpload}>
@@ -525,15 +586,36 @@ export default function ProfilePage() {
             {/* ===== BODY ===== */}
             <div className="profile-body">
               <h1 className="profile-name">{displayName || "Người dùng"}</h1>
-              <p className="profile-rating">Chưa có đánh giá</p>
 
+              {/* ⭐ ĐÁNH GIÁ TỪ TRANG MÔI GIỚI */}
+              <p className="profile-rating">
+                {agentStats.ratingCount > 0 ? (
+                  <>
+                    <span className="profile-rating-star">
+                      ★ {agentStats.rating.toFixed(1)}
+                    </span>
+                    <span className="profile-rating-count">
+                      {" "}
+                      ({agentStats.ratingCount} đánh giá)
+                    </span>
+                  </>
+                ) : (
+                  "Chưa có đánh giá"
+                )}
+              </p>
+
+              {/* ⭐ THỐNG KÊ FOLLOWER / FOLLOWING */}
               <div className="profile-stats">
                 <div>
-                  <div className="profile-stat-number">0</div>
+                  <div className="profile-stat-number">
+                    {agentStats.followers}
+                  </div>
                   <div className="profile-stat-label">Người theo dõi</div>
                 </div>
                 <div>
-                  <div className="profile-stat-number">0</div>
+                  <div className="profile-stat-number">
+                    {followingCount}
+                  </div>
                   <div className="profile-stat-label">Đang theo dõi</div>
                 </div>
               </div>
@@ -571,27 +653,48 @@ export default function ProfilePage() {
                 </span>
               </div>
 
-              <div className="profile-row">
-                <ShieldCheck size={16} />
-                <span>
-                  Đã xác thực:
-                  <span className="profile-badge">SDT</span>
-                  <span className="profile-badge">Email</span>
-                  <span className="profile-badge profile-badge-google">
-                    Google
+              {/* ĐÃ XÁC THỰC */}
+              {hasAnyVerification && (
+                <div className="profile-row">
+                  <ShieldCheck size={16} />
+                  <span>
+                    Đã xác thực:
+                    {isPhoneVerified && (
+                      <span className="profile-badge">Số điện thoại</span>
+                    )}
+                    {isEmailVerified && (
+                      <span className="profile-badge">Email</span>
+                    )}
+                    {isGoogleLinked && (
+                      <span className="profile-badge profile-badge-google">
+                        Google
+                      </span>
+                    )}
                   </span>
-                </span>
-              </div>
+                </div>
+              )}
 
+              {/* ĐỊA CHỈ */}
               <div className="profile-row">
                 <MapPin size={16} />
                 <span>
                   Địa chỉ:{" "}
-                  <strong className="profile-emphasis">Chưa cung cấp</strong>
+                  {provinces.length === 0 ? (
+                    <strong className="profile-emphasis">Chưa cung cấp</strong>
+                  ) : (
+                    provinces.map((p) => (
+                      <span
+                        key={p}
+                        className="profile-badge profile-badge-chip"
+                      >
+                        {p}
+                      </span>
+                    ))
+                  )}
                 </span>
               </div>
 
-              {/* Nút chuyển sang trang chỉnh sửa thông tin cá nhân */}
+              {/* Nút chỉnh sửa */}
               <button
                 className="profile-edit-btn"
                 type="button"

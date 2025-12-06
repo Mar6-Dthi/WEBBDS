@@ -1,5 +1,5 @@
 // src/pages/AgentReview.jsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Star,
@@ -14,6 +14,14 @@ import Header from "../components/header";
 import Footer from "../components/footer";
 import "../styles/AgentReview.css";
 
+import {
+  addAgentReview,
+  getAgentReviews,
+  seedAgentReviews,
+} from "../services/reviewService";
+import { getAgentById } from "../services/mockAgentService"; // ⭐ lấy info môi giới thật
+
+// Agent default (fallback)
 const MOCK_AGENT = {
   id: "ng_hang_nha_tho_cu",
   name: "NG.HANG NHÀ THỔ CƯ",
@@ -24,6 +32,7 @@ const MOCK_AGENT = {
   yearsExp: 9,
 };
 
+// Review khởi tạo cho riêng NG.HANG (môi giới khác mặc định không seed)
 const INITIAL_REVIEWS = [
   {
     id: 1,
@@ -80,13 +89,20 @@ function StarRating({ value = 0, onChange, size = 18, readOnly = false }) {
   );
 }
 
+function getCurrentUser() {
+  try {
+    return JSON.parse(localStorage.getItem("currentUser") || "null");
+  } catch {
+    return null;
+  }
+}
+
 export default function AgentReview() {
   const navigate = useNavigate();
-  const { id } = useParams(); // dùng id sau khi có API
+  const { id: agentId } = useParams(); // /moi-gioi/:id/danh-gia
 
-  const agent = MOCK_AGENT;
-
-  const [reviews, setReviews] = useState(INITIAL_REVIEWS);
+  const [agent, setAgent] = useState(MOCK_AGENT); // sẽ override bằng data thật
+  const [reviews, setReviews] = useState([]);
   const [form, setForm] = useState({
     userName: "",
     rating: 0,
@@ -94,9 +110,38 @@ export default function AgentReview() {
   });
   const [errors, setErrors] = useState({});
 
+  // ====== LOAD THÔNG TIN MÔI GIỚI + SEED REVIEW THEO agentId ======
+  useEffect(() => {
+    // 1. Lấy môi giới theo id từ mockAgentService
+    getAgentById(agentId).then((data) => {
+      if (!data) return;
+
+      // map field từ mockAgentService sang cấu trúc AgentReview đang dùng
+      setAgent({
+        id: data.id,
+        name: data.name,
+        avatar: data.avatarUrl,
+        phone: data.phone || "09xx xxx xxx",
+        area: data.area,
+        numDeals: data.transactionsCount,
+        yearsExp: data.yearsActive,
+      });
+    });
+
+    // 2. Seed dữ liệu review ban đầu theo từng môi giới
+    // Chỉ seed INITIAL_REVIEWS cho NG.HANG, các môi giới khác để mảng rỗng
+    const initial =
+      agentId === "ng_hang_nha_tho_cu" ? INITIAL_REVIEWS : [];
+    seedAgentReviews(agentId, initial);
+
+    // 3. Load review của đúng môi giới từ service
+    const list = getAgentReviews(agentId);
+    setReviews(list);
+  }, [agentId]);
+
   const avgRating = useMemo(() => {
     if (!reviews.length) return 0;
-    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    const sum = reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
     return (sum / reviews.length).toFixed(1);
   }, [reviews]);
 
@@ -118,24 +163,52 @@ export default function AgentReview() {
       return;
     }
 
-    const newReview = {
-      id: Date.now(),
-      userName: form.userName.trim(),
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      alert("Vui lòng đăng nhập để gửi đánh giá");
+      navigate("/login");
+      return;
+    }
+
+    const reviewerId =
+      currentUser.id ||
+      currentUser.userId ||
+      currentUser.phone ||
+      currentUser.email;
+
+    const reviewerName =
+      form.userName.trim() ||
+      currentUser.name ||
+      currentUser.displayName ||
+      "Người dùng";
+
+    // Lưu review theo ĐÚNG agentId
+    const saved = addAgentReview({
+      agentId,
+      reviewerId,
+      reviewerName,
       rating: form.rating,
       content: form.content.trim(),
-      createdAt: new Date().toISOString(),
-      likes: 0,
-    };
+    });
 
-    setReviews((prev) => [newReview, ...prev]);
+    setReviews((prev) => [saved, ...prev]);
     setForm({ userName: "", rating: 0, content: "" });
     setErrors({});
   };
 
-  const handleLike = (id) => {
+  const handleLike = (reviewId) => {
     setReviews((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, likes: r.likes + 1 } : r))
+      prev.map((r) =>
+        r.id === reviewId ? { ...r, likes: (r.likes || 0) + 1 } : r
+      )
     );
+
+    // OPTIONAL: sync ngược về localStorage nếu reviewService cũng dùng key này
+    const all = JSON.parse(localStorage.getItem("agentReviews") || "[]");
+    const updated = all.map((r) =>
+      r.id === reviewId ? { ...r, likes: (r.likes || 0) + 1 } : r
+    );
+    localStorage.setItem("agentReviews", JSON.stringify(updated));
   };
 
   return (
@@ -302,10 +375,14 @@ export default function AgentReview() {
                     <div key={r.id} className="agr-review-item">
                       <div className="agr-review-header">
                         <div className="agr-review-avatar">
-                          {r.userName.charAt(0).toUpperCase()}
+                          {(r.reviewerName || r.userName || "?")
+                            .charAt(0)
+                            .toUpperCase()}
                         </div>
                         <div>
-                          <div className="agr-review-name">{r.userName}</div>
+                          <div className="agr-review-name">
+                            {r.reviewerName || r.userName}
+                          </div>
                           <div className="agr-review-stars">
                             <StarRating value={r.rating} readOnly />
                           </div>

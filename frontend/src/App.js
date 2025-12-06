@@ -20,7 +20,10 @@ import MembershipPage from "./pages/MembershipPage";
 import AgentListings from "./pages/AgentListings";
 import ProfilePage from "./pages/ProfilePage";
 import ProfileEdit from "./pages/ProfileEdit";
-
+import Payment from "./pages/Payment";
+import TransactionHistoryPage from "./pages/TransactionHistoryPage";
+import MyReviewsPage from "./pages/MyReviewsPage";
+import MyAgentPage from "./pages/MyAgentPage";
 
 export default function App(){
   return (
@@ -46,7 +49,10 @@ export default function App(){
         <Route path="/moi-gioi/:agentId/tin-dang" element={<AgentListings />} />
         <Route path="/trang-ca-nhan" element={<ProfilePage />} />
         <Route path="/chinh-sua-trang-ca-nhan" element={<ProfileEdit />} />
-        
+        <Route path="/thanh-toan-hoi-vien" element={<Payment />} />
+        <Route path="/lich-su-giao-dich" element={<TransactionHistoryPage />} />
+        <Route path="/danh-gia-cua-toi" element={<MyReviewsPage />} />
+        <Route path="/trang-moi-gioi-cua-toi" element={<MyAgentPage />} />
       </Routes>
     </BrowserRouter>
   );

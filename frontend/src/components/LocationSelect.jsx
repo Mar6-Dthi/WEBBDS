@@ -1,6 +1,8 @@
+// src/components/LocationSelect.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { MapPin, ChevronDown, ChevronLeft, Search, Check } from "lucide-react";
 import "../styles/Home.css";
+import "../styles/LocationSelect.css";
 
 /* 63 tỉnh/thành + “Tất cả” */
 const PROVINCES = [
@@ -17,35 +19,50 @@ const PROVINCES = [
   "Vĩnh Long","Vĩnh Phúc","Yên Bái"
 ];
 
-const strip = (s="") =>
+const strip = (s = "") =>
   s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-export default function LocationSelect({ value = "Tất cả", onChange }) {
+export default function LocationSelect({
+  value = "Tất cả",
+  onChange,
+  onOpenChange, // ⭐ callback báo mở/đóng
+}) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const ref = useRef(null);
 
   const items = useMemo(
-    () => PROVINCES.filter(p => strip(p).includes(strip(q))),
+    () => PROVINCES.filter((p) => strip(p).includes(strip(q))),
     [q]
   );
 
+  // helper: set trạng thái open + báo ra ngoài
+  const setOpenWithNotify = (next) => {
+    setOpen(next);
+    onOpenChange?.(next);
+  };
+
   useEffect(() => {
     const clickOutside = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpenWithNotify(false);
+      }
     };
-    const onEsc = (e) => e.key === "Escape" && setOpen(false);
+    const onEsc = (e) => {
+      if (e.key === "Escape") setOpenWithNotify(false);
+    };
     document.addEventListener("mousedown", clickOutside);
     document.addEventListener("keydown", onEsc);
     return () => {
       document.removeEventListener("mousedown", clickOutside);
       document.removeEventListener("keydown", onEsc);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onOpenChange]); // để luôn dùng đúng callback mới nhất
 
   const select = (p) => {
     onChange?.(p);
-    setOpen(false);
+    setOpenWithNotify(false);
   };
 
   return (
@@ -53,7 +70,13 @@ export default function LocationSelect({ value = "Tất cả", onChange }) {
       <button
         type="button"
         className={`mk-select mk-select-loc ${open ? "open" : ""}`}
-        onClick={() => setOpen(v => !v)}
+        onClick={() =>
+          setOpen((prev) => {
+            const next = !prev;
+            onOpenChange?.(next);
+            return next;
+          })
+        }
       >
         <MapPin size={18} />
         <span>{value}</span>
@@ -63,7 +86,11 @@ export default function LocationSelect({ value = "Tất cả", onChange }) {
       {open && (
         <div className="mk-panel">
           <div className="mk-panel-head">
-            <button className="mk-head-back" onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className="mk-head-back"
+              onClick={() => setOpenWithNotify(false)}
+            >
               <ChevronLeft size={18} />
             </button>
             <div className="mk-head-title">Tỉnh thành</div>
@@ -91,7 +118,9 @@ export default function LocationSelect({ value = "Tất cả", onChange }) {
                   >
                     <span className="mk-radio-name">{p}</span>
                     <span className={`mk-radio ${active ? "is-checked" : ""}`}>
-                      {active && <Check size={14} className="mk-radio-check" />}
+                      {active && (
+                        <Check size={14} className="mk-radio-check" />
+                      )}
                     </span>
                   </button>
                 </li>

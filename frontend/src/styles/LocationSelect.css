@@ -1,0 +1,132 @@
+/* ====== KHUNG COMBOBOX CHUNG (dùng trong LocationSelect) ====== */
+.nhatot .mk-select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e7e7e7;
+  color: var(--ink);
+  font-weight: 600;
+  height: 60px;
+
+  /* cố định kích thước */
+  width: 260px;
+  min-width: 260px;
+  max-width: 260px;
+}
+
+/* CHỈ PHẦN CHỮ BÊN TRONG BỊ ...  */
+.nhatot .mk-select span {
+  flex: 1 1 auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ====== BỌC NGOÀI + NÚT CHỌN TỈNH/THÀNH ====== */
+.nhatot .mk-select-wrap {
+  position: relative;
+  flex: 0 0 260px;
+  min-width: 240px;
+  max-width: 320px;
+  z-index: 600000 !important;
+}
+
+.nhatot .mk-select-loc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 600;
+  width: 100%;
+  height: 60px;
+}
+
+/* ====== PANEL DROPDOWN + THANH TÌM KIẾM ====== */
+.nhatot .mk-select-wrap .mk-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: min(380px, 92vw) !important;
+  min-width: 340px;
+  max-width: 400px;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: 350px !important;
+  overflow: hidden !important;
+  padding: 10px 10px 8px !important;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  transform: none !important;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  z-index: 2147483647 !important;
+}
+
+.nhatot .mk-select-wrap .mk-panel-head {
+  display: none !important;
+}
+
+.nhatot .mk-select-wrap .mk-panel-search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 6px 6px 8px !important;
+  padding: 8px 10px !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f2f4f7;
+  border-radius: 10px;
+}
+
+.nhatot .mk-select-wrap .mk-panel-search input {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+.nhatot .mk-select-wrap .mk-panel ul {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  margin: 0 !important;
+  padding: 0 4px 8px !important;
+  list-style: none;
+}
+
+.nhatot .mk-select-wrap .mk-panel li > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 0;
+  background: transparent;
+  font-weight: 600;
+  color: #111;
+  cursor: pointer;
+}
+
+.nhatot .mk-select-wrap .mk-panel li > button:hover {
+  background: #fff7ec;
+}
+
+/* ====== RESPONSIVE CHO PANEL ====== */
+@media (max-width: 980px) {
+  .nhatot .mk-select-wrap .mk-panel {
+    max-height: 300px !important;
+  }
+}

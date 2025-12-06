@@ -90,6 +90,9 @@ export default function ListingPage() {
   // SORT
   const [sortType, setSortType] = useState("newest"); // 'newest' | 'price-asc' | 'price-desc'
 
+  // LỌC THEO NGƯỜI ĐĂNG: all | personal | agent
+  const [ownerFilter, setOwnerFilter] = useState("all");
+
   // VIEW: list / grid
   const [viewMode, setViewMode] = useState("list");
 
@@ -191,9 +194,16 @@ export default function ListingPage() {
     if (areaMax != null) payload.maxArea = areaMax;
     if (selectedBeds.length > 0) payload.bedsFilter = selectedBeds;
 
-    const baseList = hasFilter
-      ? filterMockListings(payload)
-      : getMockListings();
+    let baseList = hasFilter ? filterMockListings(payload) : getMockListings();
+
+    // lọc theo loại người đăng (Cá nhân / Môi giới)
+    if (ownerFilter === "personal") {
+      // yêu cầu: trong data phải có item.ownerType === "Cá nhân"
+      baseList = baseList.filter((item) => item.ownerType === "Cá nhân");
+    } else if (ownerFilter === "agent") {
+      // yêu cầu: item.ownerType === "Môi giới"
+      baseList = baseList.filter((item) => item.ownerType === "Môi giới");
+    }
 
     // sort theo giá
     let priceComparator = null;
@@ -230,6 +240,7 @@ export default function ListingPage() {
     selectedBeds,
     hasBedsFilter,
     sortType,
+    ownerFilter,
   ]);
 
   const total = filtered.length;
@@ -242,7 +253,7 @@ export default function ListingPage() {
   const endIndex = startIndex + pageSize;
   const paginated = filtered.slice(startIndex, endIndex);
 
-  // Khi filter / sort / viewMode đổi -> về trang 1
+  // Khi filter / sort / viewMode / ownerFilter đổi -> về trang 1
   useEffect(() => {
     setCurrentPage(1);
   }, [
@@ -255,6 +266,7 @@ export default function ListingPage() {
     hasBedsFilter,
     sortType,
     viewMode,
+    ownerFilter,
   ]);
 
   const handleChangePage = (page) => {
@@ -824,13 +836,29 @@ export default function ListingPage() {
               {/* Tabs + sort + view */}
               <div className="lp-list-head">
                 <div className="lp-tabs">
-                  <button className="lp-tab active" type="button">
+                  <button
+                    className={"lp-tab" + (ownerFilter === "all" ? " active" : "")}
+                    type="button"
+                    onClick={() => setOwnerFilter("all")}
+                  >
                     Tất cả
                   </button>
-                  <button className="lp-tab" type="button">
+                  <button
+                    className={
+                      "lp-tab" + (ownerFilter === "personal" ? " active" : "")
+                    }
+                    type="button"
+                    onClick={() => setOwnerFilter("personal")}
+                  >
                     Cá nhân
                   </button>
-                  <button className="lp-tab" type="button">
+                  <button
+                    className={
+                      "lp-tab" + (ownerFilter === "agent" ? " active" : "")
+                    }
+                    type="button"
+                    onClick={() => setOwnerFilter("agent")}
+                  >
                     Môi giới
                   </button>
                 </div>

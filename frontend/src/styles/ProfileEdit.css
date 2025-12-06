@@ -173,3 +173,111 @@
     grid-template-columns: 1fr;
   }
 }
+
+.pf-address-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pf-address-main {
+  flex: 1;
+}
+
+.pf-address-remove {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pf-address-remove:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+/* ===== FIX: không cho container cắt panel LocationSelect ===== */
+.pf-page,
+.pf-inner,
+.pf-layout,
+.pf-content,
+.pf-card {
+  overflow: visible !important;
+}
+
+.pf-card {
+  position: relative; /* cho chắc, để panel định vị theo card mà vẫn tràn ra được */
+}
+
+/* ===== BACKDROP ===== */
+.pf-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999; /* cao nhất */
+}
+
+/* ===== MODAL BOX ===== */
+.pf-modal {
+  width: 360px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  animation: popupFade .18s ease-out;
+  text-align: center; /* căn nội dung giữa cho đẹp */
+}
+
+.pf-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 10px;
+}
+
+.pf-modal-message {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.pf-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Nút hủy */
+.pf-btn-ghost {
+  padding: 8px 18px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  font-size: 14px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.pf-btn-ghost:hover {
+  background: #e5e7eb;
+}
+
+/* Hiệu ứng popup */
+@keyframes popupFade {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

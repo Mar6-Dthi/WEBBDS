@@ -1,0 +1,122 @@
+.myrv-page {
+  background: #f3f4f6;
+  min-height: calc(100vh - 64px);
+  display: flex;
+  justify-content: center;
+}
+
+.myrv-inner {
+  width: min(1200px, 92vw);
+  margin: 16px auto 32px;
+}
+
+/* Header trang */
+.myrv-head {
+  margin-bottom: 12px;
+}
+
+.myrv-breadcrumb {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 4px;
+}
+
+.myrv-breadcrumb-sep {
+  margin: 0 4px;
+}
+
+.myrv-title {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.myrv-sub {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Empty state */
+.myrv-empty {
+  margin-top: 16px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.myrv-empty h2 {
+  margin: 0 0 2px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.myrv-empty p {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Danh sách đánh giá */
+.myrv-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.myrv-item {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 12px 14px;
+}
+
+.myrv-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.myrv-agent-name {
+  margin: 0 0 2px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #111827;
+}
+
+.myrv-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.myrv-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f97316;
+}
+
+.myrv-star {
+  width: 18px;
+  height: 18px;
+  fill: #f97316;
+  color: #f97316;
+}
+
+.myrv-comment {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: #374151;
+}

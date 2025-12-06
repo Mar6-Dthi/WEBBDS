@@ -1,0 +1,60 @@
+/* ===== LAYOUT NỘI DUNG (header đã nằm trong .nhatot/.mk-page) ===== */
+.tx-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 96px 16px 48px; /* chừa khoảng trống dưới header fixed */
+}
+
+/* ===== CARD ===== */
+.tx-card {
+  width: min(900px, 100%);
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px 26px 32px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.1);
+}
+
+.tx-title {
+  margin: 0 0 20px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.tx-empty {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: #6b7280;
+}
+
+/* ===== TABLE ===== */
+.tx-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tx-table th {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.tx-table td {
+  font-size: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+/* ===== STATUS ===== */
+.tx-status {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.tx-status.success {
+  color: #16a34a;
+}

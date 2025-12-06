@@ -7,7 +7,7 @@ import Post from "../components/Post";
 import { seedMockMyPosts } from "../services/mockMyPosts";
 import "../styles/MyPosts.css";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
 const CATEGORY_OPTIONS = [
   { value: "all", label: "Tất cả BĐS" },
@@ -19,7 +19,6 @@ const CATEGORY_OPTIONS = [
     label: "Văn phòng, Mặt bằng kinh doanh",
   },
   { value: "Phòng trọ", label: "Phòng trọ" },
-  { value: "Nhà xưởng/Kho bãi", label: "Nhà xưởng/Kho bãi" },
 ];
 
 export default function MyPosts() {
@@ -48,7 +47,8 @@ export default function MyPosts() {
   }, [accessToken]);
 
   // ====== STATE FILTER + SORT + PAGE ======
-  const [ownerTypeFilter, setOwnerTypeFilter] = useState("all"); // all | ca-nhan | moi-gioi
+  // all | ca-nhan | moi-gioi
+  const [ownerTypeFilter, setOwnerTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [timeSort, setTimeSort] = useState("newest"); // newest | oldest | none
   const [priceSort, setPriceSort] = useState("none"); // none | priceDesc | priceAsc
@@ -73,9 +73,10 @@ export default function MyPosts() {
   const filteredAndSorted = useMemo(() => {
     let list = [...myPosts];
 
-    // loại người đăng
+    // --- Lọc theo loại người đăng ---
     if (ownerTypeFilter !== "all") {
       list = list.filter((p) => {
+        // bài nào không có ownerType (mock cũ) thì coi như "Cá nhân"
         const type = p.ownerType || "Cá nhân";
         if (ownerTypeFilter === "ca-nhan") return type === "Cá nhân";
         if (ownerTypeFilter === "moi-gioi") return type === "Môi giới";
@@ -83,12 +84,12 @@ export default function MyPosts() {
       });
     }
 
-    // loại BĐS
+    // --- Lọc theo loại BĐS ---
     if (categoryFilter !== "all") {
       list = list.filter((p) => p.category === categoryFilter);
     }
 
-    // sắp xếp theo thời gian
+    // --- Sắp xếp theo thời gian đăng ---
     if (timeSort === "newest") {
       list.sort(
         (a, b) =>
@@ -103,7 +104,7 @@ export default function MyPosts() {
       );
     }
 
-    // sau đó, nếu có sort theo giá thì override thứ tự theo giá
+    // --- Sắp xếp theo giá (nếu chọn) ---
     if (priceSort === "priceDesc") {
       list.sort((a, b) => (b.price || 0) - (a.price || 0));
     } else if (priceSort === "priceAsc") {
@@ -185,6 +186,7 @@ export default function MyPosts() {
             <section className="myp-filter-card">
               <h3 className="myp-filter-heading">Bộ lọc tin đăng</h3>
               <div className="myp-filter-grid">
+                {/* Lọc loại người đăng: Cá nhân / Môi giới */}
                 <div className="myp-field">
                   <label className="myp-label">Loại người đăng</label>
                   <select

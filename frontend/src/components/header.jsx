@@ -141,7 +141,7 @@ export default function NhatotHeader() {
         <div className="mk-container mk-header-row">
           {/* LEFT */}
           <div className="mk-left mk-left-edge">
-            <NavLink to="/" className="mk-logo" aria-label="Trang chủ">
+            <NavLink to="/nhatot" className="mk-logo" aria-label="Trang chủ">
               <img src="/Img/logo.png" alt="Nhà Tốt" className="mk-logo-img" />
             </NavLink>
 

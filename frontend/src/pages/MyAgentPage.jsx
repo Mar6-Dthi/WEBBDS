@@ -1,42 +1,134 @@
-// src/pages/AgentDetail.jsx
-import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { MapPin, Star, Phone, Share2 } from "lucide-react";
+// src/pages/MyAgentPage.jsx
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { MapPin, Star, Share2 } from "lucide-react";
 
 import Header from "../components/header";
 import Footer from "../components/footer";
 import "../styles/AgentDetail.css";
 
-import { getAgentById } from "../services/mockAgentService";
 import { getAgentReviews } from "../services/mockAgentReviewService";
 
-const MOCK_LISTINGS = [
-  {
-    id: "lst1",
-    title: "Nhà phố 4x16, full nội thất, Nam Sài Gòn",
-    price: "7.500.000.000 đ",
-    area: "64 m²",
-    location: "Quận 7, TP.HCM",
-    imageUrl: "/Img/demo/house-1.jpg",
-  },
-  {
-    id: "lst2",
-    title: "Nhà hẻm xe hơi, gần Lotte Mart Q7",
-    price: "6.200.000.000 đ",
-    area: "60 m²",
-    location: "Quận 7, TP.HCM",
-    imageUrl: "/Img/demo/house-2.jpg",
-  },
-  {
-    id: "lst3",
-    title: "Nhà mặt tiền kinh doanh, Tân Bình",
-    price: "9.800.000.000 đ",
-    area: "72 m²",
-    location: "Quận Tân Bình, TP.HCM",
-    imageUrl: "/Img/demo/house-3.jpg",
-  },
-];
+/* ===== KEY META ẢNH GIỐNG TRANG CÁ NHÂN ===== */
+const AVATAR_META_KEY = "profile_avatar_meta";
+const COVER_META_KEY = "profile_cover_meta";
 
+function loadMetaUrl(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return "";
+    const meta = JSON.parse(raw);
+    return meta?.url || "";
+  } catch {
+    return "";
+  }
+}
+
+/* ========= ĐỌC USER & TÌM MÔI GIỚI CỦA CHÍNH MÌNH ========= */
+function findMyAgent() {
+  let currentUser = null;
+  try {
+    currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+  } catch {
+    currentUser = null;
+  }
+  if (!currentUser) return { agent: null, profile: null };
+
+  // Đọc meta ảnh từ trang cá nhân
+  const avatarMetaUrl = loadMetaUrl(AVATAR_META_KEY);
+  const coverMetaUrl = loadMetaUrl(COVER_META_KEY);
+
+  // Đọc danh sách môi giới mock
+  let agents = [];
+  try {
+    const raw =
+      localStorage.getItem("agents") ||
+      localStorage.getItem("mockAgents") ||
+      "[]";
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) agents = parsed;
+  } catch {
+    agents = [];
+  }
+
+  // Tìm agent record gắn với user hiện tại (nếu có)
+  const myAgent =
+    agents.find(
+      (a) =>
+        a.ownerId === currentUser.id ||
+        a.userId === currentUser.id ||
+        a.phone === currentUser.phone
+    ) || {};
+
+  // Đọc bài đăng để tính tin hiện có + thời gian hoạt động
+  let posts = [];
+  try {
+    posts = JSON.parse(localStorage.getItem("posts") || "[]");
+  } catch {
+    posts = [];
+  }
+
+  const myPosts = posts.filter(
+    (p) =>
+      p.ownerId === currentUser.id ||
+      p.userId === currentUser.id ||
+      p.phone === currentUser.phone
+  );
+
+  const postsCount = myPosts.length;
+
+  let yearsActive = myAgent.yearsActive || 0;
+  if (!yearsActive && myPosts.length > 0) {
+    let first = null;
+    myPosts.forEach((p) => {
+      if (!p.createdAt) return;
+      const d = new Date(p.createdAt);
+      if (Number.isNaN(d.getTime())) return;
+      if (!first || d < first) first = d;
+    });
+    if (first) {
+      const diffMs = Date.now() - first.getTime();
+      const diffYears = diffMs / (1000 * 60 * 60 * 24 * 365);
+      yearsActive = diffYears < 1 ? 0 : Math.floor(diffYears);
+    }
+  }
+
+  const profileIntro = currentUser.profileIntro || "";
+  const profileProvinces = currentUser.profileProvinces || [];
+
+  // Gộp data thành 1 object agent dùng cho UI
+  const mergedAgent = {
+    id:
+      myAgent.id ||
+      currentUser.id ||
+      currentUser.phone ||
+      "my-agent-profile",
+    name: myAgent.name || currentUser.name || "Trang môi giới của tôi",
+    // ⭐ ƯU TIÊN ẢNH TỪ TRANG CÁ NHÂN (meta), rồi tới currentUser, rồi tới mock
+    bannerUrl:
+      coverMetaUrl ||
+      currentUser.coverUrl ||
+      myAgent.bannerUrl ||
+      "/Img/agents/default-banner.jpg",
+    avatarUrl: avatarMetaUrl || currentUser.avatarUrl || myAgent.avatarUrl || "",
+    badge: myAgent.badge || "Môi giới cá nhân",
+    followers: myAgent.followers ?? myAgent.followerCount ?? 0,
+    responseRate: myAgent.responseRate ?? 0,
+    desc: profileIntro || myAgent.desc || "",
+    area:
+      profileProvinces.join(", ") ||
+      myAgent.area ||
+      "Chưa cập nhật khu vực hoạt động",
+    yearsActive: yearsActive || 0,
+    postsCount: postsCount || myAgent.postsCount || 0,
+    rating: myAgent.rating ?? myAgent.avgRating ?? 0,
+    ratingCount: myAgent.ratingCount ?? myAgent.reviewCount ?? 0,
+  };
+
+  return { agent: mergedAgent, profile: currentUser };
+}
+
+/* ========= HÀNG SAO NHỎ ========= */
 function StarRow({ value }) {
   return (
     <div className="agd-star-row">
@@ -51,65 +143,25 @@ function StarRow({ value }) {
   );
 }
 
-/* ====== LẤY PROFILE CỦA MÔI GIỚI TỪ LOCALSTORAGE ======
-   - mockUsers: danh sách user
-   - match theo: id / userId / ownerId / phone / email
-*/
-function getProfileFromAgent(agent) {
-  if (!agent) return null;
-
-  let users = [];
-  try {
-    const raw = localStorage.getItem("mockUsers") || "[]";
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) users = parsed;
-  } catch {
-    users = [];
-  }
-
-  // thử match theo id hoặc phone
-  const found =
-    users.find(
-      (u) =>
-        u.id === agent.ownerId ||
-        u.id === agent.userId ||
-        u.userId === agent.ownerId ||
-        u.phone === agent.phone ||
-        u.phone === agent.ownerPhone
-    ) || null;
-
-  // nếu không thấy, có thể agent chính là currentUser
-  if (!found) {
-    try {
-      const current = JSON.parse(localStorage.getItem("currentUser") || "null");
-      if (current && (current.id === agent.ownerId || current.phone === agent.phone)) {
-        return current;
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  return found;
-}
-
-export default function AgentDetail() {
-  const { id } = useParams();
+/* ========= TRANG CHUYÊN TRANG MÔI GIỚI CỦA TÔI ========= */
+export default function MyAgentPage() {
   const navigate = useNavigate();
-
   const [agent, setAgent] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [ownerProfile, setOwnerProfile] = useState(null); // ⭐ profile từ trang cá nhân
 
   useEffect(() => {
-    getAgentById(id).then((a) => {
-      setAgent(a);
-      setOwnerProfile(getProfileFromAgent(a));
-    });
-    getAgentReviews(id).then(setReviews);
-  }, [id]);
+    const { agent: myAgent } = findMyAgent();
+    if (!myAgent) {
+      navigate("/login");
+      return;
+    }
+    setAgent(myAgent);
 
-  // ===== TÍNH ĐIỂM TRUNG BÌNH & SỐ LƯỢNG ĐÁNH GIÁ =====
+    getAgentReviews(myAgent.id).then((list) => {
+      setReviews(Array.isArray(list) ? list : []);
+    });
+  }, [navigate]);
+
   const avgRating = useMemo(() => {
     if (!agent) return 0;
     if (!reviews.length) {
@@ -126,7 +178,6 @@ export default function AgentDetail() {
     return agent?.ratingCount || 0;
   }, [reviews, agent]);
 
-  // 3 đánh giá mới nhất
   const latestReviews = useMemo(() => reviews.slice(0, 3), [reviews]);
 
   if (!agent) {
@@ -135,7 +186,7 @@ export default function AgentDetail() {
         <div className="mk-page">
           <Header />
           <div className="agd-page">
-            <p style={{ padding: 24 }}>Đang tải thông tin môi giới...</p>
+            <p style={{ padding: 24 }}>Đang tải chuyên trang môi giới...</p>
           </div>
           <Footer />
         </div>
@@ -143,27 +194,15 @@ export default function AgentDetail() {
     );
   }
 
+  const responseRate = agent.responseRate ?? 0;
+
   const handleViewAllListings = () => {
-    navigate(`/moi-gioi/${agent.id}/tin-dang`);
+    navigate("/quan-ly-tin");
   };
 
   const handleViewAllReviews = () => {
     navigate(`/moi-gioi/${agent.id}/danh-gia`);
   };
-
-  const responseRate = agent.responseRate ?? 0;
-
-  // ⭐ LẤY GIỚI THIỆU & KHU VỰC TỪ TRANG CÁ NHÂN (nếu có)
-  const introText =
-    ownerProfile?.profileIntro?.trim() || agent.desc || "Chưa có giới thiệu";
-
-  const areaChips =
-    Array.isArray(ownerProfile?.profileProvinces) &&
-    ownerProfile.profileProvinces.length > 0
-      ? ownerProfile.profileProvinces
-      : agent.area
-      ? [agent.area]
-      : [];
 
   return (
     <div className="nhatot">
@@ -172,7 +211,7 @@ export default function AgentDetail() {
 
         <div className="agd-page">
           <div className="agd-main">
-            {/* ================= HERO ================ */}
+            {/* ============== HERO ============== */}
             <section className="agd-hero-card">
               <div className="agd-hero-banner">
                 <img src={agent.bannerUrl} alt={agent.name} />
@@ -217,12 +256,7 @@ export default function AgentDetail() {
                       </span>
 
                       <span className="agd-dot-sep">•</span>
-                      <span>
-                        Người theo dõi:{" "}
-                        <button type="button" className="agd-link-inline">
-                          {agent.followers}
-                        </button>
-                      </span>
+                      <span>Người theo dõi: {agent.followers || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -232,28 +266,24 @@ export default function AgentDetail() {
                     <Share2 size={16} />
                     Chia sẻ
                   </button>
-                  <button className="agd-hero-ghost-btn">+ Theo dõi</button>
-                  <button className="agd-hero-chip-btn">Chat</button>
-
-                  <button className="agd-hero-main-btn">
-                    <Phone size={18} />
-                    Liên hệ
-                  </button>
+                  {/* ĐÃ BỎ Chat với khách & Liên hệ */}
                 </div>
               </div>
             </section>
 
-            {/* ================= STATS ================ */}
+            {/* ============== STATS ============== */}
             <section className="agd-stats-row">
               <div className="agd-stat-card">
                 <p className="agd-stat-label">Thời gian hoạt động</p>
-                <p className="agd-stat-value">{agent.yearsActive} năm</p>
+                <p className="agd-stat-value">
+                  {agent.yearsActive || 0} năm
+                </p>
                 <p className="agd-stat-sub">Tính từ tin đăng đầu tiên</p>
               </div>
 
               <div className="agd-stat-card">
                 <p className="agd-stat-label">Tin hiện có</p>
-                <p className="agd-stat-value">{agent.postsCount} tin</p>
+                <p className="agd-stat-value">{agent.postsCount || 0} tin</p>
                 <button
                   className="agd-stat-link"
                   onClick={handleViewAllListings}
@@ -272,7 +302,7 @@ export default function AgentDetail() {
               </div>
             </section>
 
-            {/* ================= MAIN LAYOUT 2 CỘT ================ */}
+            {/* ============== LAYOUT 2 CỘT ============== */}
             <section className="agd-layout">
               {/* LEFT COLUMN */}
               <div className="agd-left-col">
@@ -280,7 +310,11 @@ export default function AgentDetail() {
                 <div className="agd-card">
                   <h2 className="agd-section-title">Giới thiệu</h2>
                   <div className="agd-about-text">
-                    <p>- {introText}</p>
+                    <p>
+                      {agent.desc
+                        ? `- ${agent.desc}`
+                        : "- Chưa cập nhật phần giới thiệu."}
+                    </p>
                   </div>
                 </div>
 
@@ -290,13 +324,7 @@ export default function AgentDetail() {
                   <div className="agd-area-block">
                     <MapPin size={18} />
                     <div>
-                      {areaChips.length === 0 ? (
-                        <p>Chưa cập nhật</p>
-                      ) : (
-                        areaChips.map((area) => (
-                          <p key={area}>{area}</p>
-                        ))
-                      )}
+                      <p>{agent.area}</p>
                     </div>
                   </div>
                 </div>
@@ -305,23 +333,12 @@ export default function AgentDetail() {
                 <div className="agd-card">
                   <div className="agd-card-header">
                     <h2 className="agd-section-title">
-                      Tất cả tin đăng ({agent.postsCount})
+                      Tất cả tin đăng ({agent.postsCount || 0})
                     </h2>
                   </div>
 
                   <div className="agd-listings-grid">
-                    {MOCK_LISTINGS.map((lst) => (
-                      <div key={lst.id} className="agd-listing-card">
-                        <div className="agd-listing-img-wrap">
-                          <img src={lst.imageUrl} alt={lst.title} />
-                        </div>
-                        <h3 className="agd-listing-title">{lst.title}</h3>
-                        <p className="agd-listing-price">{lst.price}</p>
-                        <p className="agd-listing-meta">
-                          {lst.area} • {lst.location}
-                        </p>
-                      </div>
-                    ))}
+                    {/* TODO: map bài đăng thật */}
                   </div>
 
                   <button
@@ -357,7 +374,7 @@ export default function AgentDetail() {
                       <div key={rv.id} className="agd-review-item">
                         <div className="agd-review-header">
                           <div className="agd-review-avatar">
-                            {rv.name.charAt(0).toUpperCase()}
+                            {rv.name?.charAt(0).toUpperCase()}
                           </div>
 
                           <div className="agd-review-head-text">

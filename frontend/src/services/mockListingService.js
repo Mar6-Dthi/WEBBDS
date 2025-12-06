@@ -22,6 +22,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-1.jpg",
     ownerName: "Loan Nguyễn",
     ownerPosts: 15,
+    ownerType: "Môi giới", // 👈 phân loại
   },
   {
     id: "mb-hcm-02",
@@ -41,6 +42,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-2.jpg",
     ownerName: "Anh Huy",
     ownerPosts: 7,
+    ownerType: "Cá nhân",
   },
   {
     id: "mb-hcm-03",
@@ -60,6 +62,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-3.jpg",
     ownerName: "Nguyễn Long",
     ownerPosts: 9,
+    ownerType: "Cá nhân",
   },
   {
     id: "mb-hcm-04",
@@ -79,6 +82,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-4.jpg",
     ownerName: "Chị Hằng",
     ownerPosts: 12,
+    ownerType: "Cá nhân",
   },
   {
     id: "mb-hcm-05",
@@ -98,6 +102,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/land-1.jpg",
     ownerName: "Anh Trí",
     ownerPosts: 3,
+    ownerType: "Cá nhân",
   },
   {
     id: "mb-hcm-06",
@@ -117,6 +122,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-2.jpg",
     ownerName: "Cường Real",
     ownerPosts: 18,
+    ownerType: "Môi giới",
   },
 
   /* ====== CHO THUÊ – TP.HCM ====== */
@@ -138,6 +144,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/rent-1.jpg",
     ownerName: "Chị B",
     ownerPosts: 10,
+    ownerType: "Cá nhân",
   },
   {
     id: "ct-hcm-02",
@@ -157,6 +164,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/rent-2.jpg",
     ownerName: "Chị Thi",
     ownerPosts: 8,
+    ownerType: "Cá nhân",
   },
   {
     id: "ct-hcm-03",
@@ -176,6 +184,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/rent-3.jpg",
     ownerName: "Anh Hoài",
     ownerPosts: 6,
+    ownerType: "Cá nhân",
   },
   {
     id: "ct-hcm-04",
@@ -195,6 +204,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/rent-5.jpg",
     ownerName: "Anh Dũng",
     ownerPosts: 4,
+    ownerType: "Môi giới",
   },
   {
     id: "ct-hcm-05",
@@ -214,6 +224,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/land-1.jpg",
     ownerName: "Kho Logistics Nam",
     ownerPosts: 5,
+    ownerType: "Môi giới",
   },
 
   /* ====== MUA BÁN – HÀ NỘI ====== */
@@ -235,6 +246,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-1.jpg",
     ownerName: "Hoàng Thanh",
     ownerPosts: 9,
+    ownerType: "Môi giới",
   },
   {
     id: "mb-hn-02",
@@ -254,6 +266,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-2.jpg",
     ownerName: "Anh Dũng",
     ownerPosts: 10,
+    ownerType: "Cá nhân",
   },
   {
     id: "mb-hn-03",
@@ -273,6 +286,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/land-1.jpg",
     ownerName: "Cô Lan",
     ownerPosts: 2,
+    ownerType: "Cá nhân",
   },
 
   /* ====== CHO THUÊ – HÀ NỘI ====== */
@@ -294,6 +308,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/rent-1.jpg",
     ownerName: "Mr. Bình",
     ownerPosts: 11,
+    ownerType: "Môi giới",
   },
   {
     id: "ct-hn-02",
@@ -313,6 +328,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/rent-4.jpg",
     ownerName: "Anh Hùng",
     ownerPosts: 4,
+    ownerType: "Cá nhân",
   },
 
   /* ====== MUA BÁN – ĐÀ NẴNG ====== */
@@ -334,6 +350,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-2.jpg",
     ownerName: "Ngọc Linh",
     ownerPosts: 6,
+    ownerType: "Cá nhân",
   },
   {
     id: "mb-dn-02",
@@ -353,6 +370,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-3.jpg",
     ownerName: "Quốc Thái",
     ownerPosts: 5,
+    ownerType: "Môi giới",
   },
 
   /* ====== CHO THUÊ – ĐÀ NẴNG ====== */
@@ -374,6 +392,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/rent-1.jpg",
     ownerName: "Lan Anh",
     ownerPosts: 3,
+    ownerType: "Cá nhân",
   },
   {
     id: "ct-dn-02",
@@ -393,6 +412,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/rent-2.jpg",
     ownerName: "Cô Hoa",
     ownerPosts: 6,
+    ownerType: "Cá nhân",
   },
 
   /* ====== CÁC TỈNH KHÁC – MUA BÁN ====== */
@@ -414,6 +434,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-4.jpg",
     ownerName: "Nhật Minh",
     ownerPosts: 4,
+    ownerType: "Cá nhân",
   },
   {
     id: "mb-dnai-01",
@@ -433,6 +454,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/land-1.jpg",
     ownerName: "Anh Phát",
     ownerPosts: 2,
+    ownerType: "Cá nhân",
   },
   {
     id: "mb-ct-01",
@@ -452,6 +474,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-2.jpg",
     ownerName: "Chị Mai",
     ownerPosts: 5,
+    ownerType: "Môi giới",
   },
   {
     id: "mb-hp-01",
@@ -471,6 +494,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/house-1.jpg",
     ownerName: "Anh Dương",
     ownerPosts: 3,
+    ownerType: "Môi giới",
   },
 
   /* ====== CÁC TỈNH KHÁC – CHO THUÊ ====== */
@@ -492,6 +516,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/land-1.jpg",
     ownerName: "Cty Kho Miền Nam",
     ownerPosts: 10,
+    ownerType: "Môi giới",
   },
   {
     id: "ct-ct-01",
@@ -511,6 +536,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/rent-2.jpg",
     ownerName: "Chú Tư",
     ownerPosts: 6,
+    ownerType: "Cá nhân",
   },
   {
     id: "ct-hp-01",
@@ -530,6 +556,7 @@ export const MOCK_LISTINGS = [
     coverUrl: "/Img/demo/rent-5.jpg",
     ownerName: "Anh An",
     ownerPosts: 4,
+    ownerType: "Môi giới",
   },
 ];
 
@@ -590,7 +617,8 @@ function getAreaNumber(item) {
  *  - minPrice, maxPrice: VND
  *  - minArea,  maxArea : m²
  *  - bedsFilter       : array (vd [1,2,"gt5"])
- *  - ownerName        : tên người đăng (để map môi giới)
+ *  - ownerName        : tên người đăng (để map môi giới cụ thể)
+ *  - ownerType        : "Cá nhân" | "Môi giới"
  */
 export function filterMockListings(options = {}) {
   const {
@@ -603,7 +631,8 @@ export function filterMockListings(options = {}) {
     minArea,
     maxArea,
     bedsFilter,
-    ownerName, // 👈 thêm field mới
+    ownerName,
+    ownerType,
   } = options;
 
   const keyword = strip(q || "");
@@ -622,8 +651,11 @@ export function filterMockListings(options = {}) {
     // --- category ---
     if (category && strip(item.category) !== categoryKey) return false;
 
-    // --- ownerName (môi giới) ---
+    // --- ownerName (môi giới cụ thể) ---
     if (ownerName && item.ownerName !== ownerName) return false;
+
+    // --- ownerType (Cá nhân / Môi giới) ---
+    if (ownerType && item.ownerType !== ownerType) return false;
 
     // --- keyword search ---
     if (keyword) {

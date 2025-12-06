@@ -8,7 +8,7 @@ export default function AccountModal({
   onClose,
   isLoggedIn,
   userName,
-  userAvatar,          // 👈 thêm
+  userAvatar,
 }) {
   const navigate = useNavigate();
   if (!open) return null;
@@ -49,10 +49,7 @@ export default function AccountModal({
 
   return (
     <div className="acc-backdrop" onClick={onClose}>
-      <aside
-        className="acc-panel"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <aside className="acc-panel" onClick={(e) => e.stopPropagation()}>
         <button className="acc-close" type="button" onClick={onClose}>
           <X size={20} />
         </button>
@@ -108,6 +105,7 @@ export default function AccountModal({
         </header>
 
         <div className="acc-body">
+          {/* ======= NHÓM TIỆN ÍCH ======= */}
           <section className="acc-section">
             <h4 className="acc-section-title">Tiện ích</h4>
 
@@ -120,14 +118,6 @@ export default function AccountModal({
               <ChevronRight size={16} />
             </button>
 
-            <button
-              type="button"
-              className="acc-row"
-              onClick={() => handleRowClick("/tim-kiem-da-luu")}
-            >
-              <span>Tìm kiếm đã lưu</span>
-              <ChevronRight size={16} />
-            </button>
 
             <button
               type="button"
@@ -146,38 +136,8 @@ export default function AccountModal({
               <span>Đánh giá từ tôi</span>
               <ChevronRight size={16} />
             </button>
-          </section>
 
-          <section className="acc-section">
-            <h4 className="acc-section-title">Dịch vụ trả phí</h4>
-
-            <button
-              type="button"
-              className="acc-row"
-              onClick={() => handleRowClick("/dong-tot")}
-            >
-              <span>Đồng Tốt</span>
-              <ChevronRight size={16} />
-            </button>
-
-            <button
-              type="button"
-              className="acc-row"
-              onClick={() => handleRowClick("/goi-pro")}
-            >
-              <span>Gói PRO</span>
-              <ChevronRight size={16} />
-            </button>
-
-            <button
-              type="button"
-              className="acc-row"
-              onClick={() => handleRowClick("/kenh-doi-tac")}
-            >
-              <span>Kênh Đối Tác</span>
-              <ChevronRight size={16} />
-            </button>
-
+            {/* ĐƯA 2 MỤC NÀY LÊN NHÓM TIỆN ÍCH */}
             <button
               type="button"
               className="acc-row"
@@ -190,9 +150,23 @@ export default function AccountModal({
             <button
               type="button"
               className="acc-row"
-              onClick={() => handleRowClick("/cua-hang-chuyen-trang")}
+              onClick={() => handleRowClick("/trang-moi-gioi-cua-toi")}
             >
               <span>Cửa hàng / chuyên trang</span>
+              <ChevronRight size={16} />
+            </button>
+          </section>
+
+          {/* ======= NHÓM DỊCH VỤ TRẢ PHÍ ======= */}
+          <section className="acc-section">
+            <h4 className="acc-section-title">Dịch vụ trả phí</h4>
+
+            <button
+              type="button"
+              className="acc-row"
+              onClick={() => handleRowClick("/goi-hoi-vien")}
+            >
+              <span>Gói PRO</span>
               <ChevronRight size={16} />
             </button>
           </section>
