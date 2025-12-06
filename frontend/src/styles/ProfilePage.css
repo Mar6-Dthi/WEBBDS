@@ -1,0 +1,407 @@
+/* src/styles/ProfilePage.css */
+
+.profile-main {
+  background: #f3f4f6;
+  min-height: 100vh;
+  padding-top: 96px; /* chừa chỗ cho header sticky */
+}
+
+.profile-container {
+  width: min(960px, 92vw);
+  margin: 24px auto 40px;
+}
+
+.profile-card {
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+}
+
+/* ===== COVER ===== */
+.profile-cover-wrap {
+  position: relative;
+  height: 140px;
+  background: linear-gradient(135deg, #ff9123, #ffb347);
+}
+
+.profile-cover {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #ff9123, #ffb347);
+  background-size: cover;
+  background-position: center;
+}
+
+.profile-cover-upload {
+  position: absolute;
+  right: 18px;
+  top: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-cover-upload input {
+  display: none;
+}
+
+/* ===== AVATAR ===== */
+.profile-avatar-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: -56px;
+  transform: translateX(-50%);
+  width: 112px;
+  height: 112px;
+  border-radius: 999px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
+}
+
+.profile-avatar-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.profile-avatar-fallback {
+  width: 100px;
+  height: 100px;
+  border-radius: 999px;
+  background: #f97316;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  font-weight: 800;
+}
+
+.profile-avatar-upload {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+  cursor: pointer;
+}
+
+.profile-avatar-upload input {
+  display: none;
+}
+
+/* ===== BODY ===== */
+.profile-body {
+  padding: 72px 32px 28px;
+  text-align: center;
+}
+
+.profile-name {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.profile-rating {
+  margin: 0 0 16px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.profile-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 12px;
+}
+
+.profile-stat-number {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+  text-align: center;
+}
+
+.profile-stat-label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.profile-divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 14px 0 16px;
+}
+
+/* các dòng thông tin nhỏ */
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #4b5563;
+  margin-bottom: 6px;
+  justify-content: center;
+}
+
+.profile-row svg {
+  flex-shrink: 0;
+  color: #9ca3af;
+}
+
+.profile-emphasis {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* badge xác thực */
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 6px;
+  background: #e5f1ff;
+  color: #1d4ed8;
+}
+
+.profile-badge-google {
+  background: #fff5d9;
+  color: #b45309;
+}
+
+/* nút chỉnh sửa */
+.profile-edit-btn {
+  margin-top: 18px;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  background: #111827;
+  color: #fff;
+  cursor: pointer;
+}
+
+.profile-edit-btn:hover {
+  opacity: 0.9;
+}
+
+/* ========== CROP MODAL ========== */
+.crop-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.crop-modal {
+  width: min(600px, 92vw);
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+  padding: 16px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.crop-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.crop-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.crop-body {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+}
+
+.crop-frame {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0f172a;
+  cursor: grab;
+}
+
+.crop-frame:active {
+  cursor: grabbing;
+}
+
+.crop-image {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+}
+
+/* controls */
+.crop-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 160px;
+}
+
+.crop-controls label {
+  font-size: 13px;
+  color: #374151;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.crop-controls input[type="range"] {
+  width: 100%;
+}
+
+.crop-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* footer */
+.crop-footer {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.crop-btn {
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.crop-btn.ghost {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #e5e7eb;
+}
+
+.crop-btn.primary {
+  background: #111827;
+  color: #ffffff;
+}
+
+/* avatar background-mode */
+.profile-avatar-img.bg-mode {
+  width: 100px;
+  height: 100px;
+  border-radius: 999px;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Đảm bảo bọc cover & avatar là relative */
+.profile-cover-wrap {
+  position: relative;
+}
+
+/* avatar wrap đã có relative trong bản cũ, nếu chưa thì thêm: */
+.profile-avatar-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: -52px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Nút camera (cover + avatar) */
+.profile-cover-upload,
+.profile-avatar-upload {
+  position: absolute;
+  border: none;
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+.profile-cover-upload {
+  top: 10px;
+  right: 10px;
+}
+
+.profile-avatar-upload {
+  right: -4px;
+  bottom: -2px;
+}
+
+/* MENU 3 LỰA CHỌN (dùng chung) */
+.profile-img-menu {
+  position: absolute;
+  z-index: 30;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.35);
+  padding: 4px 0;
+  min-width: 150px;
+}
+
+.profile-img-menu-cover {
+  top: 46px;
+  right: 10px;
+}
+
+.profile-img-menu-avatar {
+  top: 0;
+  right: -4px;
+}
+
+.profile-img-menu button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #111827;
+  cursor: pointer;
+}
+
+.profile-img-menu button:hover {
+  background: #f3f4f6;
+}

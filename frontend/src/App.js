@@ -18,6 +18,9 @@ import AgentDetail from "./pages/AgentDetail";
 import AgentReview from "./pages/AgentReview";
 import MembershipPage from "./pages/MembershipPage";
 import AgentListings from "./pages/AgentListings";
+import ProfilePage from "./pages/ProfilePage";
+import ProfileEdit from "./pages/ProfileEdit";
+
 
 export default function App(){
   return (
@@ -41,6 +44,9 @@ export default function App(){
         <Route path="/moi-gioi/:id/danh-gia" element={<AgentReview />} />
         <Route path="/goi-hoi-vien" element={<MembershipPage />} />
         <Route path="/moi-gioi/:agentId/tin-dang" element={<AgentListings />} />
+        <Route path="/trang-ca-nhan" element={<ProfilePage />} />
+        <Route path="/chinh-sua-trang-ca-nhan" element={<ProfileEdit />} />
+        
       </Routes>
     </BrowserRouter>
   );

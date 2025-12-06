@@ -6,25 +6,19 @@ import "../styles/header.css";
 import AccountModal from "./AccountModal";
 import {
   getMyNotificationsMock,
-  seedNotificationsForCurrentUser, // vẫn giữ seed
+  seedNotificationsForCurrentUser,
 } from "../services/mockFavoriteService";
-
-// Chat services
 import {
   getMyUnreadChatsCountMock,
   markChatsAsReadMock,
 } from "../services/mockChatService";
-
 import NotificationModal from "./NotificationModal";
 
-export default function NhatotHeader() {
-  const navigate = useNavigate();
+// Đọc thông tin user cho header
+function getHeaderUserInfo() {
+  const accessToken = localStorage.getItem("accessToken");
+  const isLoggedIn = !!accessToken;
 
-  // ====== LOGIN INFO ======
-  const isLoggedIn = !!localStorage.getItem("accessToken");
-  const accountName = (localStorage.getItem("accountName") || "").trim();
-
-  // lấy currentUser (nếu đăng nhập Google thì nên lưu ở đây)
   let currentUser = null;
   try {
     currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -32,27 +26,49 @@ export default function NhatotHeader() {
     currentUser = null;
   }
 
+  const accountName = (localStorage.getItem("accountName") || "").trim();
   const displayName = (currentUser?.name || accountName || "").trim();
 
-  // avatar từ Google (mock)
   const avatarUrl =
     currentUser?.avatarUrl ||
     currentUser?.photoURL ||
     currentUser?.picture ||
     "";
 
-  // chữ cái đầu khi không có ảnh
+  return { isLoggedIn, displayName, avatarUrl };
+}
+
+export default function NhatotHeader() {
+  const navigate = useNavigate();
+
+  // ==== USER STATE (để khi đổi avatar bắn event là header update) ====
+  const [userInfo, setUserInfo] = useState(() => getHeaderUserInfo());
+  const { isLoggedIn, displayName, avatarUrl } = userInfo;
+
   const initial =
     displayName !== "" ? displayName.charAt(0).toUpperCase() : "";
 
-  // ====== MODAL STATE ======
+  // ==== MODAL / BADGES ====
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isAccModalOpen, setIsAccModalOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-
-  // badges
   const [notifCount, setNotifCount] = useState(0);
   const [chatUnread, setChatUnread] = useState(0);
+
+  // Khi profile thay đổi (avatar, tên...), hoặc storage thay đổi → reload userInfo
+  useEffect(() => {
+    const handleProfileChange = () => {
+      setUserInfo(getHeaderUserInfo());
+    };
+
+    window.addEventListener("profile-changed", handleProfileChange);
+    window.addEventListener("storage", handleProfileChange);
+
+    return () => {
+      window.removeEventListener("profile-changed", handleProfileChange);
+      window.removeEventListener("storage", handleProfileChange);
+    };
+  }, []);
 
   // ===== NOTIFICATIONS =====
   const refreshNotifications = () => {
@@ -60,13 +76,18 @@ export default function NhatotHeader() {
       setNotifCount(0);
       return;
     }
-
-    // luôn seed vài thông báo mock cho user hiện tại nếu chưa có
     seedNotificationsForCurrentUser();
-
     const list = getMyNotificationsMock();
     setNotifCount(list.length);
   };
+
+  useEffect(() => {
+    refreshNotifications();
+    const handler = () => refreshNotifications();
+    window.addEventListener("mock-notifications-changed", handler);
+    return () =>
+      window.removeEventListener("mock-notifications-changed", handler);
+  }, [isLoggedIn]);
 
   // ===== CHAT UNREAD =====
   const refreshChatUnread = () => {
@@ -79,29 +100,13 @@ export default function NhatotHeader() {
   };
 
   useEffect(() => {
-    refreshNotifications();
-
-    const handler = () => {
-      refreshNotifications();
-    };
-
-    window.addEventListener("mock-notifications-changed", handler);
-    return () =>
-      window.removeEventListener("mock-notifications-changed", handler);
-  }, [isLoggedIn]);
-
-  useEffect(() => {
     refreshChatUnread();
-
-    const chatHandler = () => {
-      refreshChatUnread();
-    };
-
+    const chatHandler = () => refreshChatUnread();
     window.addEventListener("mock-chats-changed", chatHandler);
     return () => window.removeEventListener("mock-chats-changed", chatHandler);
   }, [isLoggedIn]);
 
-  // require login
+  // require login cho các nút
   const handleProtectedClick = (path) => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -110,7 +115,6 @@ export default function NhatotHeader() {
     if (path) navigate(path);
   };
 
-  // bell
   const handleBellClick = () => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -120,7 +124,6 @@ export default function NhatotHeader() {
     setIsNotifOpen(true);
   };
 
-  // messages
   const handleMessagesClick = () => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -136,14 +139,12 @@ export default function NhatotHeader() {
       {/* FIXED HEADER */}
       <header className="mk-header-fixed" role="banner">
         <div className="mk-container mk-header-row">
-          {/* LEFT SIDE */}
+          {/* LEFT */}
           <div className="mk-left mk-left-edge">
-            {/* LOGO ẢNH – CLICK VỀ TRANG CHỦ */}
             <NavLink to="/" className="mk-logo" aria-label="Trang chủ">
               <img src="/Img/logo.png" alt="Nhà Tốt" className="mk-logo-img" />
             </NavLink>
 
-            {/* NAV MENU (đang ẩn bằng CSS) */}
             <nav className="mk-nav" aria-label="Chuyển mục">
               <a href="#">Kênh môi giới</a>
               <a href="#">Chợ Tốt</a>
@@ -155,9 +156,8 @@ export default function NhatotHeader() {
             </nav>
           </div>
 
-          {/* RIGHT SIDE */}
+          {/* RIGHT */}
           <div className="mk-right mk-right-edge">
-            {/* YÊU THÍCH */}
             <button
               className="mk-icon-pill"
               aria-label="Yêu thích"
@@ -166,7 +166,6 @@ export default function NhatotHeader() {
               <Heart />
             </button>
 
-            {/* TIN NHẮN */}
             <button
               className="mk-icon-pill"
               aria-label="Tin nhắn"
@@ -180,7 +179,6 @@ export default function NhatotHeader() {
               )}
             </button>
 
-            {/* THÔNG BÁO */}
             <button
               className="mk-icon-pill mk-bell"
               aria-label="Thông báo"
@@ -194,7 +192,6 @@ export default function NhatotHeader() {
               )}
             </button>
 
-            {/* QUẢN LÝ TIN */}
             <button
               className="mk-chip"
               type="button"
@@ -203,7 +200,6 @@ export default function NhatotHeader() {
               Quản lý tin
             </button>
 
-            {/* ĐĂNG TIN */}
             <button
               className="mk-chip mk-post"
               type="button"
@@ -212,7 +208,7 @@ export default function NhatotHeader() {
               Đăng tin
             </button>
 
-            {/* ACCOUNT / AVATAR */}
+            {/* AVATAR – mở panel tài khoản */}
             <button
               type="button"
               className="mk-avatar"
@@ -241,6 +237,7 @@ export default function NhatotHeader() {
         onClose={() => setIsAccModalOpen(false)}
         isLoggedIn={isLoggedIn}
         userName={displayName}
+        userAvatar={avatarUrl}        // 👈 truyền avatar vào panel
       />
 
       {/* LOGIN MODAL */}

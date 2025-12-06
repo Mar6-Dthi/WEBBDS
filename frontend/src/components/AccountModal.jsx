@@ -3,15 +3,21 @@ import { X, ChevronRight, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "../styles/AccountModal.css";
 
-export default function AccountModal({ open, onClose, isLoggedIn, userName }) {
+export default function AccountModal({
+  open,
+  onClose,
+  isLoggedIn,
+  userName,
+  userAvatar,          // 👈 thêm
+}) {
   const navigate = useNavigate();
-
   if (!open) return null;
 
+  const trimmedName = (userName || "").trim();
   const shortName =
-    (userName || "").trim() === ""
-      ? ""
-      : (userName || "").trim().slice(0, 4).toUpperCase();
+    trimmedName === "" ? "" : trimmedName.slice(0, 4).toUpperCase();
+  const firstLetter =
+    trimmedName === "" ? "U" : trimmedName.charAt(0).toUpperCase();
 
   const goLogin = () => {
     onClose?.();
@@ -28,38 +34,54 @@ export default function AccountModal({ open, onClose, isLoggedIn, userName }) {
     if (path) navigate(path);
   };
 
-  // 🔸 Đăng xuất: xoá token + tên, đóng modal và quay về trang login
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("accountName");
-
+    localStorage.removeItem("currentUser");
     onClose?.();
     navigate("/login");
+  };
+
+  const handleGoProfile = () => {
+    onClose?.();
+    navigate("/trang-ca-nhan");
   };
 
   return (
     <div className="acc-backdrop" onClick={onClose}>
       <aside
         className="acc-panel"
-        onClick={(e) => e.stopPropagation()} // không cho click xuyên
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Nút đóng */}
         <button className="acc-close" type="button" onClick={onClose}>
           <X size={20} />
         </button>
 
-        {/* Header trên cùng */}
         <header className="acc-header">
           {isLoggedIn ? (
-            <div className="acc-header-logged">
+            <button
+              type="button"
+              className="acc-header-logged"
+              onClick={handleGoProfile}
+            >
               <div className="acc-avatar-big">
-                {shortName ? <span>{shortName}</span> : <User size={26} />}
+                {userAvatar ? (
+                  <img
+                    src={userAvatar}
+                    alt={userName || "Tài khoản"}
+                    className="acc-avatar-img"
+                  />
+                ) : shortName ? (
+                  <span>{firstLetter}</span>
+                ) : (
+                  <User size={26} />
+                )}
               </div>
               <div className="acc-header-text">
                 <div className="acc-hello">Xin chào,</div>
                 <div className="acc-name">{userName}</div>
               </div>
-            </div>
+            </button>
           ) : (
             <div className="acc-header-guest">
               <div className="acc-header-title">Mua thì hời, bán thì lời.</div>
@@ -85,7 +107,6 @@ export default function AccountModal({ open, onClose, isLoggedIn, userName }) {
           )}
         </header>
 
-        {/* Nội dung list */}
         <div className="acc-body">
           <section className="acc-section">
             <h4 className="acc-section-title">Tiện ích</h4>
@@ -176,7 +197,6 @@ export default function AccountModal({ open, onClose, isLoggedIn, userName }) {
             </button>
           </section>
 
-          {/* 🔸 Section ĐĂNG XUẤT – chỉ hiện khi đã đăng nhập */}
           {isLoggedIn && (
             <section className="acc-section acc-section-logout">
               <button

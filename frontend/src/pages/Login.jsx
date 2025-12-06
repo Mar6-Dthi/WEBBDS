@@ -12,10 +12,15 @@ const MOCK_USERS_KEY = "mockUsers";
 function getMockUsers() {
   try {
     const raw = localStorage.getItem(MOCK_USERS_KEY) || "[]";
-    return JSON.parse(raw);
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
   } catch {
     return [];
   }
+}
+
+function saveMockUsers(list) {
+  localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(list));
 }
 
 export default function Login() {
@@ -23,30 +28,61 @@ export default function Login() {
   const [phone, setPhone] = useState("");
   const [googlePopup, setGooglePopup] = useState(false);
 
-  // GOOGLE LOGIN
+  // ================= GOOGLE LOGIN =================
   const handleGoogleClick = () => {
     setGooglePopup(true);
   };
 
+  // src/pages/Login.jsx (chỉ thay hàm này)
+
   const handleChooseGoogleAccount = (acc) => {
-    // 1. Lưu token & tên hiển thị (chị đang dùng cho header)
+    // 1. Lưu accessToken + tên hiển thị (dùng cho header)
     localStorage.setItem("accessToken", "google-" + Date.now());
     localStorage.setItem("accountName", acc.name || acc.email);
+    // Tài khoản GG: chưa có số điện thoại -> để trống
+    localStorage.setItem("accountPhone", "");
 
-    // 2. Lưu currentUser để tính năng Yêu thích dùng
-    const currentUser = {
-      id: acc.email,              // dùng email làm id duy nhất
-      phone: acc.email,           // demo: tạm gắn luôn email
-      name: acc.name || acc.email,
-    };
+    // 2. Cập nhật vào mockUsers với loginMethod = "google"
+    const users = getMockUsers();
+    const id = acc.email;
+    const name = acc.name || acc.email;
+
+    const idx = users.findIndex((u) => u.id === id || u.phone === id);
+
+    let user;
+    if (idx === -1) {
+      user = {
+        id,
+        phone: "",            // KHÔNG gán email vào phone nữa
+        name,
+        email: id,
+        loginMethod: "google",
+      };
+      users.push(user);
+    } else {
+      user = {
+        ...users[idx],
+        id,
+        name,
+        email: users[idx].email || id,
+        phone: users[idx].phone || "",
+        loginMethod: "google",
+      };
+      users[idx] = user;
+    }
+    localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(users));
+
+    // 3. Lưu currentUser cho toàn site dùng
+    const currentUser = { ...user };
     localStorage.setItem("currentUser", JSON.stringify(currentUser));
 
-    // 3. Đóng popup & chuyển về Home
+    // 4. Đóng popup & chuyển về Home
     setGooglePopup(false);
     navigate("/");
   };
 
-  // SỐ ĐIỆN THOẠI
+
+  // ================= LOGIN BẰNG SĐT =================
   const handleContinuePhone = () => {
     if (!phone.trim()) {
       alert("Vui lòng nhập số điện thoại");
@@ -54,17 +90,19 @@ export default function Login() {
     }
 
     const users = getMockUsers();
-    const exists = users.some((u) => u.phone === phone);
+    const exists = users.some((u) => u.phone === phone.trim());
 
     if (exists) {
-      navigate("/login-password", { state: { phone } });
+      // đã có tài khoản → sang màn hình nhập mật khẩu
+      navigate("/login-password", { state: { phone: phone.trim() } });
     } else {
-      navigate("/register-new", { state: { phone } });
+      // chưa có → sang màn đăng ký
+      navigate("/register-new", { state: { phone: phone.trim() } });
     }
   };
 
   const handleGotoRegister = () => {
-    navigate("/register-new", { state: { phone } });
+    navigate("/register-new", { state: { phone: phone.trim() } });
   };
 
   return (

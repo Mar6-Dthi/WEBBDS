@@ -1,0 +1,175 @@
+/* Trang chỉnh sửa thông tin cá nhân */
+.pf-page {
+  background: #f3f4f6;
+  min-height: 100vh;
+}
+
+.pf-inner {
+  width: min(1100px, 94vw);
+  margin: 24px auto 40px;
+}
+
+/* Breadcrumb + title */
+.pf-breadcrumb {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.pf-breadcrumb-sep {
+  margin: 0 4px;
+}
+
+.pf-title {
+  margin: 0 0 18px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
+}
+
+/* Layout 2 cột */
+.pf-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 20px;
+}
+
+/* Sidebar bên trái */
+.pf-sidebar {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-menu-item {
+  text-align: left;
+  padding: 10px 16px;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+  color: #111827;
+  cursor: pointer;
+}
+
+.pf-menu-item--active {
+  background: #fff7ec;
+  color: #ef6b00;
+  font-weight: 600;
+}
+
+/* Card nội dung */
+.pf-content {
+  min-width: 0;
+}
+
+.pf-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 20px 24px 22px;
+}
+
+.pf-card-title {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Form fields */
+.pf-field {
+  margin-bottom: 16px;
+}
+
+.pf-field-inline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.pf-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+.pf-required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.pf-input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 8px 10px;
+  font-size: 14px;
+  outline: none;
+  background: #f9fafb;
+}
+
+.pf-input:focus {
+  border-color: #f97316;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.2);
+}
+
+/* Actions */
+.pf-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.pf-btn-primary {
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #111827;
+  color: #fff;
+  cursor: pointer;
+}
+
+.pf-btn-primary:hover {
+  background: #0b1220;
+}
+
+/* Text nhạt */
+.pf-muted {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Responsive nhẹ */
+@media (max-width: 900px) {
+  .pf-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pf-sidebar {
+    flex-direction: row;
+    border-radius: 999px;
+    padding: 4px;
+  }
+
+  .pf-menu-item {
+    flex: 1;
+    text-align: center;
+    border-radius: 999px;
+  }
+
+  .pf-menu-item--active {
+    border-radius: 999px;
+  }
+
+  .pf-field-inline {
+    grid-template-columns: 1fr;
+  }
+}
