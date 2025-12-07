@@ -34,20 +34,25 @@ export default function MyPosts() {
     }
   });
 
-  // seed 20 bài mock cho user nếu chưa có
-  useEffect(() => {
-    if (!accessToken) return;
-    seedMockMyPosts(accessToken);
+  // Helper: load posts from localStorage and set state
+  function loadPosts() {
     try {
       const next = JSON.parse(localStorage.getItem("posts") || "[]");
-      setAllPosts(next);
+      setAllPosts(Array.isArray(next) ? next : []);
     } catch {
       setAllPosts([]);
     }
+  }
+
+  // seed 20 bài mock cho user nếu chưa có -> chạy 1 lần khi mount (nếu login)
+  useEffect(() => {
+    if (!accessToken) return;
+    seedMockMyPosts(accessToken);
+    loadPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
   // ====== STATE FILTER + SORT + PAGE ======
-  // all | ca-nhan | moi-gioi
   const [ownerTypeFilter, setOwnerTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [timeSort, setTimeSort] = useState("newest"); // newest | oldest | none
@@ -66,7 +71,7 @@ export default function MyPosts() {
   // ====== BÀI CỦA user HIỆN TẠI ======
   const myPosts = useMemo(() => {
     if (!accessToken) return [];
-    return allPosts.filter((p) => p.ownerId === accessToken);
+    return allPosts.filter((p) => String(p.ownerId) === String(accessToken));
   }, [accessToken, allPosts]);
 
   // ====== ÁP DỤNG FILTER + SORT ======
@@ -154,6 +159,46 @@ export default function MyPosts() {
     localStorage.setItem("posts", JSON.stringify(nextAll));
     handleCloseModal();
   };
+
+  // ====== Lắng nghe event post:created (và storage changes) để cập nhật UI ngay ======
+  useEffect(() => {
+    // handler cho custom event dispatch khi post được tạo
+    const onPostCreated = (ev) => {
+      try {
+        // nếu event chứa detail.ownerId, chỉ reload khi trùng user hiện tại
+        const detail = ev?.detail || {};
+        if (!accessToken) {
+          // không login => không cần reload
+          return;
+        }
+        if (!detail.ownerId || String(detail.ownerId) === String(accessToken)) {
+          loadPosts();
+        }
+      } catch {
+        loadPosts();
+      }
+    };
+
+    // handler cho storage event (nhiều tab)
+    const onStorage = (ev) => {
+      if (ev.key === "posts") {
+        loadPosts();
+      }
+      // nếu muốn cập nhật khi membership thay đổi:
+      if (ev.key === "membershipTransactions" || ev.key === "currentMembership") {
+        loadPosts();
+      }
+    };
+
+    window.addEventListener("post:created", onPostCreated);
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener("post:created", onPostCreated);
+      window.removeEventListener("storage", onStorage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken]);
 
   // ====== CHƯA LOGIN ======
   if (!accessToken) {

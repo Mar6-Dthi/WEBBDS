@@ -20,6 +20,17 @@ function saveMembership(info) {
   localStorage.setItem(MEMBERSHIP_KEY, JSON.stringify(info));
 }
 
+// helper: lấy user hiện tại từ localStorage
+function getCurrentUserId() {
+  try {
+    const u = JSON.parse(localStorage.getItem("currentUser") || "null");
+    if (!u) return null;
+    return u.id || u.phone || null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ThanhToanHoiVien() {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -31,6 +42,7 @@ export default function ThanhToanHoiVien() {
   const planName = state?.planName || "Gói hội viên 20 tin/tháng";
   const price = state?.price || 299000;
   const quota = state?.quota || 20;
+  const durationMs = state?.durationMs || 30 * 24 * 60 * 60 * 1000; // nếu có truyền từ MembershipPage
 
   // ======== QR MOCK ========
   const qrUrl = useMemo(() => {
@@ -46,6 +58,9 @@ export default function ThanhToanHoiVien() {
     const timer = setTimeout(() => {
       const now = new Date();
 
+      // lấy ownerId (nếu có)
+      const ownerId = getCurrentUserId() || localStorage.getItem("accessToken") || null;
+
       const tx = {
         id: Date.now(),
         planId,
@@ -55,12 +70,16 @@ export default function ThanhToanHoiVien() {
         method,
         status: "SUCCESS",
         createdAt: now.toISOString(),
+        // thêm ownerId để hệ thống (PostCreate) biết gói này của ai
+        ownerId,
+        // thêm durationMs (dùng khi check expire)
+        durationMs,
       };
 
-      // Lưu lịch sử
+      // Lưu lịch sử giao dịch (cần có ownerId để truy vấn)
       saveTransaction(tx);
 
-      // Lưu gói hiện tại
+      // Lưu gói hiện tại (dùng cho UI/fast path)
       saveMembership({
         planId,
         planName,
@@ -68,17 +87,38 @@ export default function ThanhToanHoiVien() {
         quota,
         method,
         activatedAt: now.toISOString(),
+        ownerId,
+        durationMs,
       });
+
+      // phát event để các trang khác (PostCreate) kịp cập nhật
+      try {
+        window.dispatchEvent(
+          new CustomEvent("membership:updated", {
+            detail: {
+              ownerId,
+              planId,
+              planName,
+              price,
+              quota,
+              durationMs,
+            },
+          })
+        );
+      } catch (e) {
+        // ignore if browser blocks custom events
+        // console.warn("cannot dispatch membership:updated", e);
+      }
 
       // Hiện modal thành công
       setShowSuccess(true);
 
       // 1.5s sau → trở về trang chủ
-      setTimeout(() => navigate("/nhatot"), 2500);
+      setTimeout(() => navigate("/nhatot"), 1500);
     }, 3500);
 
     return () => clearTimeout(timer);
-  }, [planId, planName, price, quota, method, navigate]);
+  }, [planId, planName, price, quota, method, navigate, durationMs]);
 
   return (
     <div className="nhatot">

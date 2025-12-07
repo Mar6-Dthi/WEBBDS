@@ -7,6 +7,9 @@ import LoginFooter from "../components/LoginFooter";
 
 const MOCK_USERS_KEY = "mockUsers";
 
+// Regex SĐT: 10 số, bắt đầu bằng 0 (vd: 0987654321)
+const PHONE_REGEX = /^0\d{9}$/;
+
 function getMockUsers() {
   try {
     const raw = localStorage.getItem(MOCK_USERS_KEY) || "[]";
@@ -40,13 +43,16 @@ export default function RegisterNewAccount() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const phone = location.state?.phone || "";
+  // Nếu từ trang login truyền phone sang thì lấy làm giá trị mặc định
+  const initialPhone = location.state?.phone || "";
 
+  const [phone, setPhone] = useState(initialPhone);
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [agree, setAgree] = useState(true);
 
   // lỗi hiển thị dưới input
+  const [phoneError, setPhoneError] = useState("");
   const [nameError, setNameError] = useState("");
   const [passError, setPassError] = useState("");
 
@@ -69,14 +75,30 @@ export default function RegisterNewAccount() {
     let valid = true;
 
     // reset lỗi
+    setPhoneError("");
     setNameError("");
     setPassError("");
 
+    const trimmedPhone = phone.trim();
+
+    // ===== VALIDATE SĐT =====
+    if (!trimmedPhone) {
+      setPhoneError("Vui lòng nhập Số điện thoại.");
+      valid = false;
+    } else if (!PHONE_REGEX.test(trimmedPhone)) {
+      setPhoneError(
+        "Số điện thoại không hợp lệ. Vui lòng nhập 10 số và bắt đầu bằng 0."
+      );
+      valid = false;
+    }
+
+    // ===== VALIDATE HỌ TÊN =====
     if (!fullName.trim()) {
       setNameError("Vui lòng nhập Họ và tên.");
       valid = false;
     }
 
+    // ===== VALIDATE MẬT KHẨU =====
     if (!password) {
       setPassError("Vui lòng nhập mật khẩu.");
       valid = false;
@@ -85,8 +107,8 @@ export default function RegisterNewAccount() {
       valid = false;
     }
 
+    // ===== CHECK ĐIỀU KHOẢN =====
     if (!agree) {
-      // lỗi điều khoản tui để hiển thị qua modal
       setModalMsg("Bạn cần đồng ý Điều khoản sử dụng và Chính sách bảo mật.");
       setModalOpen(true);
       valid = false;
@@ -98,8 +120,10 @@ export default function RegisterNewAccount() {
   const handleSubmit = () => {
     if (!validate()) return;
 
+    const trimmedPhone = phone.trim();
+
     const users = getMockUsers();
-    const existed = users.find((u) => u.phone === phone);
+    const existed = users.find((u) => u.phone === trimmedPhone);
     if (existed) {
       setModalMsg("Số điện thoại này đã được đăng ký (mock).");
       setModalOpen(true);
@@ -107,7 +131,7 @@ export default function RegisterNewAccount() {
     }
 
     users.push({
-      phone,
+      phone: trimmedPhone,
       name: fullName.trim(),
       password,
     });
@@ -123,7 +147,10 @@ export default function RegisterNewAccount() {
 
     // nếu là thông báo thành công thì điều hướng sang màn nhập mật khẩu
     if (msg.startsWith("Đăng ký thành công")) {
-      navigate("/login-password", { replace: true, state: { phone } });
+      navigate("/login-password", {
+        replace: true,
+        state: { phone: phone.trim() },
+      });
     }
   };
 
@@ -146,12 +173,31 @@ export default function RegisterNewAccount() {
           </div>
 
           <p className="reg-sub">
-            Nhập mật khẩu để đăng ký{" "}
+            Nhập thông tin để đăng ký{" "}
             {phone && <span className="reg-phone">{phone}</span>}
           </p>
 
           {/* FORM */}
           <div className="reg-form">
+            {/* Số điện thoại */}
+            <div className="reg-field">
+              <div
+                className={
+                  "reg-input-row" + (phoneError ? " reg-input-error" : "")
+                }
+              >
+                <input
+                  type="tel"
+                  placeholder="Số điện thoại *"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+              {phoneError && (
+                <div className="reg-error-text">{phoneError}</div>
+              )}
+            </div>
+
             {/* Họ và tên */}
             <div className="reg-field">
               <div
@@ -233,7 +279,11 @@ export default function RegisterNewAccount() {
         <LoginFooter />
       </div>
 
-      <RegModal open={modalOpen} message={modalMsg} onClose={handleCloseModal} />
+      <RegModal
+        open={modalOpen}
+        message={modalMsg}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }

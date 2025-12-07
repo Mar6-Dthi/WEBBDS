@@ -6,16 +6,32 @@ import "../styles/MembershipPage.css";
 import NhatotHeader from "../components/header";
 import Footer from "../components/footer";
 
+// ===== CẤU HÌNH GÓI HỘI VIÊN =====
+// posts = số tin được đăng mỗi ngày (limit/ngày)
 const PLANS = [
-  { id: "p5", label: "5 tin/ tháng", posts: 5, price: 99000 },
-  { id: "p10", label: "10 tin/ tháng", posts: 10, price: 179000, badge: "Giảm 13%" },
-  { id: "p20", label: "20 tin/ tháng", posts: 20, price: 299000, primary: true },
+  {
+    id: "m1",
+    label: "Gói 1 tháng",
+    months: 1,
+    posts: 5, // 5 tin/ngày
+    price: 199000, // tuỳ bạn chỉnh lại giá
+  },
+  {
+    id: "m3",
+    label: "Gói 3 tháng",
+    months: 3,
+    posts: 5, // 5 tin/ngày
+    price: 499000, // tuỳ bạn chỉnh lại giá
+    badge: "Ưu tiên hơn",
+    primary: true, // dùng cho CSS tô nổi bật
+  },
 ];
 
 const TX_KEY = "membershipTransactions";
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
-// ===== TÍNH TỔNG TIN + GÓI SẮP HẾT HẠN =====
+// ===== TÍNH GÓI CÒN HẠN + NGÀY HẾT HẠN SỚM NHẤT =====
+// Ở đây không tính tổng tin nữa, chỉ quan tâm số gói & ngày hết hạn
 function getMembershipSummary() {
   try {
     const raw = localStorage.getItem(TX_KEY) || "[]";
@@ -25,19 +41,28 @@ function getMembershipSummary() {
     // Lấy gói còn hạn
     const active = list.filter((tx) => {
       if (tx.status !== "SUCCESS") return false;
+
       const created = new Date(tx.createdAt).getTime();
-      return created + ONE_MONTH_MS > now;
+
+      // Nếu tx có durationMs thì dùng, không thì mặc định 1 tháng
+      const durationMs =
+        typeof tx.durationMs === "number" && tx.durationMs > 0
+          ? tx.durationMs
+          : ONE_MONTH_MS;
+
+      return created + durationMs > now;
     });
 
     if (!active.length) return null;
 
-    // Tổng số tin còn hiệu lực
-    const totalPosts = active.reduce((sum, tx) => sum + (tx.quota || 0), 0);
-
-    // Tính ngày hết hạn từng gói
+    // Tính ngày hết hạn cho từng gói
     const withExpire = active.map((tx) => {
       const created = new Date(tx.createdAt).getTime();
-      const expiresAt = new Date(created + ONE_MONTH_MS);
+      const durationMs =
+        typeof tx.durationMs === "number" && tx.durationMs > 0
+          ? tx.durationMs
+          : ONE_MONTH_MS;
+      const expiresAt = new Date(created + durationMs);
       return { ...tx, expiresAt };
     });
 
@@ -47,16 +72,9 @@ function getMembershipSummary() {
       if (tx.expiresAt < earliest) earliest = tx.expiresAt;
     }
 
-    // Cộng quota của tất cả gói hết cùng NGÀY đó
-    const earliestDateStr = earliest.toDateString();
-    const firstExpireQuota = withExpire
-      .filter((tx) => tx.expiresAt.toDateString() === earliestDateStr)
-      .reduce((sum, tx) => sum + tx.quota, 0);
-
     return {
-      totalPosts,
+      activeCount: active.length,
       firstExpireDate: earliest,
-      firstExpireQuota,
     };
   } catch {
     return null;
@@ -64,7 +82,8 @@ function getMembershipSummary() {
 }
 
 export default function MembershipPage() {
-  const [activeId, setActiveId] = useState("p20");
+  // Mặc định chọn gói 3 tháng vì ưu tiên hơn
+  const [activeId, setActiveId] = useState("m3");
   const [summary, setSummary] = useState(null);
   const navigate = useNavigate();
 
@@ -78,12 +97,16 @@ export default function MembershipPage() {
 
   // Đi đến trang thanh toán
   const handleGoPaymentPage = () => {
+    // durationMs dùng cho tx về sau (3 tháng dài hơn 1 tháng)
+    const durationMs = (active.months || 1) * ONE_MONTH_MS;
+
     navigate("/thanh-toan-hoi-vien", {
       state: {
         planId: active.id,
         planName: active.label,
         price: active.price,
-        quota: active.posts,
+        quota: active.posts, // ở đây đang mang nghĩa: 5 tin/ngày
+        durationMs, // để bên trang thanh toán / lưu giao dịch dùng
       },
     });
   };
@@ -91,13 +114,11 @@ export default function MembershipPage() {
   return (
     <div className="nhatot">
       <div className="mk-page">
-
         {/* HEADER */}
         <NhatotHeader />
 
         <main>
           <div className="mship-page">
-
             {/* HERO */}
             <div className="mship-hero">
               <div className="mship-hero-left">
@@ -126,28 +147,32 @@ export default function MembershipPage() {
               </div>
             </div>
 
-            {/* 🔔 SUMMARY: tổng tin + tin sắp hết hạn */}
+            {/* 🔔 SUMMARY: số gói còn hiệu lực + gói hết hạn sớm nhất */}
             {summary && (
               <div className="mship-summary">
                 <div className="mship-summary-main">
-                  Bạn đang có <strong>{summary.totalPosts}</strong> tin hội viên còn hiệu lực.
+                  Bạn đang có{" "}
+                  <strong>{summary.activeCount}</strong> gói hội viên còn hiệu lực.
                 </div>
                 <div className="mship-summary-sub">
-                  Trong đó <strong>{summary.firstExpireQuota}</strong> tin sẽ hết hạn vào{" "}
+                  Gói hết hạn sớm nhất vào{" "}
                   <strong>
                     {summary.firstExpireDate.toLocaleDateString("vi-VN")}
-                  </strong>.
+                  </strong>
+                  .
                 </div>
               </div>
             )}
 
-            {/* TABS */}
+            {/* TABS 2 GÓI: 1 THÁNG / 3 THÁNG */}
             <div className="mship-plan-tabs">
               {PLANS.map((p) => (
                 <button
                   key={p.id}
                   className={
-                    "mship-tab" + (p.id === activeId ? " mship-tab--active" : "")
+                    "mship-tab" +
+                    (p.id === activeId ? " mship-tab--active" : "") +
+                    (p.primary ? " mship-tab--primary" : "")
                   }
                   onClick={() => setActiveId(p.id)}
                 >
@@ -162,26 +187,33 @@ export default function MembershipPage() {
               <h2>{active.label}</h2>
               <p className="mship-price">
                 {active.price.toLocaleString("vi-VN")}đ{" "}
-                <span>/ tháng – tối đa {active.posts} tin</span>
+                <span>
+                  / {active.months} tháng – tối đa {active.posts} tin/ngày
+                </span>
               </p>
 
               <ul className="mship-benefits">
-                <li>Chỉ hội viên mới được đăng tin.</li>
-                <li>Ưu tiên hiển thị tin, tăng uy tín với khách.</li>
-                <li>Hỗ trợ kỹ thuật & tư vấn tối ưu tin đăng.</li>
+                <li>Mỗi ngày được đăng tối đa {active.posts} tin hội viên.</li>
+                <li>
+                  Tin hội viên được ưu tiên hiển thị trong kết quả tìm kiếm,
+                  tăng uy tín với khách.
+                </li>
+                {active.id === "m3" && (
+                  <li>
+                    Gói 3 tháng được ưu tiên hiển thị hơn so với gói 1 tháng.
+                  </li>
+                )}
               </ul>
 
               <button className="mship-cta" onClick={handleGoPaymentPage}>
                 Đăng ký gói này
               </button>
             </div>
-
           </div>
         </main>
 
         {/* FOOTER */}
         <Footer />
-
       </div>
     </div>
   );
