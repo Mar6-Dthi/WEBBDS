@@ -17,6 +17,7 @@ import TypeSelect from "../components/TypeSelect";
 import Post from "../components/Post";
 import Footer from "../components/footer";
 import NhatotHeader from "../components/header";
+import ChatSticker from "../components/ChatSticker";
 
 /** ===== Demo data ===== */
 // dùng membershipPlanId để ưu tiên, isBroker chỉ để sort & hiển thị badge trong Post
@@ -755,7 +756,7 @@ export default function HomeNhaTot() {
           </div>
         </div>
       </section>
-
+      <ChatSticker />
       <Footer />
     </div>
   );
