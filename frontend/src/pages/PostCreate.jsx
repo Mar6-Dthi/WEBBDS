@@ -12,7 +12,10 @@ import FormDat from "../components/FormDat";
 import FormVanphong from "../components/FormVanphong";
 import FormPhongtro from "../components/FormPhongtro";
 
-// try to use quotaService if available (you said you already have it)
+// ✅ dùng để lưu bài mới
+import { createMyPost } from "../services/mockMyPosts";
+
+// try to use quotaService if available
 let quotaService = null;
 try {
   // eslint-disable-next-line import/no-unresolved
@@ -21,7 +24,7 @@ try {
   quotaService = null;
 }
 
-// constants (fallback logic if quotaService not used)
+// constants
 const CATEGORY_GROUP = [
   "Căn hộ/Chung cư",
   "Nhà ở",
@@ -32,12 +35,13 @@ const CATEGORY_GROUP = [
 
 const PREFIX = "Bất động sản - ";
 
-const POSTS_KEY = "posts";
 const MEMBERSHIP_TX_KEY = "membershipTransactions";
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
-// ---------- fallback helpers (only used if quotaService isn't provided) ----------
+// ✅ key lưu quota hàng ngày cho từng user
+const DAILY_STATS_PREFIX = "postDailyStats_";
+
+// ---------- helpers liên quan user ----------
 function getCurrentUserIdFallback() {
   try {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -48,6 +52,14 @@ function getCurrentUserIdFallback() {
   }
 }
 
+// Đồng bộ với MyPosts / createMyPost: ưu tiên accessToken
+function resolveLocalUserId() {
+  const token = localStorage.getItem("accessToken");
+  if (token) return token;
+  return getCurrentUserIdFallback();
+}
+
+// ---------- helpers: membership fallback ----------
 function getUserActiveMembershipFallback(userId) {
   if (!userId) return null;
   try {
@@ -58,7 +70,7 @@ function getUserActiveMembershipFallback(userId) {
     const active = list.filter((tx) => {
       if (tx.status !== "SUCCESS") return false;
       const txUserId = tx.userId || tx.ownerId || null;
-      if (txUserId !== userId) return false;
+      if (String(txUserId) !== String(userId)) return false;
       const createdMs = new Date(tx.createdAt).getTime();
       if (!createdMs || Number.isNaN(createdMs)) return false;
       const durationMs =
@@ -69,8 +81,8 @@ function getUserActiveMembershipFallback(userId) {
     });
 
     if (!active.length) return null;
-    active.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    const latest = active[0];
+    active.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    const latest = active[active.length - 1];
 
     let priorityLevel = 1;
     const durationMs =
@@ -85,27 +97,54 @@ function getUserActiveMembershipFallback(userId) {
   }
 }
 
-function getTodayPostCountFallback(userId) {
+// ---------- helpers: quota mỗi ngày (KHÔNG quét posts) ----------
+function getTodayDateStr() {
+  // YYYY-MM-DD
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getTodayPostCountLocal(userId) {
+  if (!userId) return 0;
   try {
-    const raw = localStorage.getItem(POSTS_KEY) || "[]";
-    const list = JSON.parse(raw);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const start = today.getTime();
-    const end = start + ONE_DAY_MS;
-    return list.filter((p) => {
-      const createdMs = p.createdAt ? new Date(p.createdAt).getTime() : NaN;
-      if (!createdMs || Number.isNaN(createdMs)) return false;
-      const ownerMatch = userId ? p.ownerId === userId : true;
-      return ownerMatch && createdMs >= start && createdMs < end;
-    }).length;
+    const raw = localStorage.getItem(DAILY_STATS_PREFIX + userId);
+    if (!raw) return 0;
+    const data = JSON.parse(raw);
+    if (!data || data.date !== getTodayDateStr()) return 0;
+    return typeof data.count === "number" ? data.count : 0;
   } catch {
     return 0;
   }
 }
 
-// ---------- Simple modal (inline) ----------
-function SimpleModal({ open, title, message, primaryLabel, onPrimary, secondaryLabel, onSecondary }) {
+function increaseTodayPostCountLocal(userId) {
+  if (!userId) return;
+  try {
+    const today = getTodayDateStr();
+    const raw = localStorage.getItem(DAILY_STATS_PREFIX + userId) || "{}";
+    const data = JSON.parse(raw);
+
+    let nextCount = 1;
+    if (data && data.date === today && typeof data.count === "number") {
+      nextCount = data.count + 1;
+    }
+
+    const toSave = { date: today, count: nextCount };
+    localStorage.setItem(DAILY_STATS_PREFIX + userId, JSON.stringify(toSave));
+  } catch {
+    // ignore
+  }
+}
+
+// ---------- Simple modal ----------
+function SimpleModal({
+  open,
+  title,
+  message,
+  primaryLabel,
+  onPrimary,
+  secondaryLabel,
+  onSecondary,
+}) {
   if (!open) return null;
   return (
     <div className="reg-modal-backdrop" style={backdropStyle}>
@@ -113,7 +152,14 @@ function SimpleModal({ open, title, message, primaryLabel, onPrimary, secondaryL
         {title && <h3 style={{ marginTop: 0 }}>{title}</h3>}
         <p style={{ whiteSpace: "pre-wrap" }}>{message}</p>
 
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            justifyContent: "flex-end",
+            marginTop: 12,
+          }}
+        >
           {secondaryLabel && (
             <button type="button" onClick={onSecondary} style={secondaryBtnStyle}>
               {secondaryLabel}
@@ -163,13 +209,25 @@ const secondaryBtnStyle = {
 // ---------- helper ----------
 function getPureCategory(fullLabel) {
   if (!fullLabel) return "";
-  return fullLabel.startsWith(PREFIX) ? fullLabel.slice(PREFIX.length).trim() : fullLabel;
+  return fullLabel.startsWith(PREFIX)
+    ? fullLabel.slice(PREFIX.length).trim()
+    : fullLabel;
+}
+
+// 🔸 helper đọc file thành dataURL (base64) để lưu vào localStorage
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 // ---------- Component ----------
 export default function PostCreate() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalPayload, setModalPayload] = useState({}); // { title, message, primaryLabel, primaryFn, secondaryLabel, secondaryFn }
+  const [modalPayload, setModalPayload] = useState({});
   const [category, setCategory] = useState("");
   const [estateType, setEstateType] = useState("");
 
@@ -178,7 +236,7 @@ export default function PostCreate() {
   const [maxPerDay, setMaxPerDay] = useState(2);
   const [usedToday, setUsedToday] = useState(0);
   const [blocked, setBlocked] = useState(false);
-  const [membershipLink, setMembershipLink] = useState("/membership");
+  const [membershipLink, setMembershipLink] = useState("/goi-hoi-vien");
 
   // media
   const [media, setMedia] = useState([]);
@@ -186,92 +244,84 @@ export default function PostCreate() {
   const MAX_FILES = 10;
   const MAX_SIZE_MB = 10;
 
-  // ------ refreshQuota: dùng khi mount + khi có event post:created / membership:updated ------
+  // ------ refreshQuota ------
   async function refreshQuota(userIdParam = null) {
     let userId = userIdParam;
+
     try {
       if (!userId) {
         if (quotaService && typeof quotaService.getCurrentUserId === "function") {
           userId = quotaService.getCurrentUserId();
           if (userId instanceof Promise) userId = await userId;
-        } else if (quotaService && typeof quotaService.getCurrentUser === "function") {
+        } else if (
+          quotaService &&
+          typeof quotaService.getCurrentUser === "function"
+        ) {
           const u = quotaService.getCurrentUser();
           const user = u instanceof Promise ? await u : u;
           userId = user?.id || user?.phone || null;
         } else {
-          userId = getCurrentUserIdFallback();
+          userId = resolveLocalUserId();
         }
       }
     } catch {
-      userId = getCurrentUserIdFallback();
+      userId = resolveLocalUserId();
     }
 
-    // try using service checkDailyQuota first
+    // Nếu vẫn không có userId → coi như chưa login, không block, báo 0/2
+    if (!userId) {
+      setHasMembershipFlag(false);
+      setUsedToday(0);
+      setMaxPerDay(2);
+      setBlocked(false);
+      setMembershipLink("/goi-hoi-vien");
+      return;
+    }
+
+    // Nếu có quotaService.checkDailyQuota thì ưu tiên dùng nó
     if (quotaService && typeof quotaService.checkDailyQuota === "function") {
       try {
         const maybe = quotaService.checkDailyQuota(userId);
         const q = maybe instanceof Promise ? await maybe : maybe;
         const allowed = !!q?.allowed;
-        const used = typeof q?.usedToday === "number" ? q.usedToday : 0;
-        const max = typeof q?.maxPerDay === "number" ? q.maxPerDay : q?.isMember ? 5 : 2;
+        const used =
+          typeof q?.usedToday === "number"
+            ? q.usedToday
+            : getTodayPostCountLocal(userId);
+        const max =
+          typeof q?.maxPerDay === "number"
+            ? q.maxPerDay
+            : q?.isMember
+            ? 5
+            : 2;
 
         setUsedToday(used);
         setMaxPerDay(max);
         setHasMembershipFlag(!!q?.isMember);
         setBlocked(!allowed);
-        setMembershipLink(q?.membershipLink || "/membership");
 
-        if (!allowed) {
-          const msg =
-            q?.reason === "non-member"
-              ? "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Bạn cần đăng ký hội viên để có thể đăng thêm bài."
-              : "Bạn đã dùng hết số lượt đăng bài cho hôm nay.";
-          setModalPayload({
-            title: "Hết lượt đăng hôm nay",
-            message: msg,
-            primaryLabel: "Đóng",
-            primaryFn: () => setIsModalOpen(false),
-            secondaryLabel: "Đăng ký hội viên",
-            secondaryFn: () => (window.location.href = q?.membershipLink || "/membership"),
-          });
-          setIsModalOpen(true);
-        }
+        // 🔒 ÉP LUÔN LINK HỘI VIÊN
+        setMembershipLink("/goi-hoi-vien");
         return;
-      } catch (e) {
-        // fallback below
-        // console.error("quotaService.checkDailyQuota error", e);
+      } catch {
+        // fallback bên dưới
       }
     }
 
-    // fallback local logic (member=5, non-member=2)
+    // Fallback local logic (member=5, non-member=2) + dùng bộ đếm riêng
     const membership = getUserActiveMembershipFallback(userId);
     const hasMembership = !!membership;
     const max = hasMembership ? 5 : 2;
-    const used = getTodayPostCountFallback(userId);
+    const used = getTodayPostCountLocal(userId);
 
     setHasMembershipFlag(hasMembership);
     setMaxPerDay(max);
     setUsedToday(used);
     setBlocked(used >= max);
-    setMembershipLink("/membership");
-
-    if (used >= max) {
-      const msg = hasMembership
-        ? "Bạn đã dùng hết số lượt đăng bài cho hôm nay."
-        : "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Bạn cần đăng ký hội viên để có thể đăng thêm bài.";
-      setModalPayload({
-        title: "Hết lượt đăng hôm nay",
-        message: msg,
-        primaryLabel: "Đóng",
-        primaryFn: () => setIsModalOpen(false),
-        secondaryLabel: hasMembership ? null : "Đăng ký hội viên",
-        secondaryFn: () => (window.location.href = "/membership"),
-      });
-      setIsModalOpen(true);
-    }
+    setMembershipLink("/goi-hoi-vien");
   }
 
-  // on mount, check quota (prefer quotaService if available) and load draft media
+  // on mount, check quota và load draft media
   useEffect(() => {
     let isMounted = true;
 
@@ -279,10 +329,9 @@ export default function PostCreate() {
       try {
         const raw = localStorage.getItem("postDraftMedia") || "[]";
         const list = JSON.parse(raw);
-        // ensure item shape
-        const valid = (list || []).filter((m) => m && (m.src || m.type));
+        const valid = (list || []).filter((m) => m && (m.src || m.dataUrl));
         if (isMounted) setMedia(valid);
-      } catch (e) {
+      } catch {
         // ignore
       }
     };
@@ -290,68 +339,88 @@ export default function PostCreate() {
     loadDraftMedia();
     refreshQuota();
 
-    // listen for global event when a post is created so UI can update immediately
     const onPostCreated = async (ev) => {
       try {
-        // resolve current user id (prefer quotaService)
         let currentUserId = null;
         try {
-          if (quotaService && typeof quotaService.getCurrentUserId === "function") {
+          if (
+            quotaService &&
+            typeof quotaService.getCurrentUserId === "function"
+          ) {
             currentUserId = quotaService.getCurrentUserId();
-            if (currentUserId instanceof Promise) currentUserId = await currentUserId;
-          } else if (quotaService && typeof quotaService.getCurrentUser === "function") {
+            if (currentUserId instanceof Promise)
+              currentUserId = await currentUserId;
+          } else if (
+            quotaService &&
+            typeof quotaService.getCurrentUser === "function"
+          ) {
             const u = quotaService.getCurrentUser();
             const user = u instanceof Promise ? await u : u;
             currentUserId = user?.id || user?.phone || null;
           } else {
-            currentUserId = getCurrentUserIdFallback();
+            currentUserId = resolveLocalUserId();
           }
         } catch {
-          currentUserId = getCurrentUserIdFallback();
+          currentUserId = resolveLocalUserId();
         }
 
         const ownerIdFromEvent = ev?.detail?.ownerId;
-        // only refresh when the post was created by the current user
-        if (ownerIdFromEvent && currentUserId && String(ownerIdFromEvent) === String(currentUserId)) {
+        if (
+          ownerIdFromEvent &&
+          currentUserId &&
+          String(ownerIdFromEvent) === String(currentUserId)
+        ) {
           refreshQuota(currentUserId);
+        } else {
+          refreshQuota();
         }
-      } catch (err) {
-        // fallback: still call refreshQuota to be safe
-        try { refreshQuota(); } catch {}
+      } catch {
+        try {
+          refreshQuota();
+        } catch {}
       }
     };
     window.addEventListener("post:created", onPostCreated);
 
-    // listen for membership updates (payment completed) so quota refreshes immediately
     const onMembershipUpdated = async (ev) => {
       try {
-        // resolve current user id (prefer quotaService)
         let currentUserId = null;
         try {
-          if (quotaService && typeof quotaService.getCurrentUserId === "function") {
+          if (
+            quotaService &&
+            typeof quotaService.getCurrentUserId === "function"
+          ) {
             currentUserId = quotaService.getCurrentUserId();
-            if (currentUserId instanceof Promise) currentUserId = await currentUserId;
-          } else if (quotaService && typeof quotaService.getCurrentUser === "function") {
+            if (currentUserId instanceof Promise)
+              currentUserId = await currentUserId;
+          } else if (
+            quotaService &&
+            typeof quotaService.getCurrentUser === "function"
+          ) {
             const u = quotaService.getCurrentUser();
             const user = u instanceof Promise ? await u : u;
             currentUserId = user?.id || user?.phone || null;
           } else {
-            currentUserId = getCurrentUserIdFallback();
+            currentUserId = resolveLocalUserId();
           }
         } catch {
-          currentUserId = getCurrentUserIdFallback();
+          currentUserId = resolveLocalUserId();
         }
 
         const ownerIdFromEvent = ev?.detail?.ownerId;
-        // If event has ownerId and it matches current user, refresh quota for that user.
-        if (ownerIdFromEvent && currentUserId && String(ownerIdFromEvent) === String(currentUserId)) {
+        if (
+          ownerIdFromEvent &&
+          currentUserId &&
+          String(ownerIdFromEvent) === String(currentUserId)
+        ) {
           refreshQuota(currentUserId);
         } else {
-          // if no ownerId or not match, still refresh for safety (in case app uses a global membership)
           refreshQuota();
         }
-      } catch (err) {
-        try { refreshQuota(); } catch {}
+      } catch {
+        try {
+          refreshQuota();
+        } catch {}
       }
     };
     window.addEventListener("membership:updated", onMembershipUpdated);
@@ -360,7 +429,7 @@ export default function PostCreate() {
       isMounted = false;
       window.removeEventListener("post:created", onPostCreated);
       window.removeEventListener("membership:updated", onMembershipUpdated);
-      // revoke any blob urls to avoid memory leaks
+
       try {
         const raw = localStorage.getItem("postDraftMedia") || "[]";
         const list = JSON.parse(raw);
@@ -379,14 +448,14 @@ export default function PostCreate() {
   const remainingToday = Math.max(maxPerDay - usedToday, 0);
   const canPostToday = !blocked && remainingToday > 0;
 
-  // file handlers use modal instead of alert
-  const handleFilesChange = (e) => {
+  // ====== FILE HANDLERS (dùng dataURL để lưu) ======
+  const handleFilesChange = async (e) => {
     if (!canPostToday) {
       setModalPayload({
         title: "Hết lượt đăng hôm nay",
         message: hasMembershipFlag
-          ? "Bạn đã dùng hết số lượt đăng bài cho hôm nay."
-          : "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Bạn cần đăng ký hội viên để có thể đăng thêm bài.",
+          ? "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Lượt đăng sẽ được đặt lại khi sang ngày mới."
+          : "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Lượt đăng sẽ được đặt lại khi sang ngày mới.\nBạn có thể đăng ký hội viên để tăng giới hạn đăng tin.",
         primaryLabel: "Đóng",
         primaryFn: () => setIsModalOpen(false),
         secondaryLabel: hasMembershipFlag ? null : "Đăng ký hội viên",
@@ -417,24 +486,35 @@ export default function PostCreate() {
     const newItems = [];
     const skipped = [];
 
-    selected.forEach((file) => {
+    for (const file of selected) {
       if (file.size > MAX_SIZE_MB * 1024 * 1024) {
         skipped.push(file.name || file.type || "file");
-        return;
+        continue;
       }
-      const url = URL.createObjectURL(file);
+
+      const objectUrl = URL.createObjectURL(file);
+      let dataUrl = null;
+      try {
+        dataUrl = await readFileAsDataURL(file);
+      } catch {
+        // ignore, vẫn dùng được objectUrl trong phiên
+      }
+
       newItems.push({
         id: Date.now() + Math.random(),
         type: file.type && file.type.startsWith("video") ? "video" : "image",
-        src: url,
+        src: objectUrl, // dùng cho preview trong phiên
+        dataUrl,        // dùng để lưu localStorage (tồn tại sau F5)
       });
-    });
+    }
 
     if (!newItems.length) {
       if (skipped.length) {
         setModalPayload({
           title: "Một số file quá lớn",
-          message: `Không thể tải lên các file sau (vượt quá ${MAX_SIZE_MB} MB):\n- ${skipped.join("\n- ")}`,
+          message: `Không thể tải lên các file sau (vượt quá ${MAX_SIZE_MB} MB):\n- ${skipped.join(
+            "\n- "
+          )}`,
           primaryLabel: "Đóng",
           primaryFn: () => setIsModalOpen(false),
         });
@@ -470,8 +550,8 @@ export default function PostCreate() {
       setModalPayload({
         title: "Hết lượt đăng hôm nay",
         message: hasMembershipFlag
-          ? "Bạn đã dùng hết số lượt đăng bài cho hôm nay."
-          : "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Bạn cần đăng ký hội viên để có thể đăng thêm bài.",
+          ? "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Lượt đăng sẽ được đặt lại khi sang ngày mới."
+          : "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Lượt đăng sẽ được đặt lại khi sang ngày mới.\nBạn có thể đăng ký hội viên để tăng giới hạn đăng tin.",
         primaryLabel: "Đóng",
         primaryFn: () => setIsModalOpen(false),
         secondaryLabel: hasMembershipFlag ? null : "Đăng ký hội viên",
@@ -508,8 +588,8 @@ export default function PostCreate() {
       setModalPayload({
         title: "Hết lượt đăng hôm nay",
         message: hasMembershipFlag
-          ? "Bạn đã dùng hết số lượt đăng bài cho hôm nay."
-          : "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Bạn cần đăng ký hội viên để có thể đăng thêm bài.",
+          ? "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Lượt đăng sẽ được đặt lại khi sang ngày mới."
+          : "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Lượt đăng sẽ được đặt lại khi sang ngày mới.\nBạn có thể đăng ký hội viên để tăng giới hạn đăng tin.",
         primaryLabel: "Đóng",
         primaryFn: () => setIsModalOpen(false),
         secondaryLabel: hasMembershipFlag ? null : "Đăng ký hội viên",
@@ -525,12 +605,11 @@ export default function PostCreate() {
 
   const handleSelectCategory = (name) => {
     if (!canPostToday) {
-      // show block modal
       setModalPayload({
         title: "Hết lượt đăng hôm nay",
         message: hasMembershipFlag
-          ? "Bạn đã dùng hết số lượt đăng bài cho hôm nay."
-          : "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Bạn cần đăng ký hội viên để có thể đăng thêm bài.",
+          ? "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Lượt đăng sẽ được đặt lại khi sang ngày mới."
+          : "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Lượt đăng sẽ được đặt lại khi sang ngày mới.\nBạn có thể đăng ký hội viên để tăng giới hạn đăng tin.",
         primaryLabel: "Đóng",
         primaryFn: () => setIsModalOpen(false),
         secondaryLabel: hasMembershipFlag ? null : "Đăng ký hội viên",
@@ -549,21 +628,121 @@ export default function PostCreate() {
   const hasEstateType = Boolean(estateType);
   const isPhongTro = pureCategory === "Phòng trọ";
 
+  // ✅ HÀM XỬ LÝ KHI FORM CON BẤM ĐĂNG TIN
+  const handleSubmitFromChildForm = async (formValues) => {
+    // 1) Nếu hết lượt đăng thì chặn
+    if (!canPostToday) {
+      setModalPayload({
+        title: "Hết lượt đăng hôm nay",
+        message: hasMembershipFlag
+          ? "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Lượt đăng sẽ được đặt lại khi sang ngày mới."
+          : "Bạn đã dùng hết số lượt đăng bài cho hôm nay. Lượt đăng sẽ được đặt lại khi sang ngày mới.\nBạn có thể đăng ký hội viên để tăng giới hạn đăng tin.",
+        primaryLabel: "Đóng",
+        primaryFn: () => setIsModalOpen(false),
+        secondaryLabel: hasMembershipFlag ? null : "Đăng ký hội viên",
+        secondaryFn: () => (window.location.href = membershipLink),
+      });
+      setIsModalOpen(true);
+      return;
+    }
+
+    // 2) lấy userId
+    let userId = null;
+    try {
+      if (quotaService && typeof quotaService.getCurrentUserId === "function") {
+        userId = quotaService.getCurrentUserId();
+        if (userId instanceof Promise) userId = await userId;
+      } else if (
+        quotaService &&
+        typeof quotaService.getCurrentUser === "function"
+      ) {
+        const u = quotaService.getCurrentUser();
+        const user = u instanceof Promise ? await u : u;
+        userId = user?.id || user?.phone || null;
+      } else {
+        userId = resolveLocalUserId();
+      }
+    } catch {
+      userId = resolveLocalUserId();
+    }
+
+    if (!userId) {
+      setModalPayload({
+        title: "Cần đăng nhập",
+        message: "Bạn cần đăng nhập để đăng tin.",
+        primaryLabel: "Đóng",
+        primaryFn: () => setIsModalOpen(false),
+      });
+      setIsModalOpen(true);
+      return;
+    }
+
+    // 3) build dữ liệu post để lưu
+    const cat = getPureCategory(category);
+
+    const postData = {
+      ...formValues,
+      category: cat,
+      estateType:
+        estateType || (cat === "Phòng trọ" ? "Cho thuê" : formValues.estateType),
+
+      // ƯU TIÊN dataUrl (tồn tại sau F5) – fallback blob – rồi ảnh demo
+      coverUrl:
+        media[0]?.dataUrl || media[0]?.src || "/Img/demo/house-1.jpg",
+
+      // lưu toàn bộ ảnh (ưu tiên dataUrl)
+      images: media.map((m) => m.dataUrl || m.src),
+    };
+
+    // 4) lưu vào localStorage (createMyPost sẽ bắn event post:created)
+    createMyPost(userId, postData);
+
+    // 5) cập nhật bộ đếm hôm nay
+    increaseTodayPostCountLocal(userId);
+    refreshQuota(userId);
+
+    // 6) xoá draft media
+    try {
+      localStorage.removeItem("postDraftMedia");
+    } catch {}
+    setMedia([]);
+
+    // 7) thông báo thành công
+    setModalPayload({
+      title: "Đăng tin thành công",
+      message:
+        "Tin của bạn đã được lưu. Bạn có thể xem và quản lý trong mục Quản lý tin.",
+      primaryLabel: "Xem tin đã đăng",
+      primaryFn: () => {
+        setIsModalOpen(false);
+        window.location.href = "/quan-ly-tin";
+      },
+      secondaryLabel: "Ở lại trang đăng tin",
+      secondaryFn: () => {
+        setIsModalOpen(false);
+      },
+    });
+    setIsModalOpen(true);
+  };
+
   const renderForm = () => {
     if (!canPostToday) return null;
     if (!hasCategory) return null;
     if (!isPhongTro && !hasEstateType) return null;
+
+    const commonProps = { onSubmit: handleSubmitFromChildForm };
+
     switch (pureCategory) {
       case "Căn hộ/Chung cư":
-        return <FormCanho estateType={estateType} />;
+        return <FormCanho estateType={estateType} {...commonProps} />;
       case "Nhà ở":
-        return <FormNhao estateType={estateType} />;
+        return <FormNhao estateType={estateType} {...commonProps} />;
       case "Đất":
-        return <FormDat estateType={estateType} />;
+        return <FormDat estateType={estateType} {...commonProps} />;
       case "Văn phòng, Mặt bằng kinh doanh":
-        return <FormVanphong estateType={estateType} />;
+        return <FormVanphong estateType={estateType} {...commonProps} />;
       case "Phòng trọ":
-        return <FormPhongtro />;
+        return <FormPhongtro {...commonProps} />;
       default:
         return null;
     }
@@ -606,9 +785,16 @@ export default function PostCreate() {
                 Hôm nay bạn đã đăng <strong>{usedToday}</strong> /{" "}
                 <strong>{maxPerDay}</strong> tin.{" "}
                 {canPostToday ? (
-                  <>Bạn còn có thể đăng thêm <strong>{remainingToday}</strong> tin.</>
+                  <>
+                    Bạn còn có thể đăng thêm{" "}
+                    <strong>{remainingToday}</strong> tin.{" "}
+                    <span>Lượt đăng sẽ được đặt lại khi sang ngày mới.</span>
+                  </>
                 ) : (
-                  <>Bạn đã dùng hết lượt đăng hôm nay.</>
+                  <>
+                    Bạn đã dùng hết lượt đăng hôm nay.{" "}
+                    <span>Lượt đăng sẽ được đặt lại khi sang ngày mới.</span>
+                  </>
                 )}
               </div>
             </div>
@@ -616,18 +802,28 @@ export default function PostCreate() {
             {!canPostToday ? (
               <div className="pct-card pct-limit-card">
                 <h2>Đã dùng hết lượt đăng hôm nay</h2>
-                <p>
-                  Bạn đã đăng đủ <strong>{maxPerDay}</strong> tin trong ngày hôm nay.
-                  Vui lòng quay lại vào ngày mai để tiếp tục đăng tin, hoặc{" "}
-                  <button
-                    type="button"
-                    className="pct-link"
-                    onClick={() => (window.location.href = membershipLink)}
-                  >
-                    đăng ký gói hội viên
-                  </button>{" "}
-                  để tăng giới hạn đăng tin (5 tin/ngày).
-                </p>
+
+                {hasMembershipFlag ? (
+                  <p>
+                    Bạn đã đăng đủ <strong>{maxPerDay}</strong> tin trong ngày hôm nay.
+                    Lượt đăng sẽ được đặt lại khi sang <strong>ngày mới</strong>. Vui
+                    lòng quay lại vào ngày mai để tiếp tục đăng tin.
+                  </p>
+                ) : (
+                  <p>
+                    Bạn đã đăng đủ <strong>{maxPerDay}</strong> tin trong ngày hôm nay.
+                    Lượt đăng sẽ được đặt lại khi sang <strong>ngày mới</strong>. Bạn
+                    có thể{" "}
+                    <button
+                      type="button"
+                      className="pct-link"
+                      onClick={() => (window.location.href = membershipLink)}
+                    >
+                      đăng ký gói hội viên
+                    </button>{" "}
+                    để tăng giới hạn đăng tin (5 tin/ngày).
+                  </p>
+                )}
               </div>
             ) : (
               <>
@@ -669,18 +865,27 @@ export default function PostCreate() {
                         onChange={handleFilesChange}
                       />
 
-                      <div className="pct-upload-dropzone" onClick={handleOpenFileDialog}>
+                      <div
+                        className="pct-upload-dropzone"
+                        onClick={handleOpenFileDialog}
+                      >
                         <div className="pct-upload-inner">
                           <div className="pct-upload-icon">
                             <div className="pct-upload-icon-circle" />
                             <span className="pct-upload-plus">+</span>
                           </div>
-                          <p className="pct-upload-text">Thêm hình ảnh hoặc video</p>
-                          <p className="pct-upload-hint">Hình có kích thước tối thiểu 240x240 – Tối đa 10 file</p>
+                          <p className="pct-upload-text">
+                            Thêm hình ảnh hoặc video
+                          </p>
+                          <p className="pct-upload-hint">
+                            Hình có kích thước tối thiểu 240x240 – Tối đa 10 file
+                          </p>
 
                           {media.length > 0 && (
                             <>
-                              <p className="pct-upload-counter">Đã chọn {media.length}/10 file</p>
+                              <p className="pct-upload-counter">
+                                Đã chọn {media.length}/10 file
+                              </p>
 
                               <div className="pct-upload-preview-grid">
                                 {media.map((m) => (
@@ -697,9 +902,9 @@ export default function PostCreate() {
                                     </button>
 
                                     {m.type === "image" ? (
-                                      <img src={m.src} alt="" />
+                                      <img src={m.src || m.dataUrl} alt="" />
                                     ) : (
-                                      <video src={m.src} controls />
+                                      <video src={m.src || m.dataUrl} controls />
                                     )}
                                   </div>
                                 ))}
@@ -714,19 +919,30 @@ export default function PostCreate() {
                       {showEstateType && (
                         <div className="pct-estate-type">
                           <label className="pct-label">
-                            Danh mục bất động sản <span className="pct-required">*</span>
+                            Danh mục bất động sản{" "}
+                            <span className="pct-required">*</span>
                           </label>
                           <div className="pct-pill-group">
                             <button
                               type="button"
-                              className={"pct-pill" + (estateType === "Cần bán" ? " pct-pill--active" : "")}
+                              className={
+                                "pct-pill" +
+                                (estateType === "Cần bán"
+                                  ? " pct-pill--active"
+                                  : "")
+                              }
                               onClick={() => setEstateType("Cần bán")}
                             >
                               Cần bán
                             </button>
                             <button
                               type="button"
-                              className={"pct-pill" + (estateType === "Cho thuê" ? " pct-pill--active" : "")}
+                              className={
+                                "pct-pill" +
+                                (estateType === "Cho thuê"
+                                  ? " pct-pill--active"
+                                  : "")
+                              }
                               onClick={() => setEstateType("Cho thuê")}
                             >
                               Cho thuê
@@ -737,7 +953,11 @@ export default function PostCreate() {
 
                       <div className="pct-illu-wrap">
                         <div className="pct-illu-image-box">
-                          <img src="/Img/empty-category.svg" alt="Lựa chọn loại bất động sản" className="pct-illu-image" />
+                          <img
+                            src="/Img/empty-category.svg"
+                            alt="Lựa chọn loại bất động sản"
+                            className="pct-illu-image"
+                          />
                         </div>
 
                         <div className="pct-illu-text">
@@ -760,12 +980,21 @@ export default function PostCreate() {
         {/* category modal */}
         {isCategoryModalOpen && canPostToday && (
           <div className="pct-modal-backdrop" onClick={closeCategoryModal}>
-            <div className="pct-modal" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="pct-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="pct-modal-header">
-                <button type="button" className="pct-modal-back-btn" onClick={closeCategoryModal}>
+                <button
+                  type="button"
+                  className="pct-modal-back-btn"
+                  onClick={closeCategoryModal}
+                >
                   ←
                 </button>
-                <span className="pct-modal-title">Chọn danh mục bất động sản</span>
+                <span className="pct-modal-title">
+                  Chọn danh mục bất động sản
+                </span>
               </div>
 
               <div className="pct-modal-body">
@@ -773,7 +1002,12 @@ export default function PostCreate() {
 
                 <div className="pct-modal-list">
                   {CATEGORY_GROUP.map((item) => (
-                    <button type="button" key={item} className="pct-modal-item" onClick={() => handleSelectCategory(item)}>
+                    <button
+                      type="button"
+                      key={item}
+                      className="pct-modal-item"
+                      onClick={() => handleSelectCategory(item)}
+                    >
                       <span>{item}</span>
                       <span className="pct-modal-item-arrow">›</span>
                     </button>
@@ -792,11 +1026,13 @@ export default function PostCreate() {
           primaryLabel={modalPayload.primaryLabel}
           onPrimary={() => {
             setIsModalOpen(false);
-            if (typeof modalPayload.primaryFn === "function") modalPayload.primaryFn();
+            if (typeof modalPayload.primaryFn === "function")
+              modalPayload.primaryFn();
           }}
           secondaryLabel={modalPayload.secondaryLabel}
           onSecondary={() => {
-            if (typeof modalPayload.secondaryFn === "function") modalPayload.secondaryFn();
+            if (typeof modalPayload.secondaryFn === "function")
+              modalPayload.secondaryFn();
           }}
         />
       </div>

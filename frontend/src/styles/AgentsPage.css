@@ -234,20 +234,34 @@
   margin: 0;
 }
 
+/* Chưa theo dõi: nền cam, chữ trắng */
 .agcard-follow-btn {
-  border: none;
   border-radius: 999px;
-  background: var(--ag-orange);
-  color: #fff;
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+
+  background: var(--ag-orange);
+  color: #ffffff;
+  border: 1px solid var(--ag-orange);
 }
 
 .agcard-follow-btn:hover {
   filter: brightness(0.95);
 }
+
+/* ĐANG theo dõi: nền trắng, chữ cam */
+.agcard-follow-btn.agcard-follow-btn--active {
+  background: #ffffff;
+  color: var(--ag-orange);
+  border-color: var(--ag-orange);
+}
+
+.agcard-follow-btn.agcard-follow-btn--active:hover {
+  background: #fff7ec;
+}
+
 
 /* Rating */
 .agcard-rating-row {
@@ -553,4 +567,68 @@
 .agents-price-item--active .agents-price-radio {
   border-color: var(--ag-orange);
   background: var(--ag-orange);
+}
+
+.agd-share-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agd-share-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.agd-share-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.agd-share-desc {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 16px;
+}
+
+.agd-share-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.agd-share-input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.agd-share-copy-btn {
+  padding: 0 14px;
+  border-radius: 8px;
+  border: none;
+  background: #ff7a00;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.agd-share-copy-btn:hover {
+  opacity: 0.9;
+}
+
+.agd-share-close-btn {
+  margin-top: 4px;
 }

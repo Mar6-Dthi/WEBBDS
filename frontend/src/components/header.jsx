@@ -208,12 +208,18 @@ export default function NhatotHeader() {
               Đăng tin
             </button>
 
-            {/* AVATAR – mở panel tài khoản */}
+            {/* AVATAR – mở panel tài khoản (hoặc modal login nếu chưa login) */}
             <button
               type="button"
               className="mk-avatar"
               aria-label="Tài khoản"
-              onClick={() => setIsAccModalOpen(true)}
+              onClick={() => {
+                if (!isLoggedIn) {
+                  setShowLoginModal(true);
+                  return;
+                }
+                setIsAccModalOpen(true);
+              }}
             >
               {!isLoggedIn ? (
                 <User size={20} />
@@ -237,7 +243,7 @@ export default function NhatotHeader() {
         onClose={() => setIsAccModalOpen(false)}
         isLoggedIn={isLoggedIn}
         userName={displayName}
-        userAvatar={avatarUrl}        // 👈 truyền avatar vào panel
+        userAvatar={avatarUrl}
       />
 
       {/* LOGIN MODAL */}

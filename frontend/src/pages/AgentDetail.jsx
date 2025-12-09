@@ -10,32 +10,29 @@ import "../styles/AgentDetail.css";
 import { getAgentById } from "../services/mockAgentService";
 import { getAgentReviews } from "../services/mockAgentReviewService";
 
-const MOCK_LISTINGS = [
-  {
-    id: "lst1",
-    title: "Nhà phố 4x16, full nội thất, Nam Sài Gòn",
-    price: "7.500.000.000 đ",
-    area: "64 m²",
-    location: "Quận 7, TP.HCM",
-    imageUrl: "/Img/demo/house-1.jpg",
-  },
-  {
-    id: "lst2",
-    title: "Nhà hẻm xe hơi, gần Lotte Mart Q7",
-    price: "6.200.000.000 đ",
-    area: "60 m²",
-    location: "Quận 7, TP.HCM",
-    imageUrl: "/Img/demo/house-2.jpg",
-  },
-  {
-    id: "lst3",
-    title: "Nhà mặt tiền kinh doanh, Tân Bình",
-    price: "9.800.000.000 đ",
-    area: "72 m²",
-    location: "Quận Tân Bình, TP.HCM",
-    imageUrl: "/Img/demo/house-3.jpg",
-  },
-];
+// 🔹 dùng chung follow service với AgentsPage & ProfilePage
+import {
+  isFollowingAgent,
+  toggleFollowAgent,
+} from "../services/mockFollowService";
+
+// 🔹 dùng lại ChatModal (giống trang PostDetail)
+import ChatModal from "../components/ChatModal";
+
+/* ===== META ẢNH GIỐNG MyAgentPage ===== */
+const AVATAR_META_KEY = "profile_avatar_meta";
+const COVER_META_KEY = "profile_cover_meta";
+
+function loadMetaUrl(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return "";
+    const meta = JSON.parse(raw);
+    return meta?.url || "";
+  } catch {
+    return "";
+  }
+}
 
 function StarRow({ value }) {
   return (
@@ -51,10 +48,16 @@ function StarRow({ value }) {
   );
 }
 
-/* ====== LẤY PROFILE CỦA MÔI GIỚI TỪ LOCALSTORAGE ======
-   - mockUsers: danh sách user
-   - match theo: id / userId / ownerId / phone / email
-*/
+/* ====== LẤY CURRENT USER ====== */
+function getCurrentUser() {
+  try {
+    return JSON.parse(localStorage.getItem("currentUser") || "null");
+  } catch {
+    return null;
+  }
+}
+
+/* ====== LẤY PROFILE CỦA MÔI GIỚI TỪ LOCALSTORAGE ====== */
 function getProfileFromAgent(agent) {
   if (!agent) return null;
 
@@ -67,7 +70,6 @@ function getProfileFromAgent(agent) {
     users = [];
   }
 
-  // thử match theo id hoặc phone
   const found =
     users.find(
       (u) =>
@@ -78,11 +80,13 @@ function getProfileFromAgent(agent) {
         u.phone === agent.ownerPhone
     ) || null;
 
-  // nếu không thấy, có thể agent chính là currentUser
   if (!found) {
     try {
       const current = JSON.parse(localStorage.getItem("currentUser") || "null");
-      if (current && (current.id === agent.ownerId || current.phone === agent.phone)) {
+      if (
+        current &&
+        (current.id === agent.ownerId || current.phone === agent.phone)
+      ) {
         return current;
       }
     } catch {
@@ -93,21 +97,270 @@ function getProfileFromAgent(agent) {
   return found;
 }
 
+/* ====== LẤY DANH SÁCH TIN ĐĂNG THUỘC VỀ MÔI GIỚI ====== */
+function getPostsForAgent(agent) {
+  if (!agent) return [];
+
+  let allPosts = [];
+  try {
+    allPosts = JSON.parse(localStorage.getItem("posts") || "[]");
+  } catch {
+    allPosts = [];
+  }
+  if (!Array.isArray(allPosts)) allPosts = [];
+
+  const matchIds = new Set(
+    [agent.ownerId, agent.userId].filter(Boolean).map(String)
+  );
+  const matchPhones = new Set(
+    [agent.phone, agent.ownerPhone].filter(Boolean).map(String)
+  );
+
+  const filtered = allPosts.filter((p) => {
+    const ownerId = p.ownerId || p.userId || p.user_id;
+    const phone = p.phone || p.ownerPhone;
+
+    const okId = ownerId && matchIds.has(String(ownerId));
+    const okPhone = phone && matchPhones.has(String(phone));
+
+    return okId || okPhone;
+  });
+
+  return filtered;
+}
+
+/* ====== FORMAT HỖ TRỢ HIỂN THỊ TIN ĐĂNG ====== */
+function formatPostPrice(post) {
+  if (post.priceText) return post.priceText;
+  if (post.displayPrice) return post.displayPrice;
+  const p = post.price;
+  if (p == null) return "";
+  const num = Number(p);
+  if (!Number.isFinite(num)) return String(p);
+  if (num >= 1_000_000_000) {
+    return `${(num / 1_000_000_000).toFixed(2)} tỷ`;
+  }
+  if (num >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(2)} triệu`;
+  }
+  return num.toLocaleString("vi-VN") + " đ";
+}
+
+function formatPostArea(post) {
+  const a = post.areaSize || post.acreage || post.area || post.square;
+  if (!a) return "";
+  const num = Number(a);
+  if (!Number.isFinite(num)) return String(a);
+  return `${num} m²`;
+}
+
+function formatPostLocation(post) {
+  if (post.addressShort) return post.addressShort;
+  if (post.location) return post.location;
+
+  const parts = [
+    post.wardName || post.ward,
+    post.districtName || post.district,
+    post.provinceName || post.province,
+  ].filter(Boolean);
+
+  if (parts.length) return parts.join(", ");
+
+  return post.fullAddress || "";
+}
+
+function getPostThumb(post) {
+  if (Array.isArray(post.images) && post.images.length > 0) {
+    return post.images[0];
+  }
+  if (Array.isArray(post.imageUrls) && post.imageUrls.length > 0) {
+    return post.imageUrls[0];
+  }
+  return post.thumbnail || post.imageUrl || "/Img/demo/house-1.jpg";
+}
+
+/* ====== FALLBACK: XÂY DỰNG AGENT TỪ USER ID (GIỐNG MyAgentPage) ====== */
+function buildAgentFromIdFallback(id) {
+  let users = [];
+  try {
+    const raw = localStorage.getItem("mockUsers") || "[]";
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) users = parsed;
+  } catch {
+    users = [];
+  }
+
+  const current = getCurrentUser();
+
+  let user =
+    users.find(
+      (u) =>
+        String(u.id) === String(id) ||
+        String(u.userId) === String(id) ||
+        String(u.phone) === String(id)
+    ) || null;
+
+  if (
+    !user &&
+    current &&
+    (String(current.id) === String(id) ||
+      String(current.phone) === String(id))
+  ) {
+    user = current;
+  }
+
+  // Nếu vẫn không tìm thấy user, trả về agent default
+  if (!user) {
+    return {
+      id,
+      name: "Môi giới",
+      avatarUrl: "/Img/agents/avatar-1.jpg",
+      bannerUrl: "/Img/agents/banner-1.jpg",
+      badge: "",
+      desc: "Chưa có giới thiệu",
+      area: "Chưa cập nhật khu vực hoạt động",
+      responseRate: 0,
+      followers: 0,
+      postsCount: 0,
+      yearsActive: 1,
+      rating: 0,
+      ratingCount: 0,
+    };
+  }
+
+  // Nếu là chính user hiện tại thì ưu tiên meta ảnh
+  const avatarMetaUrl =
+    current && current.id === user.id ? loadMetaUrl(AVATAR_META_KEY) : "";
+  const coverMetaUrl =
+    current && current.id === user.id ? loadMetaUrl(COVER_META_KEY) : "";
+
+  // Lấy posts thật của user để tính yearsActive & postsCount
+  let allPosts = [];
+  try {
+    allPosts = JSON.parse(localStorage.getItem("posts") || "[]");
+  } catch {
+    allPosts = [];
+  }
+  if (!Array.isArray(allPosts)) allPosts = [];
+
+  const myPosts = allPosts.filter(
+    (p) =>
+      p.ownerId === user.id ||
+      p.userId === user.id ||
+      p.user_id === user.id ||
+      p.phone === user.phone
+  );
+
+  let yearsActive = 0;
+  if (myPosts.length > 0) {
+    let first = null;
+    myPosts.forEach((p) => {
+      if (!p.createdAt) return;
+      const d = new Date(p.createdAt);
+      if (Number.isNaN(d.getTime())) return;
+      if (!first || d < first) first = d;
+    });
+    if (first) {
+      const diffMs = Date.now() - first.getTime();
+      const diffYears = diffMs / (1000 * 60 * 60 * 24 * 365);
+      yearsActive = diffYears < 1 ? 0 : Math.floor(diffYears);
+    }
+  }
+
+  const profileIntro = user.profileIntro || "";
+  const profileProvinces = user.profileProvinces || [];
+
+  return {
+    id: user.id ?? id,
+    name: user.name || "Môi giới",
+    bannerUrl:
+      coverMetaUrl || user.coverUrl || "/Img/agents/default-banner.jpg",
+    avatarUrl:
+      avatarMetaUrl || user.avatarUrl || "/Img/agents/avatar-1.jpg",
+    badge: user.agentBadge || "Môi giới cá nhân",
+    followers: user.followers ?? 0,
+    responseRate: user.responseRate ?? 0,
+    desc: profileIntro || user.desc || "",
+    area:
+      (Array.isArray(profileProvinces) && profileProvinces.length
+        ? profileProvinces.join(", ")
+        : user.area || "Chưa cập nhật khu vực hoạt động"),
+    yearsActive,
+    postsCount: myPosts.length,
+    rating: user.rating ?? 0,
+    ratingCount: user.ratingCount ?? 0,
+    // Quan trọng: gắn owner để getPostsForAgent / getProfileFromAgent hoạt động
+    ownerId: user.id,
+    userId: user.id,
+    phone: user.phone,
+    ownerPhone: user.phone,
+  };
+}
+
 export default function AgentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [agent, setAgent] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [ownerProfile, setOwnerProfile] = useState(null); // ⭐ profile từ trang cá nhân
+  const [ownerProfile, setOwnerProfile] = useState(null);
+
+  // 🔹 tin đăng thật của môi giới
+  const [myPosts, setMyPosts] = useState([]);
+
+  // 🔹 trạng thái theo dõi & số follower hiển thị
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+
+  // 🔹 trạng thái mở modal chat
+  const [chatOpen, setChatOpen] = useState(false);
+
+  // 🔹 trạng thái mở modal chia sẻ
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
+  const currentUser = useMemo(() => getCurrentUser(), []);
 
   useEffect(() => {
     getAgentById(id).then((a) => {
-      setAgent(a);
-      setOwnerProfile(getProfileFromAgent(a));
+      // ⭐ Nếu không tìm thấy trong mockAgentService,
+      //   xây agent từ user giống MyAgentPage
+      let agentData = a;
+      if (!agentData) {
+        agentData = buildAgentFromIdFallback(id);
+      }
+
+      setAgent(agentData);
+      setOwnerProfile(getProfileFromAgent(agentData));
+
+      // trạng thái đang theo dõi từ localStorage
+      const followed = isFollowingAgent(agentData.id);
+      setIsFollowing(followed);
+
+      // follower mock ban đầu
+      setFollowerCount(
+        typeof agentData.followers === "number" ? agentData.followers : 0
+      );
+
+      // 🔹 LẤY TIN ĐĂNG THẬT CỦA MÔI GIỚI
+      const posts = getPostsForAgent(agentData);
+      setMyPosts(posts);
     });
-    getAgentReviews(id).then(setReviews);
+
+    getAgentReviews(id).then((list) => {
+      setReviews(Array.isArray(list) ? list : []);
+    });
   }, [id]);
+
+  // 👉 xác định có phải chính chủ môi giới này không
+  const isOwner = useMemo(() => {
+    if (!agent || !currentUser) return false;
+    return (
+      agent.ownerId === currentUser.id ||
+      agent.userId === currentUser.id ||
+      agent.phone === currentUser.phone ||
+      agent.ownerPhone === currentUser.phone
+    );
+  }, [agent, currentUser]);
 
   // ===== TÍNH ĐIỂM TRUNG BÌNH & SỐ LƯỢNG ĐÁNH GIÁ =====
   const avgRating = useMemo(() => {
@@ -126,8 +379,10 @@ export default function AgentDetail() {
     return agent?.ratingCount || 0;
   }, [reviews, agent]);
 
-  // 3 đánh giá mới nhất
   const latestReviews = useMemo(() => reviews.slice(0, 3), [reviews]);
+
+  // 🔹 số tin hiện có: ưu tiên tin thật, fallback postsCount trong agent
+  const postsCount = myPosts.length || agent?.postsCount || 0;
 
   if (!agent) {
     return (
@@ -164,6 +419,46 @@ export default function AgentDetail() {
       : agent.area
       ? [agent.area]
       : [];
+
+  // 🔹 Toggle theo dõi môi giới từ trang chi tiết
+  const handleToggleFollow = () => {
+    const res = toggleFollowAgent(agent.id);
+
+    if (!res.ok && res.reason === "NO_USER") {
+      alert("Vui lòng đăng nhập để theo dõi môi giới.");
+      return;
+    }
+
+    setIsFollowing((prev) => {
+      const wasFollowing = prev;
+      const nowFollowing = res.isFollowing;
+
+      setFollowerCount((c) => {
+        const current = typeof c === "number" ? c : 0;
+        if (nowFollowing && !wasFollowing) return current + 1;
+        if (!nowFollowing && wasFollowing) return Math.max(0, current - 1);
+        return current;
+      });
+
+      return nowFollowing;
+    });
+
+    try {
+      window.dispatchEvent(new Event("follow-changed"));
+    } catch {
+      // ignore
+    }
+  };
+
+  // 🔹 Dữ liệu giả để truyền vào ChatModal (xem môi giới như 1 "bài" riêng)
+  const chatPostObject = {
+    id: `agent_${agent.id}`,
+    title: `Trao đổi với môi giới ${agent.name}`,
+    ownerName: agent.name,
+  };
+
+  // 🔹 link chia sẻ trang môi giới
+  const shareUrl = `${window.location.origin}/moi-gioi/${agent.id}`;
 
   return (
     <div className="nhatot">
@@ -220,7 +515,7 @@ export default function AgentDetail() {
                       <span>
                         Người theo dõi:{" "}
                         <button type="button" className="agd-link-inline">
-                          {agent.followers}
+                          {followerCount}
                         </button>
                       </span>
                     </div>
@@ -228,17 +523,51 @@ export default function AgentDetail() {
                 </div>
 
                 <div className="agd-hero-actions">
-                  <button className="agd-hero-ghost-btn">
+                  {/* nút Share luôn có cho mọi người */}
+                  <button
+                    className="agd-hero-ghost-btn"
+                    type="button"
+                    onClick={() => setIsShareOpen(true)}
+                  >
                     <Share2 size={16} />
                     Chia sẻ
                   </button>
-                  <button className="agd-hero-ghost-btn">+ Theo dõi</button>
-                  <button className="agd-hero-chip-btn">Chat</button>
 
-                  <button className="agd-hero-main-btn">
-                    <Phone size={18} />
-                    Liên hệ
-                  </button>
+                  {/* Nếu KHÔNG phải chính chủ: cho phép Theo dõi + Liên hệ */}
+                  {!isOwner && (
+                    <>
+                      <button
+                        type="button"
+                        className={
+                          "agd-hero-ghost-btn agd-follow-btn" +
+                          (isFollowing ? " agd-follow-btn--active" : "")
+                        }
+                        onClick={handleToggleFollow}
+                      >
+                        {isFollowing ? "Đang theo dõi" : "+ Theo dõi"}
+                      </button>
+
+                      <button
+                        className="agd-hero-main-btn"
+                        type="button"
+                        onClick={() => setChatOpen(true)}
+                      >
+                        <Phone size={18} />
+                        Liên hệ
+                      </button>
+                    </>
+                  )}
+
+                  {/* Nếu là CHÍNH CHỦ: chỉ có nút đi tới trang quản lý của tôi */}
+                  {isOwner && (
+                    <button
+                      className="agd-hero-main-btn"
+                      type="button"
+                      onClick={() => navigate("/moi-gioi-cua-toi")}
+                    >
+                      Quản lý trang
+                    </button>
+                  )}
                 </div>
               </div>
             </section>
@@ -253,7 +582,7 @@ export default function AgentDetail() {
 
               <div className="agd-stat-card">
                 <p className="agd-stat-label">Tin hiện có</p>
-                <p className="agd-stat-value">{agent.postsCount} tin</p>
+                <p className="agd-stat-value">{postsCount} tin</p>
                 <button
                   className="agd-stat-link"
                   onClick={handleViewAllListings}
@@ -293,9 +622,7 @@ export default function AgentDetail() {
                       {areaChips.length === 0 ? (
                         <p>Chưa cập nhật</p>
                       ) : (
-                        areaChips.map((area) => (
-                          <p key={area}>{area}</p>
-                        ))
+                        areaChips.map((area) => <p key={area}>{area}</p>)
                       )}
                     </div>
                   </div>
@@ -305,23 +632,39 @@ export default function AgentDetail() {
                 <div className="agd-card">
                   <div className="agd-card-header">
                     <h2 className="agd-section-title">
-                      Tất cả tin đăng ({agent.postsCount})
+                      Tất cả tin đăng ({postsCount})
                     </h2>
                   </div>
 
                   <div className="agd-listings-grid">
-                    {MOCK_LISTINGS.map((lst) => (
-                      <div key={lst.id} className="agd-listing-card">
-                        <div className="agd-listing-img-wrap">
-                          <img src={lst.imageUrl} alt={lst.title} />
-                        </div>
-                        <h3 className="agd-listing-title">{lst.title}</h3>
-                        <p className="agd-listing-price">{lst.price}</p>
-                        <p className="agd-listing-meta">
-                          {lst.area} • {lst.location}
-                        </p>
-                      </div>
-                    ))}
+                    {myPosts.length === 0 ? (
+                      <p style={{ padding: 8 }}>Chưa có tin đăng nào.</p>
+                    ) : (
+                      myPosts.map((post) => {
+                        const thumb = getPostThumb(post);
+                        const price = formatPostPrice(post);
+                        const area = formatPostArea(post);
+                        const location = formatPostLocation(post);
+
+                        return (
+                          <div key={post.id} className="agd-listing-card">
+                            <div className="agd-listing-img-wrap">
+                              <img src={thumb} alt={post.title} />
+                            </div>
+                            <h3 className="agd-listing-title">
+                              {post.title || "Tin đăng"}
+                            </h3>
+                            {price && (
+                              <p className="agd-listing-price">{price}</p>
+                            )}
+                            <p className="agd-listing-meta">
+                              {area && `${area} • `}
+                              {location}
+                            </p>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
 
                   <button
@@ -405,6 +748,57 @@ export default function AgentDetail() {
         </div>
 
         <Footer />
+
+        {/* 🔹 MODAL CHAT LIÊN HỆ MÔI GIỚI */}
+        <ChatModal
+          open={chatOpen}
+          onClose={() => setChatOpen(false)}
+          post={chatPostObject}
+          mode="buyerToAgent"
+        />
+
+        {/* 🔹 MODAL CHIA SẺ LINK TRANG MÔI GIỚI */}
+        {isShareOpen && (
+          <div
+            className="agd-share-backdrop"
+            onClick={() => setIsShareOpen(false)}
+          >
+            <div
+              className="agd-share-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="agd-share-title">Chia sẻ trang môi giới</h3>
+              <p className="agd-share-desc">
+                Sao chép đường link bên dưới và gửi cho khách hàng / bạn bè.
+              </p>
+
+              <div className="agd-share-input-row">
+                <input
+                  type="text"
+                  className="agd-share-input"
+                  readOnly
+                  value={shareUrl}
+                  onFocus={(e) => e.target.select()}
+                />
+                <button
+                  type="button"
+                  className="agd-share-copy-btn"
+                  onClick={() => navigator.clipboard.writeText(shareUrl)}
+                >
+                  Copy
+                </button>
+              </div>
+
+              <button
+                type="button"
+                className="agd-outline-pill-btn agd-outline-pill-full agd-share-close-btn"
+                onClick={() => setIsShareOpen(false)}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

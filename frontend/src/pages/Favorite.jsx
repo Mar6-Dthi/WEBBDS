@@ -7,47 +7,12 @@ import "../styles/header.css";
 import NhatotHeader from "../components/header";
 import ChatModal from "../components/ChatModal";
 
-/* ===== helper: key dùng chung với Post.jsx ===== */
-
-/**
- * Lấy key để lưu favorites:
- *  - Nếu có currentUser.id / phone → dùng cái đó
- *  - Nếu không nhưng có accessToken → dùng "user_<accessToken>"
- *  - Nếu không có gì → null (coi như chưa login)
- */
-function getFavoriteUserKey() {
-  try {
-    const rawUser = localStorage.getItem("currentUser");
-    if (rawUser) {
-      const u = JSON.parse(rawUser);
-      if (u.id || u.phone) return String(u.id || u.phone);
-    }
-  } catch {
-    // ignore
-  }
-
-  const token = localStorage.getItem("accessToken");
-  if (token) return "user_" + token;
-
-  return null;
-}
-
-// Lấy danh sách bài đã lưu theo userKey
-function loadFavoritesForUser(userKey) {
-  if (!userKey) return [];
-  try {
-    const raw = localStorage.getItem("favorites_" + userKey) || "[]";
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-// Lưu danh sách favorites
-function saveFavoritesForUser(userKey, list) {
-  if (!userKey) return;
-  localStorage.setItem("favorites_" + userKey, JSON.stringify(list));
-}
+import {
+  getFavoriteIds,
+  toggleFavorite,
+  toggleFavoriteMock,
+  getFavoritePosts,
+} from "../services/mockFavoriteService";
 
 function formatPriceVND(n) {
   if (n == null) return "";
@@ -61,73 +26,43 @@ function formatPriceVND(n) {
 
 /* ===== Component chính ===== */
 export default function Favorite() {
-  const [userKey, setUserKey] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [list, setList] = useState([]);
-  const [sessionLikes, setSessionLikes] = useState({}); // trạng thái tim trong phiên
+  const [favoriteIds, setFavoriteIds] = useState(() => new Set(getFavoriteIds() || []));
 
   // state cho cửa sổ chat
   const [chatPost, setChatPost] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
-    // kiểm tra login theo accessToken hoặc currentUser
+    // kiểm tra login theo accessToken hoặc currentUser (vẫn giữ rule cũ cho phần chat)
     const hasToken = !!localStorage.getItem("accessToken");
     const hasUser = !!localStorage.getItem("currentUser");
+    setIsLoggedIn(hasToken || hasUser);
 
-    if (!hasToken && !hasUser) {
-      setIsLoggedIn(false);
-      return;
-    }
-    setIsLoggedIn(true);
+    // load danh sách tin yêu thích từ mockFavoriteService
+    const favPosts = getFavoritePosts();
+    setList(favPosts);
 
-    const key = getFavoriteUserKey();
-    setUserKey(key);
-
-    const favs = loadFavoritesForUser(key);
-    setList(favs);
-
-    // trạng thái tim trong phiên (mặc định tất cả đang được tim)
-    const init = {};
-    favs.forEach((it) => {
-      const k = it.id ?? `${it.title}|${it.price}`;
-      init[k] = true;
-    });
-    setSessionLikes(init);
+    // đồng bộ lại set ID tim
+    setFavoriteIds(new Set(getFavoriteIds() || []));
   }, []);
 
   const handleToggleFavorite = (item) => {
-    const key = item.id ?? `${item.title}|${item.price}`;
-    const currentLiked = sessionLikes[key] ?? true;
-    const nextLiked = !currentLiked;
+    const id = String(item.postId ?? item.id);
+    if (!id) return;
 
-    // 1. Cập nhật UI: chỉ đổi màu tim, KHÔNG xoá item khỏi list
-    setSessionLikes((prev) => ({
-      ...prev,
-      [key]: nextLiked,
-    }));
+    // 1. Đảo trạng thái yêu thích trong store ID
+    const { ids, added } = toggleFavorite(id);
+    setFavoriteIds(new Set(ids));
 
-    // 2. Cập nhật localStorage: bỏ tim → xoá khỏi favorites_<userKey>
-    if (!userKey) return;
+    // 2. Cập nhật kho bài yêu thích (favorite_posts)
+    //    item ở đây đã có cấu trúc từ getFavoritePosts (postId, postTitle, ...)
+    toggleFavoriteMock(item, added);
 
-    const currentList = loadFavoritesForUser(userKey);
-
-    let nextList;
-    if (nextLiked) {
-      // thêm lại (trường hợp user bấm tim lại khi chưa reload)
-      const existed = currentList.some(
-        (p) => (p.id ?? `${p.title}|${p.price}`) === key
-      );
-      nextList = existed ? currentList : [...currentList, item];
-    } else {
-      // bỏ tim → xoá khỏi kho
-      nextList = currentList.filter(
-        (p) => (p.id ?? `${p.title}|${p.price}`) !== key
-      );
-    }
-
-    saveFavoritesForUser(userKey, nextList);
-    // ❗ KHÔNG cập nhật state `list` để item vẫn còn hiển thị tới khi reload
+    // 3. Cập nhật lại danh sách hiển thị
+    const nextList = getFavoritePosts();
+    setList(nextList);
   };
 
   // bấm Chat
@@ -163,15 +98,8 @@ export default function Favorite() {
               <span className="fav-title-count">({total} / 100)</span>
             </h1>
 
-            {/* chưa login */}
-            {!isLoggedIn && (
-              <div className="fav-empty">
-                <p>Vui lòng đăng nhập để xem danh sách tin đã lưu.</p>
-              </div>
-            )}
-
-            {/* login nhưng rỗng */}
-            {isLoggedIn && total === 0 && (
+            {/* chưa có tin yêu thích */}
+            {total === 0 && (
               <div className="fav-empty">
                 <p>Hiện tại chị chưa lưu tin nào.</p>
                 <p>💛 Hãy bấm trái tim ở tin đăng để lưu lại.</p>
@@ -179,31 +107,35 @@ export default function Favorite() {
             )}
 
             {/* có tin */}
-            {isLoggedIn && total > 0 && (
+            {total > 0 && (
               <div className="fav-list">
                 {list.map((item, idx) => {
-                  const likeKey = item.id ?? `${item.title}|${item.price}`;
-                  const liked = sessionLikes[likeKey] ?? true;
+                  const id = String(item.postId ?? item.id ?? idx);
+                  const liked = favoriteIds.has(id);
 
-                  const detailPath =
-                    item.to || (item.id ? `/post/${item.id}` : "#");
+                  const title = item.postTitle ?? item.title ?? "Tin đăng";
+                  const thumb = item.postThumbnail ?? item.coverUrl;
+                  const priceValue =
+                    item.postPrice ?? item.priceValue ?? item.price;
+                  const location =
+                    item.postLocation ?? item.address ?? item.location;
 
-                  const priceValue = item.priceValue ?? item.price;
+                  const detailId = item.postId ?? item.id;
+                  const detailPath = detailId ? `/post/${detailId}` : "#";
 
                   return (
-                    <div className="fav-item" key={item.id ?? idx}>
+                    <div className="fav-item" key={id}>
                       {/* ảnh */}
                       <NavLink
                         to={detailPath}
-                        state={{ item }} // gửi data sang PostDetail
+                        state={{ item }}
                         className="fav-thumb"
-                        aria-label={item.title}
+                        aria-label={title}
                       >
-                        <img src={item.coverUrl} alt={item.title} />
-                        {item.photos > 0 && (
-                          <span className="fav-thumb-count">
-                            {item.photos}
-                          </span>
+                        {thumb ? (
+                          <img src={thumb} alt={title} />
+                        ) : (
+                          <div className="fav-thumb-placeholder" />
                         )}
                       </NavLink>
 
@@ -214,7 +146,7 @@ export default function Favorite() {
                           state={{ item }}
                           className="fav-item-title"
                         >
-                          {item.title}
+                          {title}
                         </NavLink>
 
                         <div className="fav-item-price">
@@ -222,19 +154,7 @@ export default function Favorite() {
                         </div>
 
                         <div className="fav-item-meta">
-                          {item.typeLabel && <span>{item.typeLabel}</span>}
-                          {item.timeAgo && (
-                            <>
-                              <span className="fav-dot">•</span>
-                              <span>{item.timeAgo}</span>
-                            </>
-                          )}
-                          {(item.address || item.location) && (
-                            <>
-                              <span className="fav-dot">•</span>
-                              <span>{item.address || item.location}</span>
-                            </>
-                          )}
+                          {location && <span>{location}</span>}
                         </div>
                       </div>
 

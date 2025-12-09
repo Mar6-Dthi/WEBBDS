@@ -14,37 +14,63 @@ const PLANS = [
     label: "Gói 1 tháng",
     months: 1,
     posts: 5, // 5 tin/ngày
-    price: 199000, // tuỳ bạn chỉnh lại giá
+    price: 199000,
   },
   {
     id: "m3",
     label: "Gói 3 tháng",
     months: 3,
     posts: 5, // 5 tin/ngày
-    price: 499000, // tuỳ bạn chỉnh lại giá
+    price: 499000,
     badge: "Ưu tiên hơn",
-    primary: true, // dùng cho CSS tô nổi bật
+    primary: true,
   },
 ];
 
 const TX_KEY = "membershipTransactions";
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 
-// ===== TÍNH GÓI CÒN HẠN + NGÀY HẾT HẠN SỚM NHẤT =====
-// Ở đây không tính tổng tin nữa, chỉ quan tâm số gói & ngày hết hạn
-function getMembershipSummary() {
+/* ===== LẤY USER HIỆN TẠI ===== */
+function getCurrentUser() {
+  try {
+    const raw = localStorage.getItem("currentUser") || "null";
+    const user = JSON.parse(raw);
+    return user && typeof user === "object" ? user : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Lấy userId dùng chung trong membership:
+ * Ưu tiên: user.id -> user.phone -> user.email -> null
+ * (khớp với ThanhToanHoiVien)
+ */
+function getMembershipUserId() {
+  const user = getCurrentUser();
+  if (!user) return null;
+  return user.id || user.phone || user.email || null;
+}
+
+// ===== TÍNH GÓI CÒN HẠN + NGÀY HẾT HẠN SỚM NHẤT CHO ĐÚNG USER =====
+function getMembershipSummary(userId) {
+  if (!userId) return null; // chưa đăng nhập thì không có summary
+
   try {
     const raw = localStorage.getItem(TX_KEY) || "[]";
-    const list = JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    const allTx = Array.isArray(parsed) ? parsed : [];
     const now = Date.now();
 
-    // Lấy gói còn hạn
+    // ⚠️ Chỉ lấy giao dịch của đúng user (dùng tx.userId)
+    const list = allTx.filter((tx) => tx.userId === userId);
+
+    // Lấy các gói còn hạn
     const active = list.filter((tx) => {
       if (tx.status !== "SUCCESS") return false;
 
       const created = new Date(tx.createdAt).getTime();
 
-      // Nếu tx có durationMs thì dùng, không thì mặc định 1 tháng
       const durationMs =
         typeof tx.durationMs === "number" && tx.durationMs > 0
           ? tx.durationMs
@@ -85,19 +111,38 @@ export default function MembershipPage() {
   // Mặc định chọn gói 3 tháng vì ưu tiên hơn
   const [activeId, setActiveId] = useState("m3");
   const [summary, setSummary] = useState(null);
+
   const navigate = useNavigate();
 
   const active = PLANS.find((p) => p.id === activeId) || PLANS[0];
 
+  // 👉 Lấy userId một lần khi mount
+  const [userId] = useState(() => getMembershipUserId());
+
   // Load summary khi mở trang
   useEffect(() => {
-    const info = getMembershipSummary();
+    const info = getMembershipSummary(userId);
     setSummary(info);
-  }, []);
+  }, [userId]);
+
+  // Nghe event membership:updated từ ThanhToanHoiVien để cập nhật lại summary
+  useEffect(() => {
+    function handleUpdated(e) {
+      const evtUserId = e.detail?.userId;
+      if (!evtUserId) return;
+      // Nếu event là của user khác thì bỏ qua
+      if (evtUserId !== userId) return;
+
+      const info = getMembershipSummary(evtUserId);
+      setSummary(info);
+    }
+
+    window.addEventListener("membership:updated", handleUpdated);
+    return () => window.removeEventListener("membership:updated", handleUpdated);
+  }, [userId]);
 
   // Đi đến trang thanh toán
   const handleGoPaymentPage = () => {
-    // durationMs dùng cho tx về sau (3 tháng dài hơn 1 tháng)
     const durationMs = (active.months || 1) * ONE_MONTH_MS;
 
     navigate("/thanh-toan-hoi-vien", {
@@ -105,8 +150,9 @@ export default function MembershipPage() {
         planId: active.id,
         planName: active.label,
         price: active.price,
-        quota: active.posts, // ở đây đang mang nghĩa: 5 tin/ngày
-        durationMs, // để bên trang thanh toán / lưu giao dịch dùng
+        quota: active.posts, // 5 tin/ngày
+        durationMs,
+        userId, // ⭐ để trang thanh toán lưu đúng user
       },
     });
   };
@@ -177,7 +223,9 @@ export default function MembershipPage() {
                   onClick={() => setActiveId(p.id)}
                 >
                   {p.label}
-                  {p.badge && <span className="mship-tab-badge">{p.badge}</span>}
+                  {p.badge && (
+                    <span className="mship-tab-badge">{p.badge}</span>
+                  )}
                 </button>
               ))}
             </div>

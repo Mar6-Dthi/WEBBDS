@@ -7,6 +7,12 @@ import Post from "../components/Post";
 import { seedMockMyPosts } from "../services/mockMyPosts";
 import "../styles/MyPosts.css";
 
+import {
+  getFavoriteIds,
+  toggleFavorite,
+  toggleFavoriteMock,
+} from "../services/mockFavoriteService";
+
 const PAGE_SIZE = 12;
 
 const CATEGORY_OPTIONS = [
@@ -23,7 +29,29 @@ const CATEGORY_OPTIONS = [
 
 export default function MyPosts() {
   const navigate = useNavigate();
-  const accessToken = localStorage.getItem("accessToken");
+
+  // ======================================================
+  // ✔ CHUẨN HOÁ LẤY ownerId (PHẢI GIỐNG PostCreate)
+  //  - PostCreate đang lưu ownerId = currentUser.id (email) với login google
+  //  - Nên ở đây cũng ưu tiên currentUser.id / phone, cuối cùng mới fallback accessToken
+  // ======================================================
+  function resolveLocalUserId() {
+    try {
+      const u = JSON.parse(localStorage.getItem("currentUser") || "null");
+      if (u?.id) return u.id;       // vd: 'loan@gmail.com'
+      if (u?.phone) return u.phone; // trường hợp đăng nhập bằng số điện thoại
+    } catch {
+      // ignore
+    }
+
+    // fallback cuối cùng
+    const accessToken = localStorage.getItem("accessToken");
+    if (accessToken) return accessToken;
+
+    return null;
+  }
+
+  const ownerId = resolveLocalUserId();
 
   // ====== STATE POSTS ======
   const [allPosts, setAllPosts] = useState(() => {
@@ -34,7 +62,6 @@ export default function MyPosts() {
     }
   });
 
-  // Helper: load posts from localStorage and set state
   function loadPosts() {
     try {
       const next = JSON.parse(localStorage.getItem("posts") || "[]");
@@ -44,57 +71,47 @@ export default function MyPosts() {
     }
   }
 
-  // seed 20 bài mock cho user nếu chưa có -> chạy 1 lần khi mount (nếu login)
+  // seed mock once
   useEffect(() => {
-    if (!accessToken) return;
-    seedMockMyPosts(accessToken);
+    if (!ownerId) return;
+    seedMockMyPosts(ownerId);
     loadPosts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken]);
+  }, [ownerId]);
 
-  // ====== STATE FILTER + SORT + PAGE ======
-  const [ownerTypeFilter, setOwnerTypeFilter] = useState("all");
+  // ====== FILTER + SORT ======
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [timeSort, setTimeSort] = useState("newest"); // newest | oldest | none
-  const [priceSort, setPriceSort] = useState("none"); // none | priceDesc | priceAsc
+  const [timeSort, setTimeSort] = useState("newest");
+  const [priceSort, setPriceSort] = useState("none");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ====== STATE MODAL XOÁ ======
+  // ====== DELETE ======
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // reset page khi thay đổi filter/sort
+  // ====== FAVORITE ======
+  const [favoriteIds, setFavoriteIds] = useState(
+    () => new Set(getFavoriteIds() || [])
+  );
+
   useEffect(() => {
     setCurrentPage(1);
-  }, [ownerTypeFilter, categoryFilter, timeSort, priceSort]);
+  }, [categoryFilter, timeSort, priceSort]);
 
-  // ====== BÀI CỦA user HIỆN TẠI ======
+  // ======================================================
+  // ✔ LỌC ĐÚNG BÀI CỦA USER (ownerId giống PostCreate)
+  // ======================================================
   const myPosts = useMemo(() => {
-    if (!accessToken) return [];
-    return allPosts.filter((p) => String(p.ownerId) === String(accessToken));
-  }, [accessToken, allPosts]);
+    if (!ownerId) return [];
+    return allPosts.filter((p) => String(p.ownerId) === String(ownerId));
+  }, [ownerId, allPosts]);
 
-  // ====== ÁP DỤNG FILTER + SORT ======
   const filteredAndSorted = useMemo(() => {
     let list = [...myPosts];
 
-    // --- Lọc theo loại người đăng ---
-    if (ownerTypeFilter !== "all") {
-      list = list.filter((p) => {
-        // bài nào không có ownerType (mock cũ) thì coi như "Cá nhân"
-        const type = p.ownerType || "Cá nhân";
-        if (ownerTypeFilter === "ca-nhan") return type === "Cá nhân";
-        if (ownerTypeFilter === "moi-gioi") return type === "Môi giới";
-        return true;
-      });
-    }
-
-    // --- Lọc theo loại BĐS ---
     if (categoryFilter !== "all") {
       list = list.filter((p) => p.category === categoryFilter);
     }
 
-    // --- Sắp xếp theo thời gian đăng ---
     if (timeSort === "newest") {
       list.sort(
         (a, b) =>
@@ -109,7 +126,6 @@ export default function MyPosts() {
       );
     }
 
-    // --- Sắp xếp theo giá (nếu chọn) ---
     if (priceSort === "priceDesc") {
       list.sort((a, b) => (b.price || 0) - (a.price || 0));
     } else if (priceSort === "priceAsc") {
@@ -117,30 +133,22 @@ export default function MyPosts() {
     }
 
     return list;
-  }, [myPosts, ownerTypeFilter, categoryFilter, timeSort, priceSort]);
+  }, [myPosts, categoryFilter, timeSort, priceSort]);
 
-  // ====== PHÂN TRANG ======
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredAndSorted.length / PAGE_SIZE)
-  );
+  // ====== PAGINATION ======
+  const totalPages = Math.max(1, Math.ceil(filteredAndSorted.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * PAGE_SIZE;
-  const pagePosts = filteredAndSorted.slice(
-    startIndex,
-    startIndex + PAGE_SIZE
-  );
+  const pagePosts = filteredAndSorted.slice(startIndex, startIndex + PAGE_SIZE);
 
   const goToPage = (page) => {
     const p = Math.max(1, Math.min(page, totalPages));
     setCurrentPage(p);
   };
 
-  const handleView = (id) => {
-    navigate(`/post/${id}`);
-  };
+  // ====== ACTIONS ======
+  const handleView = (id) => navigate(`/post/${id}`);
 
-  // mở/đóng modal xoá
   const handleAskDelete = (post) => {
     setDeleteTarget(post);
     setShowConfirm(true);
@@ -151,7 +159,6 @@ export default function MyPosts() {
     setDeleteTarget(null);
   };
 
-  // xác nhận xoá
   const handleConfirmDelete = () => {
     if (!deleteTarget) return;
     const nextAll = allPosts.filter((p) => p.id !== deleteTarget.id);
@@ -160,34 +167,18 @@ export default function MyPosts() {
     handleCloseModal();
   };
 
-  // ====== Lắng nghe event post:created (và storage changes) để cập nhật UI ngay ======
+  // ====== UPDATE UI WHEN NEW POST CREATED ======
   useEffect(() => {
-    // handler cho custom event dispatch khi post được tạo
     const onPostCreated = (ev) => {
-      try {
-        // nếu event chứa detail.ownerId, chỉ reload khi trùng user hiện tại
-        const detail = ev?.detail || {};
-        if (!accessToken) {
-          // không login => không cần reload
-          return;
-        }
-        if (!detail.ownerId || String(detail.ownerId) === String(accessToken)) {
-          loadPosts();
-        }
-      } catch {
+      const detail = ev?.detail || {};
+      if (!detail.ownerId) return;
+      if (String(detail.ownerId) === String(ownerId)) {
         loadPosts();
       }
     };
 
-    // handler cho storage event (nhiều tab)
     const onStorage = (ev) => {
-      if (ev.key === "posts") {
-        loadPosts();
-      }
-      // nếu muốn cập nhật khi membership thay đổi:
-      if (ev.key === "membershipTransactions" || ev.key === "currentMembership") {
-        loadPosts();
-      }
+      if (ev.key === "posts") loadPosts();
     };
 
     window.addEventListener("post:created", onPostCreated);
@@ -197,23 +188,38 @@ export default function MyPosts() {
       window.removeEventListener("post:created", onPostCreated);
       window.removeEventListener("storage", onStorage);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken]);
+  }, [ownerId]);
 
-  // ====== CHƯA LOGIN ======
-  if (!accessToken) {
+  // ====== FAVORITE ======
+  const handleToggleFavorite = (e, item) => {
+    e?.stopPropagation?.();
+    e?.preventDefault?.();
+
+    const { ids, added } = toggleFavorite(item.id);
+    setFavoriteIds(new Set(ids));
+
+    toggleFavoriteMock(
+      {
+        postId: item.id,
+        postTitle: item.title,
+        ownerName: item.ownerName,
+        postPrice: item.price,
+        postLocation: item.address,
+        postThumbnail: item.coverUrl,
+      },
+      added
+    );
+  };
+
+  // ====== NOT LOGGED IN ======
+  if (!ownerId) {
     return (
       <div className="nhatot">
-        <div className="mk-page">
-          <Header />
-          <main className="myp-main">
-            <div className="myp-inner">
-              <h1 className="myp-title">Quản lý tin</h1>
-              <p>Bạn cần đăng nhập để xem các tin đã đăng.</p>
-            </div>
-          </main>
-          <Footer />
-        </div>
+        <Header />
+        <main className="myp-main">
+          <p>Bạn cần đăng nhập để xem tin đã đăng.</p>
+        </main>
+        <Footer />
       </div>
     );
   }
@@ -227,24 +233,10 @@ export default function MyPosts() {
           <div className="myp-inner">
             <h1 className="myp-title">Quản lý tin</h1>
 
-            {/* BỘ LỌC */}
+            {/* FILTER */}
             <section className="myp-filter-card">
               <h3 className="myp-filter-heading">Bộ lọc tin đăng</h3>
               <div className="myp-filter-grid">
-                {/* Lọc loại người đăng: Cá nhân / Môi giới */}
-                <div className="myp-field">
-                  <label className="myp-label">Loại người đăng</label>
-                  <select
-                    className="myp-select"
-                    value={ownerTypeFilter}
-                    onChange={(e) => setOwnerTypeFilter(e.target.value)}
-                  >
-                    <option value="all">Tất cả</option>
-                    <option value="ca-nhan">Cá nhân</option>
-                    <option value="moi-gioi">Môi giới</option>
-                  </select>
-                </div>
-
                 <div className="myp-field">
                   <label className="myp-label">Loại BĐS</label>
                   <select
@@ -292,10 +284,7 @@ export default function MyPosts() {
             <section className="myp-posts-section">
               <div className="myp-posts-head">
                 <h3>Tin đăng của bạn ({filteredAndSorted.length})</h3>
-                <span className="myp-posts-sub">
-                  Hiển thị theo bộ lọc bên trên. Có thể sắp xếp riêng theo thời
-                  gian và theo giá.
-                </span>
+                <span className="myp-posts-sub">Hiển thị theo bộ lọc bên trên.</span>
               </div>
 
               {pagePosts.length === 0 ? (
@@ -305,7 +294,13 @@ export default function MyPosts() {
                   <div className="mk-feed-grid myp-posts-grid">
                     {pagePosts.map((item) => (
                       <div key={item.id} className="myp-post-card-wrap">
-                        <Post item={item} to={`/post/${item.id}`} />
+                        <Post
+                          item={item}
+                          to={`/post/${item.id}`}
+                          isLiked={favoriteIds.has(String(item.id))}
+                          onToggleFavorite={(e) => handleToggleFavorite(e, item)}
+                        />
+
                         <div className="myp-post-actions">
                           <button
                             type="button"
@@ -314,6 +309,7 @@ export default function MyPosts() {
                           >
                             Xem tin
                           </button>
+
                           <button
                             type="button"
                             className="myp-action-btn myp-action-btn-danger"
@@ -326,7 +322,6 @@ export default function MyPosts() {
                     ))}
                   </div>
 
-                  {/* PHÂN TRANG */}
                   {totalPages > 1 && (
                     <div className="myp-pagination">
                       <button
@@ -373,16 +368,17 @@ export default function MyPosts() {
         <Footer />
       </div>
 
-      {/* MODAL XÁC NHẬN XOÁ */}
+      {/* MODAL XOÁ */}
       {showConfirm && (
         <div className="myp-modal-backdrop">
           <div className="myp-modal">
             <h3 className="myp-modal-title">Xóa tin đăng?</h3>
             <p className="myp-modal-text">
               {deleteTarget
-                ? `Bạn có chắc chắn muốn xóa tin “${deleteTarget.title}”?`
+                ? `Bạn có chắc muốn xóa tin “${deleteTarget.title}”?`
                 : "Bạn có chắc chắn muốn xóa tin này?"}
             </p>
+
             <div className="myp-modal-actions">
               <button
                 type="button"
@@ -391,6 +387,7 @@ export default function MyPosts() {
               >
                 Hủy
               </button>
+
               <button
                 type="button"
                 className="myp-modal-btn myp-modal-btn-danger"

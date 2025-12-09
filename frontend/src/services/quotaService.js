@@ -1,7 +1,23 @@
 // src/services/quotaService.js
+
+// Key lưu lịch sử giao dịch hội viên
 const MEMBERSHIP_TX_KEY = "membershipTransactions";
-const POSTS_KEY = "posts";
+
+// Key prefix dùng chung với PostCreate.jsx để đếm số tin trong ngày
+const DAILY_STATS_PREFIX = "postDailyStats_";
+
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * Lấy currentUser từ localStorage
+ */
+export function getCurrentUser() {
+  try {
+    return JSON.parse(localStorage.getItem("currentUser") || "null");
+  } catch (e) {
+    return null;
+  }
+}
 
 /**
  * Lấy userId ưu tiên:
@@ -11,17 +27,19 @@ const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
  * - null nếu không có
  */
 export function getCurrentUserId() {
-  try {
-    const cu = JSON.parse(localStorage.getItem("currentUser") || "null");
-    if (cu) return cu.id || cu.phone || null;
-  } catch (e) {
-    // ignore
-  }
+  const cu = getCurrentUser();
+  if (cu) return cu.id || cu.phone || null;
+
   return localStorage.getItem("accessToken") || null;
 }
 
+/**
+ * Lấy gói hội viên đang còn hiệu lực của user (nếu có)
+ * Trả về bản ghi giao dịch mới nhất còn hạn, hoặc null
+ */
 export function getUserActiveMembership(userId) {
   if (!userId) return null;
+
   try {
     const raw = localStorage.getItem(MEMBERSHIP_TX_KEY) || "[]";
     const list = JSON.parse(raw);
@@ -29,9 +47,11 @@ export function getUserActiveMembership(userId) {
 
     const active = list.filter((tx) => {
       if (!tx || tx.status !== "SUCCESS") return false;
-      // support both userId and ownerId keys
+
+      // support cả userId và ownerId, ép về string cho chắc
       const txUserId = tx.userId || tx.ownerId || null;
-      if (txUserId !== userId) return false;
+      if (!txUserId) return false;
+      if (String(txUserId) !== String(userId)) return false;
 
       const createdMs = new Date(tx.createdAt || 0).getTime();
       if (!createdMs || Number.isNaN(createdMs)) return false;
@@ -46,61 +66,79 @@ export function getUserActiveMembership(userId) {
 
     if (!active.length) return null;
 
-    active.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    const latest = active[0];
+    // Lấy giao dịch mới nhất
+    active.sort(
+      (a, b) =>
+        new Date(b.createdAt || 0).getTime() -
+        new Date(a.createdAt || 0).getTime()
+    );
 
-    // return full tx (other code expects either object or null)
-    return latest;
+    return active[0]; // các nơi khác chỉ cần truthy / falsy
   } catch (e) {
     return null;
   }
 }
 
+/**
+ * Tính quota tối đa / ngày cho user
+ * - Có hội viên: 5 tin / ngày
+ * - Không hội viên: 2 tin / ngày
+ */
 export function getDailyQuotaForUser(userId) {
   const membership = getUserActiveMembership(userId);
-  if (membership) return 5;
-  return 2;
+  return membership ? 5 : 2;
 }
 
+/**
+ * Lấy ngày hôm nay theo giờ local, dạng YYYY-MM-DD
+ * (để tránh lệch múi giờ do toISOString dùng UTC)
+ */
+function getTodayDateStrLocal() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Đếm số bài đã đăng hôm nay theo bộ đếm local:
+ * postDailyStats_<userId> = { date: "YYYY-MM-DD", count: number }
+ * (ĐỒNG BỘ với PostCreate.jsx)
+ */
 export function getTodayPostCount(userId) {
   try {
     if (!userId) return 0;
-    const all = JSON.parse(localStorage.getItem(POSTS_KEY) || "[]");
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const endOfDay = startOfDay + 24 * 60 * 60 * 1000;
 
-    return all.filter((p) => {
-      if (!p) return false;
-      const owner = p.ownerId || p.owner || null;
-      if (owner !== userId) return false;
-      if (!p.createdAt) return false;
-      const t = new Date(p.createdAt).getTime();
-      return t >= startOfDay && t < endOfDay;
-    }).length;
+    const raw = localStorage.getItem(DAILY_STATS_PREFIX + userId);
+    if (!raw) return 0;
+
+    const data = JSON.parse(raw);
+    if (!data || data.date !== getTodayDateStrLocal()) return 0;
+
+    return typeof data.count === "number" ? data.count : 0;
   } catch (e) {
     return 0;
   }
 }
 
 /**
- * checkDailyQuota: trả về cả legacy keys và keys mà PostCreate mong đợi
+ * checkDailyQuota: trả về cả legacy keys và các key mà PostCreate mong đợi
  */
 export function checkDailyQuota(userId) {
   const quota = getDailyQuotaForUser(userId); // số tối đa / ngày (2 hoặc 5)
-  const used = getTodayPostCount(userId); // số đã dùng
+  const used = getTodayPostCount(userId);     // số đã dùng (theo postDailyStats_)
   const remaining = Math.max(0, quota - used);
   const activeMembership = getUserActiveMembership(userId);
   const isMember = !!activeMembership;
 
-  // build canonical response
   const base = {
     // legacy names (không phá code cũ)
-    quota,      // legacy: total per day
-    used,       // legacy
-    remaining,
+    quota,      // tổng số tin / ngày
+    used,       // đã dùng
+    remaining,  // còn lại
 
-    // expected by PostCreate
+    // các field PostCreate.jsx đang dùng
     allowed: remaining > 0,
     remainingToday: remaining,
     usedToday: used,
@@ -114,7 +152,7 @@ export function checkDailyQuota(userId) {
     return base;
   }
 
-  // not allowed -> attach reason + message
+  // Hết lượt
   if (!isMember) {
     return {
       ...base,

@@ -1,14 +1,7 @@
 // src/pages/AgentReview.jsx
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  Star,
-  User,
-  Phone,
-  MapPin,
-  MessageCircle,
-  ThumbsUp,
-} from "lucide-react";
+import { Star, User, MapPin, ThumbsUp } from "lucide-react";
 
 import Header from "../components/header";
 import Footer from "../components/footer";
@@ -17,45 +10,27 @@ import "../styles/AgentReview.css";
 import {
   addAgentReview,
   getAgentReviews,
-  seedAgentReviews,
-} from "../services/reviewService";
-import { getAgentById } from "../services/mockAgentService"; // ⭐ lấy info môi giới thật
+  addAgentReply,
+} from "../services/mockAgentReviewService"; // 🔹 dùng file mockAgentReviewService mới
+import { getAgentById } from "../services/mockAgentService";
 
-// Agent default (fallback)
-const MOCK_AGENT = {
-  id: "ng_hang_nha_tho_cu",
-  name: "NG.HANG NHÀ THỔ CƯ",
-  avatar: "/Img/agents/avatar-1.jpg",
-  phone: "09xx xxx xxx",
-  area: "Quận 7, Quận 10, Quận Tân Bình (TP.HCM)",
-  numDeals: 128,
-  yearsExp: 9,
-};
+// ===== META AVATAR GIỐNG PROFILE =====
+const AVATAR_META_KEY = "profile_avatar_meta";
 
-// Review khởi tạo cho riêng NG.HANG (môi giới khác mặc định không seed)
-const INITIAL_REVIEWS = [
-  {
-    id: 1,
-    userName: "Trần Thị Lan",
-    rating: 5,
-    content:
-      "Anh Quân hỗ trợ rất nhiệt tình, dẫn đi xem nhà đúng nhu cầu, giải thích rõ ràng giấy tờ.",
-    createdAt: "2025-11-20T10:00:00",
-    likes: 4,
-  },
-  {
-    id: 2,
-    userName: "Nguyễn Hữu Phúc",
-    rating: 4,
-    content:
-      "Thái độ ok, tư vấn kỹ. Có hơi chậm phản hồi lúc cao điểm nhưng nhìn chung hài lòng.",
-    createdAt: "2025-11-18T15:30:00",
-    likes: 2,
-  },
-];
+function loadMetaUrl(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return "";
+    const meta = JSON.parse(raw);
+    return meta?.url || "";
+  } catch {
+    return "";
+  }
+}
 
 function formatTime(iso) {
   const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
@@ -97,46 +72,106 @@ function getCurrentUser() {
   }
 }
 
+/** Fallback: build môi giới từ chính currentUser (dùng cho trang /moi-gioi/:id/danh-gia của mình) */
+function buildAgentFromCurrentUser(agentIdFromUrl) {
+  const current = getCurrentUser();
+  if (!current) return null;
+
+  const avatarMetaUrl = loadMetaUrl(AVATAR_META_KEY);
+
+  let posts = [];
+  try {
+    posts = JSON.parse(localStorage.getItem("posts") || "[]");
+  } catch {
+    posts = [];
+  }
+
+  const myPosts = posts.filter(
+    (p) =>
+      p.ownerId === current.id ||
+      p.userId === current.id ||
+      p.phone === current.phone
+  );
+
+  const numDeals = myPosts.length;
+
+  let yearsExp = 0;
+  if (myPosts.length > 0) {
+    let first = null;
+    myPosts.forEach((p) => {
+      if (!p.createdAt) return;
+      const d = new Date(p.createdAt);
+      if (Number.isNaN(d.getTime())) return;
+      if (!first || d < first) first = d;
+    });
+    if (first) {
+      const diffMs = Date.now() - first.getTime();
+      const diffYears = diffMs / (1000 * 60 * 60 * 24 * 365);
+      yearsExp = diffYears < 1 ? 0 : Math.floor(diffYears);
+    }
+  }
+
+  const areaProvinces = current.profileProvinces || [];
+
+  return {
+    id: agentIdFromUrl || current.id || current.phone || "my-agent-profile",
+    name: current.name || "Trang môi giới của tôi",
+    avatar: avatarMetaUrl || current.avatarUrl || "",
+    phone: current.phone || "09xx xxx xxx",
+    area: areaProvinces.join(", ") || "Chưa cập nhật khu vực hoạt động",
+    numDeals,
+    yearsExp,
+  };
+}
+
 export default function AgentReview() {
   const navigate = useNavigate();
   const { id: agentId } = useParams(); // /moi-gioi/:id/danh-gia
 
-  const [agent, setAgent] = useState(MOCK_AGENT); // sẽ override bằng data thật
+  const [agent, setAgent] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [isSelfAgent, setIsSelfAgent] = useState(false);
+
   const [form, setForm] = useState({
     userName: "",
     rating: 0,
     content: "",
   });
   const [errors, setErrors] = useState({});
+  const [replyInputs, setReplyInputs] = useState({}); // { [reviewId]: text }
 
-  // ====== LOAD THÔNG TIN MÔI GIỚI + SEED REVIEW THEO agentId ======
+  // ====== LOAD THÔNG TIN MÔI GIỚI & REVIEW ======
   useEffect(() => {
-    // 1. Lấy môi giới theo id từ mockAgentService
-    getAgentById(agentId).then((data) => {
-      if (!data) return;
+    async function loadData() {
+      // 1. Lấy môi giới theo id từ mockAgentService
+      const data = await getAgentById(agentId);
 
-      // map field từ mockAgentService sang cấu trúc AgentReview đang dùng
-      setAgent({
-        id: data.id,
-        name: data.name,
-        avatar: data.avatarUrl,
-        phone: data.phone || "09xx xxx xxx",
-        area: data.area,
-        numDeals: data.transactionsCount,
-        yearsExp: data.yearsActive,
-      });
-    });
+      if (data) {
+        setAgent({
+          id: data.id,
+          name: data.name,
+          avatar: data.avatarUrl,
+          phone: data.phone || "09xx xxx xxx",
+          area: data.area,
+          numDeals: data.transactionsCount,
+          yearsExp: data.yearsActive,
+        });
+        setIsSelfAgent(false);
+      } else {
+        // Không có trong mock => xem như trang môi giới của chính mình
+        const fallback = buildAgentFromCurrentUser(agentId);
+        if (fallback) {
+          setAgent(fallback);
+          setIsSelfAgent(true);
+        }
+      }
 
-    // 2. Seed dữ liệu review ban đầu theo từng môi giới
-    // Chỉ seed INITIAL_REVIEWS cho NG.HANG, các môi giới khác để mảng rỗng
-    const initial =
-      agentId === "ng_hang_nha_tho_cu" ? INITIAL_REVIEWS : [];
-    seedAgentReviews(agentId, initial);
+      // 2. Load review từ service (đã kèm replies)
+      const list = await getAgentReviews(agentId);
+      setReviews(Array.isArray(list) ? list : []);
+    }
 
-    // 3. Load review của đúng môi giới từ service
-    const list = getAgentReviews(agentId);
-    setReviews(list);
+    loadData();
   }, [agentId]);
 
   const avgRating = useMemo(() => {
@@ -152,9 +187,18 @@ export default function AgentReview() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Không cho tự review bản thân
+    if (isSelfAgent) {
+      alert("Bạn không thể tự viết đánh giá cho bản thân.");
+      return;
+    }
+
     const nextErrors = {};
-    if (!form.userName.trim()) nextErrors.userName = "Vui lòng nhập tên của bạn";
-    if (!form.rating) nextErrors.rating = "Vui lòng chọn số sao đánh giá";
+    if (!form.userName.trim())
+      nextErrors.userName = "Vui lòng nhập tên của bạn";
+    if (!form.rating)
+      nextErrors.rating = "Vui lòng chọn số sao đánh giá";
     if (!form.content.trim())
       nextErrors.content = "Vui lòng nhập nội dung nhận xét";
 
@@ -182,7 +226,6 @@ export default function AgentReview() {
       currentUser.displayName ||
       "Người dùng";
 
-    // Lưu review theo ĐÚNG agentId
     const saved = addAgentReview({
       agentId,
       reviewerId,
@@ -197,18 +240,91 @@ export default function AgentReview() {
   };
 
   const handleLike = (reviewId) => {
+    // Cập nhật UI
     setReviews((prev) =>
       prev.map((r) =>
         r.id === reviewId ? { ...r, likes: (r.likes || 0) + 1 } : r
       )
     );
 
-    // OPTIONAL: sync ngược về localStorage nếu reviewService cũng dùng key này
-    const all = JSON.parse(localStorage.getItem("agentReviews") || "[]");
-    const updated = all.map((r) =>
-      r.id === reviewId ? { ...r, likes: (r.likes || 0) + 1 } : r
+    // Sync lại localStorage cho agentReviews (object { [agentId]: [] })
+    try {
+      const all = JSON.parse(
+        localStorage.getItem("agentReviews") || "{}"
+      );
+      if (all[agentId]) {
+        all[agentId] = all[agentId].map((r) =>
+          r.id === reviewId ? { ...r, likes: (r.likes || 0) + 1 } : r
+        );
+        localStorage.setItem("agentReviews", JSON.stringify(all));
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  // ====== REPLY ======
+
+  const handleReplyChange = (reviewId, value) => {
+    setReplyInputs((prev) => ({ ...prev, [reviewId]: value }));
+  };
+
+  const handleSubmitReply = (reviewId) => {
+    const text = (replyInputs[reviewId] || "").trim();
+    if (!text) return;
+
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      alert("Vui lòng đăng nhập để trả lời đánh giá");
+      navigate("/login");
+      return;
+    }
+
+    const replierId =
+      currentUser.id ||
+      currentUser.userId ||
+      currentUser.phone ||
+      currentUser.email;
+
+    const replierName =
+      currentUser.name || currentUser.displayName || "Môi giới";
+
+    const reply = addAgentReply({
+      agentId,
+      reviewId,
+      replierId,
+      replierName,
+      content: text,
+    });
+
+    setReviews((prev) =>
+      prev.map((r) =>
+        r.id === reviewId
+          ? { ...r, replies: [...(r.replies || []), reply] }
+          : r
+      )
     );
-    localStorage.setItem("agentReviews", JSON.stringify(updated));
+
+    setReplyInputs((prev) => ({ ...prev, [reviewId]: "" }));
+  };
+
+  if (!agent) {
+    return (
+      <div className="nhatot">
+        <div className="mk-page">
+          <Header />
+          <div className="agr-page">
+            <p style={{ padding: 24 }}>Đang tải thông tin môi giới...</p>
+          </div>
+          <Footer />
+        </div>
+      </div>
+    );
+  }
+
+  const handleGoReviewerAgent = (review) => {
+    if (!review.reviewerId) return;
+    navigate(`/moi-gioi/${encodeURIComponent(review.reviewerId)}/danh-gia`);
   };
 
   return (
@@ -255,15 +371,11 @@ export default function AgentReview() {
                   <h1 className="agr-agent-name">{agent.name}</h1>
                   <div className="agr-agent-meta">
                     <span>
-                      <User size={16} /> {agent.yearsExp} năm kinh nghiệm
+                      <User size={16} /> {agent.yearsExp || 0} năm
+                      kinh nghiệm
                     </span>
                     <span>
                       <MapPin size={16} /> Khu vực: {agent.area}
-                    </span>
-                  </div>
-                  <div className="agr-agent-meta">
-                    <span>
-                      <MessageCircle size={16} /> Đã giao dịch: {agent.numDeals}+
                     </span>
                   </div>
                 </div>
@@ -279,85 +391,93 @@ export default function AgentReview() {
                     {reviews.length} đánh giá từ khách hàng
                   </p>
                 </div>
-                <button
-                  className="agr-contact-btn"
-                  type="button"
-                  onClick={() => alert("Mock: Gọi điện cho môi giới")}
-                >
-                  <Phone size={18} />
-                  Gọi {agent.phone}
-                </button>
               </div>
             </section>
 
             {/* layout 2 cột */}
             <section className="agr-layout">
-              {/* form */}
-              <div className="agr-form-card">
-                <h2 className="agr-section-title">
-                  Viết đánh giá về môi giới này
-                </h2>
-                <p className="agr-form-note">
-                  Chia sẻ trải nghiệm thực tế để những khách hàng khác có thêm
-                  thông tin trước khi làm việc với môi giới.
-                </p>
+              {/* LEFT: form hoặc note */}
+              {!isSelfAgent ? (
+                <div className="agr-form-card">
+                  <h2 className="agr-section-title">
+                    Viết đánh giá về môi giới này
+                  </h2>
+                  <p className="agr-form-note">
+                    Chia sẻ trải nghiệm thực tế để những khách hàng khác có
+                    thêm thông tin trước khi làm việc với môi giới.
+                  </p>
 
-                <form onSubmit={handleSubmit} className="agr-form">
-                  <div className="agr-field">
-                    <label>
-                      Tên của bạn <span className="agr-required">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="userName"
-                      value={form.userName}
-                      onChange={handleChange}
-                      placeholder="Ví dụ: Nguyễn Thị A"
-                    />
-                    {errors.userName && (
-                      <p className="agr-error">{errors.userName}</p>
-                    )}
-                  </div>
+                  <form onSubmit={handleSubmit} className="agr-form">
+                    <div className="agr-field">
+                      <label>
+                        Tên của bạn{" "}
+                        <span className="agr-required">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="userName"
+                        value={form.userName}
+                        onChange={handleChange}
+                        placeholder="Ví dụ: Nguyễn Thị A"
+                      />
+                      {errors.userName && (
+                        <p className="agr-error">{errors.userName}</p>
+                      )}
+                    </div>
 
-                  <div className="agr-field">
-                    <label>
-                      Mức độ hài lòng <span className="agr-required">*</span>
-                    </label>
-                    <StarRating
-                      value={form.rating}
-                      onChange={(v) =>
-                        setForm((prev) => ({ ...prev, rating: v }))
-                      }
-                      size={24}
-                    />
-                    {errors.rating && (
-                      <p className="agr-error">{errors.rating}</p>
-                    )}
-                  </div>
+                    <div className="agr-field">
+                      <label>
+                        Mức độ hài lòng{" "}
+                        <span className="agr-required">*</span>
+                      </label>
+                      <StarRating
+                        value={form.rating}
+                        onChange={(v) =>
+                          setForm((prev) => ({ ...prev, rating: v }))
+                        }
+                        size={24}
+                      />
+                      {errors.rating && (
+                        <p className="agr-error">{errors.rating}</p>
+                      )}
+                    </div>
 
-                  <div className="agr-field">
-                    <label>
-                      Nhận xét chi tiết <span className="agr-required">*</span>
-                    </label>
-                    <textarea
-                      name="content"
-                      rows={4}
-                      value={form.content}
-                      onChange={handleChange}
-                      placeholder="Ví dụ: Môi giới tư vấn rõ ràng, hỗ trợ xem nhà, thương lượng giá, hỗ trợ giấy tờ..."
-                    />
-                    {errors.content && (
-                      <p className="agr-error">{errors.content}</p>
-                    )}
-                  </div>
+                    <div className="agr-field">
+                      <label>
+                        Nhận xét chi tiết{" "}
+                        <span className="agr-required">*</span>
+                      </label>
+                      <textarea
+                        name="content"
+                        rows={4}
+                        value={form.content}
+                        onChange={handleChange}
+                        placeholder="Ví dụ: Môi giới tư vấn rõ ràng, hỗ trợ xem nhà, thương lượng giá, hỗ trợ giấy tờ..."
+                      />
+                      {errors.content && (
+                        <p className="agr-error">{errors.content}</p>
+                      )}
+                    </div>
 
-                  <button type="submit" className="agr-submit-btn">
-                    Gửi đánh giá
-                  </button>
-                </form>
-              </div>
+                    <button type="submit" className="agr-submit-btn">
+                      Gửi đánh giá
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <div className="agr-form-card">
+                  <h2 className="agr-section-title">
+                    Đánh giá về bạn từ khách hàng
+                  </h2>
+                  <p className="agr-form-note">
+                    Bạn không thể tự viết đánh giá cho bản thân. Bạn chỉ
+                    có thể trả lời các đánh giá của khách hàng trong danh
+                    sách bên phải.
+                  </p>
+                </div>
+              )}
 
-              {/* review list */}
+              {/* RIGHT: danh sách review + reply */}
               <div className="agr-review-card">
                 <h2 className="agr-section-title">
                   Đánh giá từ khách hàng ({reviews.length})
@@ -365,8 +485,8 @@ export default function AgentReview() {
 
                 {reviews.length === 0 && (
                   <div className="agr-empty">
-                    Chưa có đánh giá nào. Hãy là người đầu tiên chia sẻ trải
-                    nghiệm!
+                    Chưa có đánh giá nào. Hãy là người đầu tiên chia sẻ
+                    trải nghiệm!
                   </div>
                 )}
 
@@ -375,20 +495,32 @@ export default function AgentReview() {
                     <div key={r.id} className="agr-review-item">
                       <div className="agr-review-header">
                         <div className="agr-review-avatar">
-                          {(r.reviewerName || r.userName || "?")
+                          {(r.name || r.reviewerName || r.userName || "?")
                             .charAt(0)
                             .toUpperCase()}
                         </div>
                         <div>
                           <div className="agr-review-name">
-                            {r.reviewerName || r.userName}
+                            {r.reviewerId ? (
+                              <button
+                                type="button"
+                                className="agr-review-name-btn"
+                                onClick={() =>
+                                  handleGoReviewerAgent(r)
+                                }
+                              >
+                                {r.name || r.reviewerName || r.userName}
+                              </button>
+                            ) : (
+                              r.name || r.reviewerName || r.userName
+                            )}
                           </div>
                           <div className="agr-review-stars">
                             <StarRating value={r.rating} readOnly />
                           </div>
                         </div>
                         <div className="agr-review-time">
-                          {formatTime(r.createdAt)}
+                          {formatTime(r.createdAt) || r.timeAgo}
                         </div>
                       </div>
 
@@ -402,9 +534,55 @@ export default function AgentReview() {
                         <ThumbsUp size={16} />
                         <span>Hữu ích</span>
                         {r.likes > 0 && (
-                          <span className="agr-like-count">{r.likes}</span>
+                          <span className="agr-like-count">
+                            {r.likes}
+                          </span>
                         )}
                       </button>
+
+                      {/* REPLIES */}
+                      {r.replies && r.replies.length > 0 && (
+                        <div className="agr-replies">
+                          {r.replies.map((rep) => (
+                            <div
+                              key={rep.id}
+                              className="agr-reply-item"
+                            >
+                              <div className="agr-reply-meta">
+                                <span className="agr-reply-name">
+                                  {rep.name}
+                                </span>
+                                <span className="agr-reply-time">
+                                  {formatTime(rep.createdAt)}
+                                </span>
+                              </div>
+                              <p className="agr-reply-content">
+                                {rep.content}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {isSelfAgent && (
+                        <div className="agr-reply-form">
+                          <textarea
+                            rows={2}
+                            placeholder="Trả lời khách hàng..."
+                            value={replyInputs[r.id] || ""}
+                            onChange={(e) =>
+                              handleReplyChange(r.id, e.target.value)
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="agr-reply-btn"
+                            onClick={() => handleSubmitReply(r.id)}
+                          >
+                            Trả lời
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

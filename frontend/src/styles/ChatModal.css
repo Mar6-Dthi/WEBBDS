@@ -1,13 +1,22 @@
-/* src/styles/ChatModal.css */
+/* ================================
+   ChatModal.css — FULL FIXED VERSION
+   ================================ */
 
 .chat-modal-wrapper {
   position: fixed;
   right: 20px;
   bottom: 20px;
   z-index: 3000;
-  pointer-events: none; /* để chỉ modal nhận click */
+
+  /* FIX QUAN TRỌNG: không được block pointer */
+  pointer-events: auto;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 
+/* KHUNG CHAT */
 .chat-modal {
   width: 360px;
   max-width: 92vw;
@@ -18,11 +27,11 @@
   flex-direction: column;
   overflow: hidden;
   pointer-events: auto;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* HEADER */
+/* ====================== HEADER ====================== */
+
 .chat-header {
   padding: 10px 12px;
   border-bottom: 1px solid #f3f4f6;
@@ -41,7 +50,7 @@
 .chat-avatar {
   width: 32px;
   height: 32px;
-  border-radius: 999px;
+  border-radius: 50%;
   background: #ff7a00;
   color: #fff;
   display: grid;
@@ -68,13 +77,15 @@
   background: transparent;
   cursor: pointer;
   padding: 4px;
-  border-radius: 999px;
+  border-radius: 50%;
 }
+
 .chat-close-btn:hover {
   background: rgba(0, 0, 0, 0.06);
 }
 
-/* BODY */
+/* ====================== BODY ====================== */
+
 .chat-body {
   padding: 10px;
   max-height: 260px;
@@ -115,7 +126,8 @@
   border-bottom-left-radius: 4px;
 }
 
-/* INPUT */
+/* ====================== INPUT ====================== */
+
 .chat-input-row {
   padding: 8px;
   border-top: 1px solid #e5e7eb;
@@ -142,7 +154,7 @@
 .chat-send-btn {
   width: 34px;
   height: 34px;
-  border-radius: 999px;
+  border-radius: 50%;
   border: none;
   background: #ff7a00;
   color: #fff;
@@ -150,6 +162,7 @@
   place-items: center;
   cursor: pointer;
 }
+
 .chat-send-btn:hover {
   filter: brightness(0.95);
 }

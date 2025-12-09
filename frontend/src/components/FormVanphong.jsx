@@ -1,172 +1,84 @@
 // src/components/FormVanphong.jsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-
-const MEMBERSHIP_TX_KEY = "membershipTransactions";
-const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
-const POSTS_KEY = "posts";
-const DRAFT_MEDIA_KEY = "postDraftMedia";
-
-/* ===== LẤY USER HIỆN TẠI ===== */
-function getCurrentUserId() {
-  try {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-    if (!currentUser) return null;
-    return currentUser.id || currentUser.phone || null;
-  } catch {
-    return null;
-  }
-}
-
-/* ===== TÌM GÓI HỘI VIÊN ACTIVE MỚI NHẤT CỦA USER ===== */
-function getUserActiveMembership(userId) {
-  if (!userId) return null;
-
-  try {
-    const raw = localStorage.getItem(MEMBERSHIP_TX_KEY) || "[]";
-    const list = JSON.parse(raw);
-    const now = Date.now();
-
-    const active = list.filter((tx) => {
-      if (tx.status !== "SUCCESS") return false;
-
-      const txUserId = tx.userId || tx.ownerId || null;
-      if (txUserId !== userId) return false;
-
-      const createdMs = new Date(tx.createdAt).getTime();
-      if (!createdMs || Number.isNaN(createdMs)) return false;
-
-      const durationMs =
-        typeof tx.durationMs === "number" && tx.durationMs > 0
-          ? tx.durationMs
-          : ONE_MONTH_MS;
-
-      return createdMs + durationMs > now;
-    });
-
-    if (!active.length) return null;
-
-    active.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    const latest = active[0];
-
-    let priorityLevel = 1;
-    const durationMs =
-      typeof latest.durationMs === "number" && latest.durationMs > 0
-        ? latest.durationMs
-        : ONE_MONTH_MS;
-
-    if (durationMs >= 3 * ONE_MONTH_MS) {
-      priorityLevel = 2;
-    }
-
-    return {
-      planId: latest.planId || null,
-      priorityLevel,
-      durationMs,
-      isMember: true,
-    };
-  } catch {
-    return null;
-  }
-}
-
-/* ===== đếm số post trong ngày của user (fallback) ===== */
-function getTodayPostCountFallback(userId) {
-  try {
-    const raw = localStorage.getItem(POSTS_KEY) || "[]";
-    const list = JSON.parse(raw);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const start = today.getTime();
-    const end = start + 24 * 60 * 60 * 1000;
-    return list.filter((p) => {
-      const createdMs = p.createdAt ? new Date(p.createdAt).getTime() : NaN;
-      if (!createdMs || Number.isNaN(createdMs)) return false;
-      const ownerMatch = userId ? p.ownerId === userId : true;
-      return ownerMatch && createdMs >= start && createdMs < end;
-    }).length;
-  } catch {
-    return 0;
-  }
-}
 
 /* ===== Simple modal for messages ===== */
-function SimpleModal({ open, title, message, primaryLabel, onPrimary, secondaryLabel, onSecondary }) {
+function SimpleModal({
+  open,
+  title,
+  message,
+  primaryLabel,
+  onPrimary,
+  secondaryLabel,
+  onSecondary,
+}) {
   if (!open) return null;
   return (
-    <div style={{
-      position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)",
-      display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
-    }}>
-      <div style={{ width: "min(520px,92vw)", background: "#fff", borderRadius: 10, padding: 18, boxShadow: "0 12px 40px rgba(0,0,0,0.12)" }}>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.35)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+      }}
+    >
+      <div
+        style={{
+          width: "min(520px,92vw)",
+          background: "#fff",
+          borderRadius: 10,
+          padding: 18,
+          boxShadow: "0 12px 40px rgba(0,0,0,0.12)",
+        }}
+      >
         {title && <h3 style={{ marginTop: 0 }}>{title}</h3>}
         <div style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>{message}</div>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-          {secondaryLabel && <button type="button" onClick={onSecondary} style={{ background: "#f3f4f6", border: "none", padding: "8px 12px", borderRadius: 8 }}>{secondaryLabel}</button>}
-          {primaryLabel && <button type="button" onClick={onPrimary} style={{ background: "#0f172a", color: "#fff", border: "none", padding: "8px 12px", borderRadius: 8 }}>{primaryLabel}</button>}
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            justifyContent: "flex-end",
+            marginTop: 12,
+          }}
+        >
+          {secondaryLabel && (
+            <button
+              type="button"
+              onClick={onSecondary}
+              style={{
+                background: "#f3f4f6",
+                border: "none",
+                padding: "8px 12px",
+                borderRadius: 8,
+              }}
+            >
+              {secondaryLabel}
+            </button>
+          )}
+          {primaryLabel && (
+            <button
+              type="button"
+              onClick={onPrimary}
+              style={{
+                background: "#0f172a",
+                color: "#fff",
+                border: "none",
+                padding: "8px 12px",
+                borderRadius: 8,
+              }}
+            >
+              {primaryLabel}
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-/* ===== best-effort gọi decrementQuota nếu tồn tại ===== */
-async function tryDecrementQuota(userId, amount = 1) {
-  try {
-    const globalSvc = typeof window !== "undefined" ? window.quotaService : null;
-    let localSvc = null;
-    try {
-      // eslint-disable-next-line global-require
-      localSvc = require("../services/quotaService");
-    } catch {}
-    const svc = globalSvc || localSvc;
-    if (svc && typeof svc.decrementQuota === "function") {
-      const maybe = svc.decrementQuota(userId, amount);
-      if (maybe instanceof Promise) await maybe.catch(() => {});
-    }
-  } catch (e) {
-    // ignore
-  }
-}
-
-/* ===== try checkDailyQuota if available (sync/async) ===== */
-async function tryCheckDailyQuota(userId) {
-  try {
-    const globalSvc = typeof window !== "undefined" ? window.quotaService : null;
-    let localSvc = null;
-    try { localSvc = require("../services/quotaService"); } catch {}
-    const svc = globalSvc || localSvc;
-    if (svc && typeof svc.checkDailyQuota === "function") {
-      const maybe = svc.checkDailyQuota(userId);
-      const result = maybe instanceof Promise ? await maybe : maybe;
-      return result;
-    }
-  } catch (e) {
-    // ignore
-  }
-  // fallback: compute simple allowed logic: non-member -> 2/day, member ->5/day
-  try {
-    const membership = getUserActiveMembership(userId);
-    const max = membership ? 5 : 2;
-    const used = getTodayPostCountFallback(userId);
-    const allowed = used < max;
-    return {
-      allowed,
-      usedToday: used,
-      maxPerDay: max,
-      isMember: !!membership,
-      reason: allowed ? null : (membership ? "member-exhausted" : "non-member"),
-      message: allowed ? "Được phép đăng" : (membership ? "Bạn đã dùng hết lượt đăng hôm nay." : "Bạn đã dùng hết lượt đăng hôm nay. Hãy đăng ký hội viên để tăng hạn mức."),
-      membershipLink: "/membership",
-    };
-  } catch {
-    return { allowed: true };
-  }
-}
-
-export default function FormVanphong({ estateType }) {
-  const navigate = useNavigate();
+export default function FormVanphong({ estateType, onSubmit }) {
   const isRent = estateType === "Cho thuê";
 
   // ===== STATE FORM =====
@@ -189,9 +101,16 @@ export default function FormVanphong({ estateType }) {
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
 
-  // modal
+  // modal (phòng khi thiếu onSubmit hoặc lỗi chung)
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalOpts, setModalOpts] = useState({ title: "", message: "", primaryLabel: "Đóng", secondaryLabel: null, onPrimary: null, onSecondary: null });
+  const [modalOpts, setModalOpts] = useState({
+    title: "",
+    message: "",
+    primaryLabel: "Đóng",
+    secondaryLabel: null,
+    onPrimary: null,
+    onSecondary: null,
+  });
 
   const openModal = (opts = {}) => {
     setModalOpts({
@@ -228,62 +147,30 @@ export default function FormVanphong({ estateType }) {
     if (busy) return;
     if (!validate()) return;
 
+    if (typeof onSubmit !== "function") {
+      openModal({
+        title: "Lỗi cấu hình",
+        message: "FormVanphong chưa được truyền hàm onSubmit.",
+      });
+      return;
+    }
+
     setBusy(true);
     try {
-      const ownerId = getCurrentUserId() || localStorage.getItem("accessToken") || "guest";
+      const areaNum = form.area ? Number(form.area) : 0;
+      const priceNum = form.price ? Number(form.price) : 0;
 
-      // check quota (try service -> fallback)
-      const quota = await tryCheckDailyQuota(ownerId);
-      if (!quota?.allowed) {
-        if (quota?.reason === "non-member") {
-          openModal({
-            title: "Hết lượt đăng hôm nay",
-            message: quota?.message || "Bạn đã dùng hết lượt đăng hôm nay. Đăng ký hội viên để tăng hạn mức.",
-            primaryLabel: "Đóng",
-            onPrimary: () => closeModal(),
-            secondaryLabel: "Đăng ký hội viên",
-            onSecondary: () => {
-              closeModal();
-              navigate(quota?.membershipLink || "/membership");
-            },
-          });
-          setBusy(false);
-          return;
-        } else {
-          openModal({
-            title: "Hết lượt đăng hôm nay",
-            message: quota?.message || "Bạn đã dùng hết lượt đăng hôm nay.",
-            primaryLabel: "Đóng",
-            onPrimary: () => closeModal(),
-          });
-          setBusy(false);
-          return;
-        }
-      }
+      const payload = {
+        // các field chung mà PostCreate / MyPosts dùng
+        title: form.title.trim(),
+        description: form.description.trim(),
+        address: form.address.trim(),
 
-      // membership & priority
-      const membership = getUserActiveMembership(ownerId);
-      const membershipPlanId = membership?.planId || null;
-      const membershipPriority = membership?.priorityLevel || 0;
+        price: priceNum,
+        area: areaNum,
+        landArea: areaNum,
+        usableArea: areaNum,
 
-      // draft media
-      const draftMedia = JSON.parse(localStorage.getItem(DRAFT_MEDIA_KEY) || "[]");
-      const images = Array.isArray(draftMedia) ? draftMedia.filter((m) => !!m.src).map((m) => m.src) : [];
-
-      const id = String(Date.now());
-      const newPost = {
-        id,
-        ownerId,
-        category: "Văn phòng, Mặt bằng kinh doanh",
-        estateType, // "Cần bán" | "Cho thuê"
-
-        title: form.title,
-        description: form.description,
-        address: form.address,
-
-        price: Number(form.price),
-        landArea: Number(form.area),
-        usableArea: Number(form.area),
         bed: "",
         bath: "",
         direction: form.direction,
@@ -291,62 +178,16 @@ export default function FormVanphong({ estateType }) {
         houseType: form.officeType || "Văn phòng / Mặt bằng",
         legal: form.legal,
         interior: form.interior,
-        estateStatus: "",
 
         projectName: form.projectName,
         maCan: form.maCan,
         block: form.block,
 
-        createdAt: new Date().toISOString(),
-
-        // ẢNH THẬT TỪ USER
-        images,
-
-        // fallback người bán
-        sellerName: "Chủ văn phòng",
-        sellerPhone: "0900000000",
-
-        // quyền ưu tiên hiển thị theo hội viên
-        membershipPlanId,
-        membershipPriority,
+        estateType, // "Cần bán" | "Cho thuê"
       };
 
-      // persist
-      const old = JSON.parse(localStorage.getItem(POSTS_KEY) || "[]");
-      localStorage.setItem(POSTS_KEY, JSON.stringify([...old, newPost]));
-
-      // clear draft media
-      localStorage.removeItem(DRAFT_MEDIA_KEY);
-
-      // dispatch global event so PostCreate (and other listeners) can refresh quota/usedToday
-      try {
-        window.dispatchEvent(
-          new CustomEvent("post:created", {
-            detail: {
-              id: newPost.id,
-              category: newPost.category,
-              ownerId: newPost.ownerId,        // <-- quan trọng: thêm ownerId
-              createdAt: newPost.createdAt,    // tuỳ chọn: thêm createdAt giúp listener
-            },
-          })
-        );
-      } catch (e) {
-        // ignore
-      }
-
-      // best-effort decrement quota (service)
-      await tryDecrementQuota(ownerId, 1);
-
-      // navigate to new post
-      navigate(`/post/${id}`);
-    } catch (err) {
-      console.error("FormVanphong submit error", err);
-      openModal({
-        title: "Lỗi",
-        message: "Có lỗi khi lưu tin. Vui lòng thử lại.",
-        primaryLabel: "Đóng",
-        onPrimary: () => closeModal(),
-      });
+      const result = onSubmit(payload);
+      if (result instanceof Promise) await result;
     } finally {
       setBusy(false);
     }
@@ -389,7 +230,9 @@ export default function FormVanphong({ estateType }) {
               onChange={handleChange}
               placeholder="Số nhà, đường, phường/xã, quận/huyện"
             />
-            {errors.address && <div className="pct-error">{errors.address}</div>}
+            {errors.address && (
+              <div className="pct-error">{errors.address}</div>
+            )}
           </div>
         </div>
       </section>
@@ -469,7 +312,9 @@ export default function FormVanphong({ estateType }) {
               <option>Ki-ốt</option>
               <option>Loại khác</option>
             </select>
-            {errors.officeType && <div className="pct-error">{errors.officeType}</div>}
+            {errors.officeType && (
+              <div className="pct-error">{errors.officeType}</div>
+            )}
           </div>
         </div>
 
@@ -580,7 +425,9 @@ export default function FormVanphong({ estateType }) {
 
       {/* ========== TIÊU ĐỀ & MÔ TẢ CHI TIẾT ========== */}
       <section className="pct-section">
-        <h3 className="pct-section-title">Tiêu đề tin đăng và Mô tả chi tiết</h3>
+        <h3 className="pct-section-title">
+          Tiêu đề tin đăng và Mô tả chi tiết
+        </h3>
 
         <div className="pct-field-col">
           <div className="pct-field">
@@ -595,7 +442,9 @@ export default function FormVanphong({ estateType }) {
               onChange={handleChange}
               placeholder="Ví dụ: Cho thuê mặt bằng kinh doanh 200m², mặt tiền đường lớn..."
             />
-            <div className="pct-help-text">{form.title.length}/70 kí tự</div>
+            <div className="pct-help-text">
+              {form.title.length}/70 kí tự
+            </div>
             {errors.title && <div className="pct-error">{errors.title}</div>}
           </div>
 
@@ -611,8 +460,12 @@ export default function FormVanphong({ estateType }) {
               onChange={handleChange}
               placeholder="Nên có: loại văn phòng/mặt bằng, vị trí, tiện ích, diện tích, pháp lý, nội thất, v.v."
             />
-            <div className="pct-help-text">{form.description.length}/1500 kí tự</div>
-            {errors.description && <div className="pct-error">{errors.description}</div>}
+            <div className="pct-help-text">
+              {form.description.length}/1500 kí tự
+            </div>
+            {errors.description && (
+              <div className="pct-error">{errors.description}</div>
+            )}
           </div>
         </div>
       </section>
@@ -625,7 +478,13 @@ export default function FormVanphong({ estateType }) {
           onClick={handleSubmit}
           disabled={busy}
         >
-          {busy ? (isRent ? "Đang đăng..." : "Đang đăng...") : (isRent ? "Đăng tin cho thuê" : "Đăng tin")}
+          {busy
+            ? isRent
+              ? "Đang đăng..."
+              : "Đang đăng..."
+            : isRent
+            ? "Đăng tin cho thuê"
+            : "Đăng tin"}
         </button>
       </div>
 

@@ -12,21 +12,28 @@ function getPostKey(post) {
   return post.id != null ? String(post.id) : `title_${post.title || ""}`;
 }
 
-export default function ChatModal({ open, onClose, post }) {
+/**
+ * mode:
+ *  - "favoriteOwner": chủ tin nhắn cho người đã like tin (tự tạo câu chào)
+ *  - "buyerToSeller": người xem tin nhắn cho người bán (không auto câu chào)
+ */
+export default function ChatModal({ open, onClose, post, mode = "favoriteOwner" }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const bodyRef = useRef(null);
 
-  // 👇 Tên người còn lại (người đã like bài của mình)
+  // Tên hiển thị người còn lại
   const otherName = post?.ownerName || post?.sellerName || "Người dùng";
+
+  // KHÓA DUY NHẤT CHO HỘI THOẠI THEO BÀI
+  const postKey = getPostKey(post);
 
   // Load / tạo đoạn hội thoại ban đầu
   useEffect(() => {
-    if (!post) return;
-    const key = getPostKey(post);
-    if (!key) return;
-    const storageKey = CHAT_KEY_PREFIX + key;
+    if (!post || !postKey) return;
+    const storageKey = CHAT_KEY_PREFIX + postKey;
 
+    // 1. Thử load từ localStorage
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) {
@@ -39,27 +46,38 @@ export default function ChatModal({ open, onClose, post }) {
       // ignore
     }
 
-    // ❗ Chưa có đoạn chat nào => CHÍNH MÌNH nhắn trước
-    const meName = getCurrentUserName() || "mình";
+    // 2. Chưa có đoạn chat nào
+    let initial = [];
+    const currentOtherName =
+      post.ownerName || post.sellerName || "Người dùng";
 
-    const initial = [
-      {
-        id: 1,
-        from: "me", // => bubble bên phải, màu cam
-        text: `Chào ${otherName}, mình là ${meName}. Mình thấy bạn đã thêm tin "${post.title}" vào mục yêu thích, bạn cần thêm thông tin gì không?`,
-      },
-    ];
+    if (mode === "favoriteOwner") {
+      const meName = getCurrentUserName() || "mình";
+      initial = [
+        {
+          id: 1,
+          from: "me",
+          text: `Chào ${currentOtherName}, mình là ${meName}. Mình thấy bạn đã thêm tin "${post.title}" vào mục yêu thích, bạn cần thêm thông tin gì không?`,
+        },
+      ];
+    } else if (mode === "buyerToSeller") {
+      // người mua nhắn cho người bán -> không auto câu chào
+      initial = [];
+    }
 
     setMessages(initial);
     setInput("");
+
     try {
-      localStorage.setItem(storageKey, JSON.stringify(initial));
+      if (initial.length > 0) {
+        localStorage.setItem(storageKey, JSON.stringify(initial));
+      }
     } catch {
       // ignore
     }
-  }, [post, otherName]);
+  }, [postKey, mode]); // ❗ CHỈ phụ thuộc postKey, không phụ thuộc object post
 
-  // Auto scroll
+  // Auto scroll khi messages đổi
   useEffect(() => {
     if (!bodyRef.current) return;
     bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
@@ -71,12 +89,11 @@ export default function ChatModal({ open, onClose, post }) {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
+    if (!postKey) return;
 
-    const key = getPostKey(post);
-    if (!key) return;
-    const storageKey = CHAT_KEY_PREFIX + key;
+    const storageKey = CHAT_KEY_PREFIX + postKey;
 
-    // Gửi tin cho người kia (người đã like bài)
+    // Gửi tin cho người kia (đồng thời mock lưu vào trang Message)
     const res = sendChatMessageMock({
       postId: post.id,
       postTitle: post.title,
@@ -89,7 +106,7 @@ export default function ChatModal({ open, onClose, post }) {
       return;
     }
 
-    // Lưu local đoạn chat
+    // Cập nhật lịch sử hội thoại local
     setMessages((prev) => {
       const next = [...prev, { id: Date.now(), from: "me", text }];
       try {
@@ -111,7 +128,6 @@ export default function ChatModal({ open, onClose, post }) {
               {otherName.charAt(0).toUpperCase()}
             </div>
             <div>
-              {/* 👇 Tên hiển thị là tên người đã like (người kia) */}
               <div className="chat-name">{otherName}</div>
               <div className="chat-sub">
                 Đang trao đổi về:{" "}

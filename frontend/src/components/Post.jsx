@@ -11,95 +11,64 @@ import {
 } from "lucide-react";
 
 import {
+  getFavoriteIds,
+  toggleFavorite,
   toggleFavoriteMock,
 } from "../services/mockFavoriteService";
-
 import { addToViewHistory } from "../services/viewHistoryService";
 
 /* ================= FORMATTERS ================= */
 function formatPriceVND(n) {
-  if (n >= 1_000_000_000) return `${+(n / 1_000_000_000).toFixed(2)} tỷ`;
-  if (n >= 1_000_000) return `${+(n / 1_000_000).toFixed(0)} tr`;
-  return n.toLocaleString("vi-VN");
+  if (n == null) return "";
+  const num = Number(n);
+  if (!Number.isFinite(num)) return "";
+  if (num >= 1_000_000_000) return `${+(num / 1_000_000_000).toFixed(2)} tỷ`;
+  if (num >= 1_000_000) return `${+(num / 1_000_000).toFixed(0)} tr`;
+  return num.toLocaleString("vi-VN");
 }
 
 function formatPerM2(n) {
   if (!n) return null;
-  if (n >= 1_000_000) return `${Math.round(n / 1_000_000)} tr/m²`;
-  return `${n.toLocaleString("vi-VN")} đ/m²`;
+  const num = Number(n);
+  if (!Number.isFinite(num)) return null;
+  if (num >= 1_000_000) return `${Math.round(num / 1_000_000)} tr/m²`;
+  return `${num.toLocaleString("vi-VN")} đ/m²`;
 }
 
-/* ========== FAVORITE LOCAL STORAGE ========= */
-function getFavoriteUserKey() {
-  try {
-    const rawUser = localStorage.getItem("currentUser");
-    if (rawUser) {
-      const u = JSON.parse(rawUser);
-      if (u.id || u.phone) return String(u.id || u.phone);
-    }
-  } catch {}
+/* =============== FIX LẤY ẢNH =============== */
+function getPrimaryImage(item) {
+  if (!item) return null;
 
-  const token = localStorage.getItem("accessToken");
-  if (token) return "user_" + token;
+  // 1) ưu tiên coverUrl
+  if (item.coverUrl) return item.coverUrl;
 
-  return "guest";
-}
-
-function getFavorites(userKey) {
-  try {
-    return JSON.parse(localStorage.getItem("favorites_" + userKey) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function saveFavorites(userKey, list) {
-  localStorage.setItem("favorites_" + userKey, JSON.stringify(list));
-}
-
-function isItemFavorite(userKey, item) {
-  if (!item) return false;
-  const list = getFavorites(userKey);
-
-  if (item.id != null) {
-    return list.some((p) => p.id === item.id);
-  }
-  return list.some((p) => p.title === item.title && p.price === item.price);
-}
-
-function toggleFavoriteForUser(userKey, item) {
-  if (!item) return;
-
-  let list = getFavorites(userKey);
-
-  if (item.id != null) {
-    const exists = list.some((p) => p.id === item.id);
-    list = exists ? list.filter((p) => p.id !== item.id) : [...list, item];
-  } else {
-    const exists = list.some(
-      (p) => p.title === item.title && p.price === item.price
-    );
-    list = exists
-      ? list.filter(
-          (p) => !(p.title === item.title && p.price === item.price)
-        )
-      : [...list, item];
+  // 2) media kiểu {type,image,src}
+  if (Array.isArray(item.media) && item.media.length > 0) {
+    const m = item.media[0];
+    if (m.src) return m.src;
   }
 
-  saveFavorites(userKey, list);
+  // 3) images[] dạng string
+  if (Array.isArray(item.images) && item.images.length > 0) {
+    return item.images[0];
+  }
+
+  // fallback
+  return "https://via.placeholder.com/400x300?text=No+Image";
 }
 
 /* ================= THE CARD ================= */
-
-export default function Post({ item, to = "#" }) {
+export default function Post({
+  item,
+  to = "#",
+  isLiked,
+  onToggleFavorite,
+}) {
   const navigate = useNavigate();
-  const userKey = getFavoriteUserKey();
-  const accessToken = localStorage.getItem("accessToken");
 
   const {
     id,
     title,
-    coverUrl,
     timeAgo,
     photos = 0,
     price,
@@ -108,56 +77,52 @@ export default function Post({ item, to = "#" }) {
     beds,
     typeLabel,
     location,
-    ownerName,  // 🔥 rất quan trọng cho Notification
-    isBroker,
+    ownerName,
   } = item || {};
 
-  const [liked, setLiked] = useState(false);
+  // lấy ảnh đúng
+  const primaryImage = getPrimaryImage(item);
 
-  /* READ CURRENT FAVORITE STATE */
+  // ===== LIKE STATE =====
+  const [likedInternal, setLikedInternal] = useState(false);
+
   useEffect(() => {
-    if (!item) {
-      setLiked(false);
-      return;
-    }
-    const fav = isItemFavorite(userKey, item);
-    setLiked(fav);
-  }, [userKey, item]);
+    if (!item || item.id == null) return setLikedInternal(false);
+    const ids = getFavoriteIds();
+    setLikedInternal(ids.includes(String(item.id)));
+  }, [item]);
 
-  /* ========== LIKE HANDLER ========== */
+  const liked = typeof isLiked === "boolean" ? isLiked : likedInternal;
+
   const handleLikeClick = (e) => {
     e.preventDefault();
+    e.stopPropagation();
 
-    if (!accessToken) {
-      navigate("/login");
+    if (typeof onToggleFavorite === "function") {
+      onToggleFavorite(e);
       return;
     }
 
-    const currentlyLiked = isItemFavorite(userKey, item);
-    toggleFavoriteForUser(userKey, item);
-    setLiked(!currentlyLiked);
+    if (!id) return;
 
-    // ✔ Chỉ khi "THÊM TIM" → tạo thông báo cho chủ bài
-    if (!currentlyLiked && ownerName) {
-      toggleFavoriteMock({
+    const { ids, added } = toggleFavorite(id);
+    setLikedInternal(added);
+
+    toggleFavoriteMock(
+      {
         postId: id,
         postTitle: title,
         ownerName,
-
-        // ✔ bổ sung data để NotificationModal hiển thị đẹp
         postPrice: price,
         postLocation: location,
-        postThumbnail: coverUrl,
-      });
-    }
+        postThumbnail: primaryImage,
+      },
+      added
+    );
   };
 
-  /* ========== VIEW HISTORY ========== */
-  const handleCardClick = () => {
-    if (item) addToViewHistory(item);
-  };
+  const handleCardClick = () => item && addToViewHistory(item);
 
-  /* ========== UI ========== */
   return (
     <NavLink
       to={to}
@@ -167,12 +132,9 @@ export default function Post({ item, to = "#" }) {
       onClick={handleCardClick}
     >
       <div className="mk-post-media">
-        <img src={coverUrl} alt={title} loading="lazy" />
+        <img src={primaryImage} alt={title} loading="lazy" />
 
-        {isBroker && (
-          <div className="mk-badge mk-badge-broker">Môi giới</div>
-        )}
-
+        {/* ❤️ */}
         <button
           type="button"
           aria-label={liked ? "Bỏ yêu thích" : "Yêu thích"}
@@ -208,9 +170,7 @@ export default function Post({ item, to = "#" }) {
         </div>
 
         <div className="mk-post-price">
-          <div className="mk-price-main">
-            {price != null ? formatPriceVND(price) : ""}
-          </div>
+          <div className="mk-price-main">{formatPriceVND(price)}</div>
           <div className="mk-price-sub">
             {pricePerM2 && <span>{formatPerM2(pricePerM2)}</span>}
             {area && (

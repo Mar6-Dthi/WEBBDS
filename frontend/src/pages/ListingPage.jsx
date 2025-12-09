@@ -32,7 +32,7 @@ const CATEGORY_OPTIONS = [
   { value: "Đất", label: "Đất" },
   { value: "Văn phòng", label: "Văn phòng, Mặt bằng kinh doanh" },
   { value: "Phòng trọ", label: "Phòng trọ" },
-  { value: "Nhà xưởng/Kho bãi", label: "Nhà xưởng, Kho bãi" },
+  // ĐÃ BỎ: { value: "Nhà xưởng/Kho bãi", label: "Nhà xưởng, Kho bãi" },
 ];
 
 // giới hạn thanh kéo giá (đơn vị: TỶ)
@@ -89,9 +89,6 @@ export default function ListingPage() {
 
   // SORT
   const [sortType, setSortType] = useState("newest"); // 'newest' | 'price-asc' | 'price-desc'
-
-  // LỌC THEO NGƯỜI ĐĂNG: all | personal | agent
-  const [ownerFilter, setOwnerFilter] = useState("all");
 
   // VIEW: list / grid
   const [viewMode, setViewMode] = useState("list");
@@ -196,14 +193,7 @@ export default function ListingPage() {
 
     let baseList = hasFilter ? filterMockListings(payload) : getMockListings();
 
-    // lọc theo loại người đăng (Cá nhân / Môi giới)
-    if (ownerFilter === "personal") {
-      // yêu cầu: trong data phải có item.ownerType === "Cá nhân"
-      baseList = baseList.filter((item) => item.ownerType === "Cá nhân");
-    } else if (ownerFilter === "agent") {
-      // yêu cầu: item.ownerType === "Môi giới"
-      baseList = baseList.filter((item) => item.ownerType === "Môi giới");
-    }
+    // ĐÃ BỎ: lọc theo loại người đăng (Cá nhân / Môi giới)
 
     // sort theo giá
     let priceComparator = null;
@@ -240,7 +230,6 @@ export default function ListingPage() {
     selectedBeds,
     hasBedsFilter,
     sortType,
-    ownerFilter,
   ]);
 
   const total = filtered.length;
@@ -253,7 +242,7 @@ export default function ListingPage() {
   const endIndex = startIndex + pageSize;
   const paginated = filtered.slice(startIndex, endIndex);
 
-  // Khi filter / sort / viewMode / ownerFilter đổi -> về trang 1
+  // Khi filter / sort / viewMode đổi -> về trang 1
   useEffect(() => {
     setCurrentPage(1);
   }, [
@@ -266,7 +255,6 @@ export default function ListingPage() {
     hasBedsFilter,
     sortType,
     viewMode,
-    ownerFilter,
   ]);
 
   const handleChangePage = (page) => {
@@ -283,16 +271,18 @@ export default function ListingPage() {
     const { ids, added } = toggleFavorite(item.id);
     setFavoriteIds(new Set(ids));
 
-    if (added) {
-      toggleFavoriteMock({
+    // lưu / xoá bài ở localStorage để trang Yêu thích dùng
+    toggleFavoriteMock(
+      {
         postId: item.id,
         postTitle: item.title,
         ownerName: item.ownerName,
         postPrice: item.price,
         postLocation: item.address,
         postThumbnail: item.coverUrl,
-      });
-    }
+      },
+      added
+    );
   };
 
   // click card
@@ -833,35 +823,9 @@ export default function ListingPage() {
           {/* ===== BODY: LIST + SORT + VIEW ===== */}
           <section className="lp-body">
             <div className="lp-left">
-              {/* Tabs + sort + view */}
+              {/* Sort + view (ĐÃ BỎ TAB Cá nhân / Môi giới) */}
               <div className="lp-list-head">
-                <div className="lp-tabs">
-                  <button
-                    className={"lp-tab" + (ownerFilter === "all" ? " active" : "")}
-                    type="button"
-                    onClick={() => setOwnerFilter("all")}
-                  >
-                    Tất cả
-                  </button>
-                  <button
-                    className={
-                      "lp-tab" + (ownerFilter === "personal" ? " active" : "")
-                    }
-                    type="button"
-                    onClick={() => setOwnerFilter("personal")}
-                  >
-                    Cá nhân
-                  </button>
-                  <button
-                    className={
-                      "lp-tab" + (ownerFilter === "agent" ? " active" : "")
-                    }
-                    type="button"
-                    onClick={() => setOwnerFilter("agent")}
-                  >
-                    Môi giới
-                  </button>
-                </div>
+                <div />{/* giữ layout, nếu cần có thể chỉnh lại CSS */}
 
                 <div className="lp-sort-view">
                   <div className="lp-sort">
@@ -951,7 +915,7 @@ export default function ListingPage() {
                       >
                         <div className="lp-card-media">
                           <img src={item.coverUrl} alt={item.title} />
-                          <span className="lp-card-badge">Tin ưu tiên</span>
+                          {/* ĐÃ BỎ BADGE TIN ƯU TIÊN */}
                           <span className="lp-card-photos">
                             {item.area} m²
                           </span>
@@ -1036,7 +1000,7 @@ export default function ListingPage() {
                       >
                         <div className="lp-card-grid-media">
                           <img src={item.coverUrl} alt={item.title} />
-                          <span className="lp-card-grid-badge">Tin ưu tiên</span>
+                          {/* ĐÃ BỎ BADGE TIN ƯU TIÊN */}
                           <button
                             type="button"
                             className={`lp-like-btn-grid ${

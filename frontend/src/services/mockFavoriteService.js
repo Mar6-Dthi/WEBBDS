@@ -1,5 +1,7 @@
 // src/services/mockFavoriteService.js
 
+// ========== HELPERS LOCALSTORAGE ==========
+
 function load(key) {
   try {
     return JSON.parse(localStorage.getItem(key) || "[]");
@@ -13,7 +15,12 @@ function save(key, data) {
 }
 
 // ================== PHẦN YÊU THÍCH (FAVORITES) ==================
+
+// Lưu danh sách ID bài đã tim
 const FAVORITE_KEY = "favorites_mock";
+
+// Lưu danh sách FULL THÔNG TIN bài đã tim (dùng cho trang Yêu thích)
+const FAVORITE_POSTS_KEY = "favorite_posts";
 
 /** Lấy danh sách ID tin đã được thả tim */
 export function getFavoriteIds() {
@@ -27,7 +34,7 @@ export function getFavoriteIds() {
 
 /**
  * Bật / tắt yêu thích cho một bài.
- * @param {string} postId
+ * @param {string|number} postId
  * @returns {{ ids: string[], added: boolean }}
  *  - ids: danh sách ID mới
  *  - added: true nếu thao tác hiện tại là THÊM tim, false nếu là GỠ tim
@@ -51,9 +58,17 @@ export function toggleFavorite(postId) {
   return { ids: next, added };
 }
 
-// ================== PHẦN THÔNG BÁO (NOTIFICATIONS) ==================
+/** Lấy danh sách BÀI YÊU THÍCH (dùng cho trang Favorite.jsx) */
+export function getFavoritePosts() {
+  const list = load(FAVORITE_POSTS_KEY);
+  return Array.isArray(list) ? list : [];
+}
 
-// Lấy tên user đang login (ưu tiên currentUser.name, fallback accountName)
+// ================== PHẦN THÔNG TIN USER ==================
+
+/**
+ * Lấy tên user đang login (ưu tiên currentUser.name, fallback accountName)
+ */
 export function getCurrentUserName() {
   try {
     const cur = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -65,28 +80,86 @@ export function getCurrentUserName() {
   return accName.trim() || null;
 }
 
+// ================== FAVORITE POSTS + NOTIFICATIONS ==================
+
 /**
- * Khi bấm tim một bài (CHỈ khi chuyển từ "chưa tim" → "đã tim")
- * gọi hàm này để tạo thông báo cho CHỦ BÀI.
+ * Hàm dùng chung khi bấm tim:
+ *  - Quản lý danh sách bài yêu thích (FAVORITE_POSTS_KEY)
+ *  - Gửi thông báo cho chủ bài (notifications_mock) KHI THÊM TIM
  *
- * Có thể truyền thêm các field khác nếu cần (price, location, thumbnail...)
+ * @param {object} postData
+ * @param {boolean} [added] - true: vừa thêm tim, false: vừa gỡ tim.
+ *    Nếu không truyền (undefined) thì mặc định coi như THÊM (giữ tương thích cũ).
+ *
+ * postData nên có các field:
+ *  - postId
+ *  - postTitle
+ *  - ownerName
+ *  - postPrice
+ *  - postLocation
+ *  - postThumbnail
  */
-export function toggleFavoriteMock({
-  postId,
-  postTitle,
-  ownerName,
-  postPrice,
-  postLocation,
-  postThumbnail,
-}) {
-  const actorName = getCurrentUserName();
-  if (!actorName) {
-    return { error: "NOT_LOGIN" };
+export function toggleFavoriteMock(postData, added) {
+  if (!postData || typeof postData !== "object") {
+    return { error: "INVALID_DATA" };
   }
 
-  // không tự thông báo cho mình
+  const {
+    postId,
+    postTitle,
+    ownerName,
+    postPrice,
+    postLocation,
+    postThumbnail,
+    ...rest
+  } = postData;
+
+  const idStr = postId != null ? String(postId) : null;
+
+  // ===== 1. CẬP NHẬT DANH SÁCH BÀI YÊU THÍCH (favorite_posts) =====
+  if (idStr) {
+    let favPosts = getFavoritePosts();
+
+    // Nếu added === undefined → mặc định là thêm (giữ tương thích phiên bản cũ)
+    const isAdded = added === undefined ? true : !!added;
+
+    if (isAdded) {
+      const existed = favPosts.some((p) => String(p.postId) === idStr);
+      if (!existed) {
+        favPosts.unshift({
+          postId,
+          postTitle,
+          ownerName,
+          postPrice,
+          postLocation,
+          postThumbnail,
+          ...rest,
+        });
+      }
+    } else {
+      // Bỏ tim → xoá khỏi danh sách
+      favPosts = favPosts.filter((p) => String(p.postId) !== idStr);
+    }
+
+    save(FAVORITE_POSTS_KEY, favPosts);
+  }
+
+  // ===== 2. THÔNG BÁO CHO CHỦ BÀI (CHỈ KHI THÊM TIM) =====
+  const actorName = getCurrentUserName();
+
+  // Không có user đăng nhập thì bỏ qua phần thông báo nhưng vẫn cho lưu YÊU THÍCH
+  if (!actorName) {
+    return { ok: true, noNotification: true };
+  }
+
+  // Không tự thông báo cho mình
   if (!ownerName || ownerName === actorName) {
     return { ok: true, skipped: true };
+  }
+
+  // Nếu là thao tác GỠ TIM thì không tạo notification
+  if (added === false) {
+    return { ok: true, removed: true };
   }
 
   const notifications = load("notifications_mock");
@@ -115,7 +188,9 @@ export function toggleFavoriteMock({
   return { ok: true };
 }
 
-// Lấy danh sách thông báo của user hiện tại (tức chủ bài)
+// ================== PHẦN THÔNG BÁO (NOTIFICATIONS) ==================
+
+/** Lấy danh sách thông báo của user hiện tại (tức chủ bài) */
 export function getMyNotificationsMock() {
   const me = getCurrentUserName();
   if (!me) return [];
@@ -123,9 +198,7 @@ export function getMyNotificationsMock() {
   return notifications.filter((n) => n.ownerName === me);
 }
 
-/**
- * Đánh dấu 1 thông báo là ĐÃ ĐỌC (dùng khi click vào 1 item trong modal)
- */
+/** Đánh dấu 1 thông báo là ĐÃ ĐỌC (dùng khi click vào 1 item trong modal) */
 export function markNotificationReadMock(id) {
   const notifications = load("notifications_mock");
   const updated = notifications.map((n) =>
@@ -134,9 +207,7 @@ export function markNotificationReadMock(id) {
   save("notifications_mock", updated);
 }
 
-/**
- * Đánh dấu TẤT CẢ thông báo của user hiện tại là đã đọc.
- */
+/** Đánh dấu TẤT CẢ thông báo của user hiện tại là đã đọc. */
 export function markNotificationsAsReadMock() {
   const me = getCurrentUserName();
   if (!me) return;

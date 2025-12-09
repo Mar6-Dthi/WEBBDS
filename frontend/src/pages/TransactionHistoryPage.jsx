@@ -6,13 +6,36 @@ import "../styles/TransactionHistory.css";
 
 const TX_KEY = "membershipTransactions";
 
-// Load lịch sử giao dịch từ localStorage
-function loadTransactions() {
+/* ===== LẤY userId DÙNG CHUNG VỚI Membership / Payment / PostCreate ===== */
+function getMembershipUserId() {
+  try {
+    const raw = localStorage.getItem("currentUser") || "null";
+    const user = JSON.parse(raw);
+    if (!user || typeof user !== "object") return null;
+    return user.id || user.phone || user.email || null;
+  } catch {
+    return null;
+  }
+}
+
+// Load lịch sử giao dịch từ localStorage CHO ĐÚNG user
+function loadTransactionsForUser(userId) {
+  if (!userId) return [];
+
   try {
     const raw = localStorage.getItem(TX_KEY) || "[]";
     const list = JSON.parse(raw);
-    return list.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    const all = Array.isArray(list) ? list : [];
+
+    // 🔥 Chỉ lấy giao dịch của đúng user (tx.userId hoặc tx.ownerId)
+    const mine = all.filter(
+      (tx) => tx.userId === userId || tx.ownerId === userId
+    );
+
+    // Sắp xếp mới nhất lên đầu
+    return mine.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   } catch {
     return [];
@@ -20,7 +43,11 @@ function loadTransactions() {
 }
 
 export default function TransactionHistoryPage() {
-  const transactions = useMemo(() => loadTransactions(), []);
+  const userId = useMemo(() => getMembershipUserId(), []);
+  const transactions = useMemo(
+    () => loadTransactionsForUser(userId),
+    [userId]
+  );
 
   return (
     <div className="nhatot">
@@ -31,7 +58,11 @@ export default function TransactionHistoryPage() {
           <div className="tx-card">
             <h1 className="tx-title">Lịch sử giao dịch hội viên</h1>
 
-            {transactions.length === 0 ? (
+            {!userId ? (
+              <p className="tx-empty">
+                Vui lòng đăng nhập để xem lịch sử giao dịch.
+              </p>
+            ) : transactions.length === 0 ? (
               <p className="tx-empty">Chưa có giao dịch nào.</p>
             ) : (
               <table className="tx-table">

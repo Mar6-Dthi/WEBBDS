@@ -91,37 +91,73 @@ function loadAgentStats(user) {
   const base = { followers: 0, following: 0, rating: 0, ratingCount: 0 };
   if (!user) return base;
 
-  let list = [];
+  // ===== 1. Đọc danh sách agent để lấy rating, following... =====
+  let agents = [];
   try {
     const rawAgents =
       localStorage.getItem("agents") ||
       localStorage.getItem("mockAgents") ||
       "[]";
     const parsed = JSON.parse(rawAgents);
-    if (Array.isArray(parsed)) list = parsed;
+    if (Array.isArray(parsed)) agents = parsed;
   } catch {
-    return base;
+    // ignore, giữ agents = []
   }
 
   const me =
-    list.find(
+    agents.find(
       (a) =>
         a.ownerId === user.id ||
         a.userId === user.id ||
         a.phone === user.phone
     ) || null;
 
-  if (!me) return base;
-
-  const followers = me.followers ?? me.followerCount ?? 0;
-  const following = me.following ?? me.followingCount ?? 0;
-  const ratingRaw = me.rating ?? me.avgRating ?? 0;
+  // rating & following lấy từ agent (nếu có)
+  const ratingRaw = me?.rating ?? me?.avgRating ?? 0;
   const rating = Math.max(0, Math.min(5, Number(ratingRaw) || 0));
   const ratingCount =
-    me.ratingCount ?? me.reviewCount ?? me.totalReviews ?? 0;
+    me?.ratingCount ?? me?.reviewCount ?? me?.totalReviews ?? 0;
+
+  const following = me?.following ?? me?.followingCount ?? 0;
+
+  // ===== 2. TÍNH followers TỪ BẢNG agentFollowing =====
+  // Gom các candidate id mà người khác có thể follow để chỉ tới bạn
+  const candidateIds = new Set();
+
+  if (me?.id != null) candidateIds.add(String(me.id));
+  if (user.id != null) candidateIds.add(String(user.id));
+  if (user.userId != null) candidateIds.add(String(user.userId));
+  if (user.phone) candidateIds.add(String(user.phone));
+  if (user.email) candidateIds.add(String(user.email));
+
+  let followersFromMap = 0;
+  try {
+    const raw = localStorage.getItem("agentFollowing") || "{}";
+    const data = JSON.parse(raw);
+    if (data && typeof data === "object") {
+      Object.values(data).forEach((list) => {
+        if (!Array.isArray(list)) return;
+        list.forEach((aid) => {
+          if (candidateIds.has(String(aid))) {
+            followersFromMap += 1;
+          }
+        });
+      });
+    }
+  } catch {
+    // ignore
+  }
+
+  // Nếu đếm được từ map thì ưu tiên, nếu không thì fallback từ agent
+  const followers =
+    followersFromMap ||
+    me?.followers ||
+    me?.followerCount ||
+    0;
 
   return { followers, following, rating, ratingCount };
 }
+
 
 /* ========= MODAL CROP / ZOOM ẢNH ========= */
 function ImageAdjustModal({

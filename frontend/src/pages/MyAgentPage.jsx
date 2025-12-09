@@ -149,6 +149,9 @@ export default function MyAgentPage() {
   const [agent, setAgent] = useState(null);
   const [reviews, setReviews] = useState([]);
 
+  // NEW: state mở/đóng modal chia sẻ
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
   useEffect(() => {
     const { agent: myAgent } = findMyAgent();
     if (!myAgent) {
@@ -180,6 +183,13 @@ export default function MyAgentPage() {
 
   const latestReviews = useMemo(() => reviews.slice(0, 3), [reviews]);
 
+  // NEW: link công khai tới trang môi giới (view như người khác)
+  const shareUrl = useMemo(() => {
+    if (!agent) return "";
+    // Giả sử route xem môi giới là /moi-gioi/:id
+    return `${window.location.origin}/moi-gioi/${agent.id}`;
+  }, [agent]);
+
   if (!agent) {
     return (
       <div className="nhatot">
@@ -202,6 +212,16 @@ export default function MyAgentPage() {
 
   const handleViewAllReviews = () => {
     navigate(`/moi-gioi/${agent.id}/danh-gia`);
+  };
+
+  // NEW: copy link ra clipboard
+  const handleCopyShareLink = () => {
+    if (!shareUrl) return;
+    navigator.clipboard
+      .writeText(shareUrl)
+      .catch(() => {
+        // có thể thêm toast sau nếu muốn
+      });
   };
 
   return (
@@ -262,7 +282,10 @@ export default function MyAgentPage() {
                 </div>
 
                 <div className="agd-hero-actions">
-                  <button className="agd-hero-ghost-btn">
+                  <button
+                    className="agd-hero-ghost-btn"
+                    onClick={() => setIsShareOpen(true)} // mở modal
+                  >
                     <Share2 size={16} />
                     Chia sẻ
                   </button>
@@ -423,6 +446,49 @@ export default function MyAgentPage() {
 
         <Footer />
       </div>
+
+      {/* ============== MODAL CHIA SẺ ============== */}
+      {isShareOpen && (
+        <div
+          className="agd-share-backdrop"
+          onClick={() => setIsShareOpen(false)}
+        >
+          <div
+            className="agd-share-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="agd-share-title">Chia sẻ trang môi giới</h3>
+            <p className="agd-share-desc">
+              Sao chép đường link bên dưới và gửi cho khách hàng / bạn bè.
+            </p>
+
+            <div className="agd-share-input-row">
+              <input
+                type="text"
+                className="agd-share-input"
+                readOnly
+                value={shareUrl}
+                onFocus={(e) => e.target.select()}
+              />
+              <button
+                type="button"
+                className="agd-share-copy-btn"
+                onClick={handleCopyShareLink}
+              >
+                Copy
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="agd-outline-pill-btn agd-outline-pill-full agd-share-close-btn"
+              onClick={() => setIsShareOpen(false)}
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

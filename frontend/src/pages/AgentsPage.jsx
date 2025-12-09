@@ -7,6 +7,13 @@ import NhatotHeader from "../components/header";
 import Footer from "../components/footer";
 import AgentsFilterBar, { PRICE_OPTIONS } from "../components/AgentsFilterBar";
 import "../styles/AgentsPage.css";
+import ChatModal from "../components/ChatModal";
+
+// 🔹 dùng chung service follow với ProfilePage
+import {
+  getMyFollowingAgents,
+  toggleFollowAgent,
+} from "../services/mockFollowService";
 
 /** ================== MOCK DỮ LIỆU MÔI GIỚI ================== */
 /** avgPricePerM2: triệu / m2
@@ -184,7 +191,14 @@ const AGENTS = [
 const PAGE_SIZE = 10;
 
 /** ================== CARD COMPONENT ================== */
-function AgentCard({ agent, onClickDetail, onClickPosts }) {
+function AgentCard({
+  agent,
+  onClickDetail,
+  onClickPosts,
+  isFollowing,
+  onToggleFollow,
+  onContact,
+}) {
   return (
     <div className="agcard">
       <div className="agcard-banner">
@@ -208,7 +222,19 @@ function AgentCard({ agent, onClickDetail, onClickPosts }) {
           <div className="agcard-info">
             <div className="agcard-name-row">
               <h3 className="agcard-name">{agent.name}</h3>
-              <button className="agcard-follow-btn">Theo dõi</button>
+              <button
+                className={
+                  "agcard-follow-btn" +
+                  (isFollowing ? " agcard-follow-btn--active" : "")
+                }
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFollow(agent);
+                }}
+              >
+                {isFollowing ? "Đang theo dõi" : "Theo dõi"}
+              </button>
             </div>
 
             <div className="agcard-rating-row">
@@ -238,7 +264,10 @@ function AgentCard({ agent, onClickDetail, onClickPosts }) {
         <button
           className="agcard-btn agcard-btn-ghost"
           type="button"
-          onClick={() => alert("Mock: gọi " + agent.name)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onContact(agent);
+          }}
         >
           <Phone size={15} />
           Liên hệ
@@ -247,7 +276,10 @@ function AgentCard({ agent, onClickDetail, onClickPosts }) {
         <button
           className="agcard-btn agcard-btn-outline"
           type="button"
-          onClick={() => onClickPosts(agent)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClickPosts(agent);
+          }}
         >
           Xem tin đăng
           <ChevronRight size={15} />
@@ -278,6 +310,15 @@ export default function AgentsPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
 
+  // ====== FOLLOW STATE (theo user hiện tại) ======
+  const [followedIds, setFollowedIds] = useState(() =>
+    getMyFollowingAgents().map((id) => String(id))
+  );
+
+  // ====== CHAT STATE ======
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatTarget, setChatTarget] = useState(null);
+
   const handleProvinceChange = (province) => {
     setFilters((prev) => ({ ...prev, province }));
     setCurrentPage(1);
@@ -301,24 +342,20 @@ export default function AgentsPage() {
   // ====== LỌC AGENT THEO FILTER ======
   const filteredAgents = useMemo(() => {
     return AGENTS.filter((agent) => {
-      // 1. Lọc theo tỉnh
       if (filters.province && filters.province !== "Tất cả") {
         const list = agent.provinces || [];
         const lower = list.map((p) => p.toLowerCase());
         if (!lower.includes(filters.province.toLowerCase())) return false;
       }
 
-      // 2. Lọc theo loại môi giới
       if (filters.agentType !== "all") {
         if (agent.agentType !== filters.agentType) return false;
       }
 
-      // 3. Lọc theo loại BĐS
       if (filters.estateType !== "all") {
         if (agent.estateType !== filters.estateType) return false;
       }
 
-      // 4. Lọc theo khoảng giá (triệu/m2)
       if (filters.priceRange !== "all") {
         const band = PRICE_OPTIONS.find(
           (o) => o.value === filters.priceRange
@@ -357,12 +394,48 @@ export default function AgentsPage() {
     navigate(`/moi-gioi/${agent.id}`);
   };
 
-  // 🔥 Quan trọng: gửi kèm state { agent } sang trang tin đăng
   const handleGoPosts = (agent) => {
     navigate(`/moi-gioi/${agent.id}/tin-dang`, {
       state: { agent },
     });
   };
+
+  // 🔹 Toggle theo dõi môi giới (liên kết với mockFollowService + ProfilePage)
+  const handleToggleFollow = (agent) => {
+    const res = toggleFollowAgent(agent.id);
+
+    if (!res.ok && res.reason === "NO_USER") {
+      alert("Vui lòng đăng nhập để theo dõi môi giới.");
+      return;
+    }
+
+    // cập nhật lại danh sách đang theo dõi từ service
+    const list = getMyFollowingAgents().map((id) => String(id));
+    setFollowedIds(list);
+
+    // bắn event để ProfilePage cập nhật số "Đang theo dõi"
+    try {
+      window.dispatchEvent(new Event("follow-changed"));
+    } catch {
+      // ignore
+    }
+  };
+
+  // 🔹 Mở chat với môi giới
+  const handleContact = (agent) => {
+    setChatTarget(agent);
+    setChatOpen(true);
+  };
+
+  // object giả để truyền cho ChatModal
+  const chatPost =
+    chatTarget == null
+      ? null
+      : {
+          id: `agent_${chatTarget.id}`,
+          title: `Trao đổi với môi giới ${chatTarget.name}`,
+          ownerName: chatTarget.name,
+        };
 
   return (
     <div className="nhatot">
@@ -391,8 +464,11 @@ export default function AgentsPage() {
                   <AgentCard
                     key={a.id}
                     agent={a}
+                    isFollowing={followedIds.includes(String(a.id))}
+                    onToggleFollow={handleToggleFollow}
                     onClickDetail={handleGoDetail}
                     onClickPosts={handleGoPosts}
+                    onContact={handleContact}
                   />
                 ))}
                 {pageAgents.length === 0 && (
@@ -445,6 +521,13 @@ export default function AgentsPage() {
         </div>
 
         <Footer />
+
+        {/* MODAL CHAT VỚI MÔI GIỚI */}
+        <ChatModal
+          open={chatOpen && !!chatPost}
+          onClose={() => setChatOpen(false)}
+          post={chatPost || undefined}
+        />
       </div>
     </div>
   );

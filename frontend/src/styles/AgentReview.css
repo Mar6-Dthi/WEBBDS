@@ -363,3 +363,167 @@
     border-radius: 12px;
   }
 }
+
+.agr-review-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.agr-reply-toggle-btn {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.agr-reply-display {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.agr-reply-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.agr-reply-content {
+  font-size: 13px;
+  color: #111827;
+}
+
+.agr-reply-time {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.agr-reply-editor {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.agr-reply-editor textarea {
+  width: 100%;
+  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.agr-reply-submit-btn {
+  align-self: flex-end;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  border: none;
+  background: #ff7a00;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ================================
+   REPLY STYLING
+================================ */
+
+/* Vùng gom các reply của môi giới */
+.agr-replies {
+  margin-top: 10px;
+  padding-left: 14px;
+  border-left: 3px solid #ffe1c2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Một reply */
+.agr-reply-item {
+  background: #fff7ec;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #444;
+  box-shadow: 0 2px 6px rgba(255, 122, 0, 0.08);
+}
+
+.agr-reply-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.agr-reply-name {
+  font-weight: 600;
+  color: #ff7a00;
+  font-size: 13px;
+}
+
+.agr-reply-time {
+  font-size: 11px;
+  color: #888;
+}
+
+.agr-reply-content {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* ================================
+   FORM TRẢ LỜI
+================================ */
+.agr-reply-form {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agr-reply-form textarea {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 8px 10px;
+  font-size: 13px;
+  resize: none;
+  outline: none;
+  background: #fff;
+  transition: border 0.2s ease;
+}
+
+.agr-reply-form textarea:focus {
+  border-color: #ff7a00;
+  box-shadow: 0 0 0 1px rgba(255, 122, 0, 0.25);
+}
+
+/* Nút gửi trả lời */
+.agr-reply-btn {
+  align-self: flex-end;
+  padding: 6px 14px;
+  background: #ff7a00;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.agr-reply-btn:hover {
+  filter: brightness(0.92);
+}
+
+.agr-reply-btn:active {
+  transform: scale(0.97);
+}

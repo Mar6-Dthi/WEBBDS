@@ -556,3 +556,67 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.agd-share-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agd-share-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.agd-share-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.agd-share-desc {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 16px;
+}
+
+.agd-share-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.agd-share-input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.agd-share-copy-btn {
+  padding: 0 14px;
+  border-radius: 8px;
+  border: none;
+  background: #ff7a00;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.agd-share-copy-btn:hover {
+  opacity: 0.9;
+}
+
+.agd-share-close-btn {
+  margin-top: 4px;
+}
