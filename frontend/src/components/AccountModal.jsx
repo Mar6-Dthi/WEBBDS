@@ -112,7 +112,7 @@ export default function AccountModal({
             <button
               type="button"
               className="acc-row"
-              onClick={() => handleRowClick("/tin-da-luu")}
+              onClick={() => handleRowClick("/yeu-thich")}
             >
               <span>Tin đăng đã lưu</span>
               <ChevronRight size={16} />
